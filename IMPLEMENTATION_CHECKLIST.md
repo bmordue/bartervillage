@@ -53,8 +53,8 @@
 
 ## Milestone 1: Repo, Nix flake and shared rules package skeleton (spec §16.1)
 
-- [ ] **M1.01** Initialise a TypeScript workspace with packages for `rules`, `server`, `worker`, `client` and `content`. _Depends on: none._
-- [ ] **M1.02** Enable strict TypeScript, linting and formatting. _Depends on: M1.01._
+- [x] **M1.01** Initialise a TypeScript workspace with packages for `rules`, `server`, `worker`, `client` and `content`. _Depends on: none._
+- [x] **M1.02** Enable strict TypeScript, linting and formatting. _Depends on: M1.01._
 - [ ] **M1.03** Add the unit, property and golden-log test runners. _Depends on: M1.01, M1.02._
 - [ ] **M1.04** Add CI covering lint, type-check, unit tests, property tests and golden logs. _Depends on: M1.02, M1.03._
 - [ ] **M1.05** Add a Nix flake and dev shell pinning Node and required tooling. _Depends on: M1.01._
