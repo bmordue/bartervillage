@@ -188,7 +188,7 @@
 - [ ] **M3.13** Sites carry biome and traits (soil, water, light) (spec §5). _Depends on: M3.01, M3.06, M3.16; blocked by D.04._
 - [ ] **M3.14** Regions contain player plots, world-owned commons and wild zones; shared buildings are funded only by goals (spec §5). _Depends on: M3.06, M3.07, M7.05._
 - [ ] **M3.15** Wild nodes in commons and wild zones are public and shared; shared water zones exist for fishing (spec §5). _Depends on: M2.C01, M3.14._
-- [ ] **M3.16** Versioned content JSON with a validator for energy costs, recipes, crops, buildings, biomes, weather modifiers, goals and the phrase book (spec §12). _Depends on: M1.07, M1.09._
+- [x] **M3.16** Versioned content JSON with a validator for energy costs, recipes, crops, buildings, biomes, weather modifiers, goals and the phrase book (spec §12). _Depends on: M1.07, M1.09._
 - [ ] **M3.17** Pin a content version per world; content changes apply at the next tick (spec §12). _Depends on: M3.01, M3.16._
 - [ ] **M3.18** Current-state tables plus an append-only archived event log and a per-tick state hash (spec §12). _Depends on: M1.11, M2.A03, M3.01._
 - [ ] **M3.19** Generator tests: the same seed and version produce the same map; appending regions never changes existing regions or plots. _Depends on: CT.01, M3.06, M3.07, M3.08._

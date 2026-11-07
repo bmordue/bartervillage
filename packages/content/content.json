@@ -1,0 +1,2243 @@
+{
+  "version": "1.0.0",
+  "items": {
+    "wheat": {
+      "name": "Wheat"
+    },
+    "carrot": {
+      "name": "Carrot"
+    },
+    "potato": {
+      "name": "Potato"
+    },
+    "onion": {
+      "name": "Onion"
+    },
+    "cabbage": {
+      "name": "Cabbage"
+    },
+    "tomato": {
+      "name": "Tomato"
+    },
+    "corn": {
+      "name": "Corn"
+    },
+    "pumpkin": {
+      "name": "Pumpkin"
+    },
+    "grape": {
+      "name": "Grape"
+    },
+    "herb": {
+      "name": "Herb"
+    },
+    "flax": {
+      "name": "Flax"
+    },
+    "cotton": {
+      "name": "Cotton"
+    },
+    "mushroom": {
+      "name": "Mushroom"
+    },
+    "turnip": {
+      "name": "Turnip"
+    },
+    "strawberry": {
+      "name": "Strawberry"
+    },
+    "hay": {
+      "name": "Hay"
+    },
+    "egg": {
+      "name": "Egg"
+    },
+    "milk": {
+      "name": "Milk"
+    },
+    "wool": {
+      "name": "Wool"
+    },
+    "wood": {
+      "name": "Wood"
+    },
+    "stone": {
+      "name": "Stone"
+    },
+    "fish": {
+      "name": "Fish"
+    },
+    "berries": {
+      "name": "Berries"
+    },
+    "clay": {
+      "name": "Clay"
+    },
+    "iron_ore": {
+      "name": "Iron ore"
+    },
+    "flour": {
+      "name": "Flour"
+    },
+    "bread": {
+      "name": "Bread"
+    },
+    "soup": {
+      "name": "Soup"
+    },
+    "stew": {
+      "name": "Stew"
+    },
+    "cheese": {
+      "name": "Cheese"
+    },
+    "butter": {
+      "name": "Butter"
+    },
+    "jam": {
+      "name": "Jam"
+    },
+    "pie": {
+      "name": "Pie"
+    },
+    "cake": {
+      "name": "Cake"
+    },
+    "juice": {
+      "name": "Juice"
+    },
+    "wine": {
+      "name": "Wine"
+    },
+    "tea": {
+      "name": "Herb tea"
+    },
+    "roasted_vegetables": {
+      "name": "Roasted vegetables"
+    },
+    "plank": {
+      "name": "Plank"
+    },
+    "rope": {
+      "name": "Rope"
+    },
+    "brick": {
+      "name": "Brick"
+    },
+    "metal_bar": {
+      "name": "Metal bar"
+    },
+    "tool": {
+      "name": "Tool"
+    },
+    "furniture": {
+      "name": "Furniture"
+    },
+    "crate": {
+      "name": "Crate"
+    },
+    "charcoal": {
+      "name": "Charcoal"
+    },
+    "pot": {
+      "name": "Iron pot"
+    },
+    "lantern": {
+      "name": "Lantern"
+    },
+    "fence": {
+      "name": "Fence"
+    },
+    "bucket": {
+      "name": "Bucket"
+    },
+    "thread": {
+      "name": "Thread"
+    },
+    "cloth": {
+      "name": "Cloth"
+    },
+    "blanket": {
+      "name": "Blanket"
+    },
+    "clothes": {
+      "name": "Clothes"
+    },
+    "tapestry": {
+      "name": "Tapestry"
+    },
+    "dried_fish": {
+      "name": "Dried fish"
+    },
+    "fish_oil": {
+      "name": "Fish oil"
+    },
+    "bait": {
+      "name": "Bait"
+    },
+    "smoked_fish": {
+      "name": "Smoked fish"
+    },
+    "apple": {
+      "name": "Apple"
+    }
+  },
+  "energy": {
+    "dailyBudget": 100,
+    "travelPerBoundary": 5,
+    "costs": {
+      "plant": 2,
+      "harvest": 2,
+      "tend": 2,
+      "feed": 2,
+      "build": 10,
+      "upgrade": 15,
+      "craft": 3,
+      "travel": 0,
+      "help": 5,
+      "gift": 1,
+      "forage": 3,
+      "fish": 3,
+      "post_offer": 1,
+      "post_wanted_request": 1,
+      "cancel_offer": 0,
+      "accept_offer": 1,
+      "counter_offer": 1,
+      "contribute_goal": 1,
+      "place_decoration": 1
+    }
+  },
+  "goodwill": {
+    "gift": 5,
+    "help": 1
+  },
+  "crops": [
+    {
+      "id": "wheat",
+      "name": "Wheat",
+      "growthTicks": 4,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "wheat",
+          "quantity": 2
+        },
+        {
+          "item": "hay",
+          "quantity": 1
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "carrot",
+      "name": "Carrot",
+      "growthTicks": 3,
+      "seasons": [
+        "spring",
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "carrot",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "potato",
+      "name": "Potato",
+      "growthTicks": 5,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "potato",
+          "quantity": 3
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "onion",
+      "name": "Onion",
+      "growthTicks": 3,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "onion",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cabbage",
+      "name": "Cabbage",
+      "growthTicks": 6,
+      "seasons": [
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "cabbage",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": true,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "tomato",
+      "name": "Tomato",
+      "growthTicks": 4,
+      "seasons": [
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "tomato",
+          "quantity": 3
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": true,
+      "frostSensitive": true,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "corn",
+      "name": "Corn",
+      "growthTicks": 5,
+      "seasons": [
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "corn",
+          "quantity": 3
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": true,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "pumpkin",
+      "name": "Pumpkin",
+      "growthTicks": 7,
+      "seasons": [
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "pumpkin",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": true,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "grape",
+      "name": "Grape",
+      "growthTicks": 6,
+      "seasons": [
+        "summer",
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "grape",
+          "quantity": 3
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": true,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "herb",
+      "name": "Herb",
+      "growthTicks": 2,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "herb",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "flax",
+      "name": "Flax",
+      "growthTicks": 5,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "flax",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cotton",
+      "name": "Cotton",
+      "growthTicks": 6,
+      "seasons": [
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "cotton",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "mushroom",
+      "name": "Mushroom",
+      "growthTicks": 3,
+      "seasons": [
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "mushroom",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": false,
+      "tendingRequired": false,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "turnip",
+      "name": "Turnip",
+      "growthTicks": 3,
+      "seasons": [
+        "autumn"
+      ],
+      "yield": [
+        {
+          "item": "turnip",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": false,
+      "frostSensitive": true,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "strawberry",
+      "name": "Strawberry",
+      "growthTicks": 4,
+      "seasons": [
+        "spring",
+        "summer"
+      ],
+      "yield": [
+        {
+          "item": "strawberry",
+          "quantity": 2
+        }
+      ],
+      "wateringRequired": true,
+      "tendingRequired": true,
+      "frostSensitive": false,
+      "unlockedByDefault": true
+    }
+  ],
+  "animals": [
+    {
+      "id": "chicken",
+      "name": "Chicken",
+      "produces": [
+        {
+          "item": "egg",
+          "quantity": 2
+        }
+      ],
+      "feedItem": "hay"
+    },
+    {
+      "id": "cow",
+      "name": "Cow",
+      "produces": [
+        {
+          "item": "milk",
+          "quantity": 2
+        }
+      ],
+      "feedItem": "hay"
+    },
+    {
+      "id": "sheep",
+      "name": "Sheep",
+      "produces": [
+        {
+          "item": "wool",
+          "quantity": 2
+        }
+      ],
+      "feedItem": "hay"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "flour",
+      "name": "Flour",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "wheat",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "flour",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 0,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cheese",
+      "name": "Cheese",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "milk",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "cheese",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "butter",
+      "name": "Butter",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "milk",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "butter",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "berry_jam",
+      "name": "Berry jam",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "berries",
+          "quantity": 3
+        }
+      ],
+      "outputs": [
+        {
+          "item": "jam",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "carrot_soup",
+      "name": "Carrot soup",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "carrot",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "soup",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "mushroom_soup",
+      "name": "Mushroom soup",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "mushroom",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "soup",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "herb_tea",
+      "name": "Herb tea",
+      "building": "kitchen",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "herb",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "tea",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 0,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "vegetable_stew",
+      "name": "Vegetable stew",
+      "building": "kitchen",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "potato",
+          "quantity": 2
+        },
+        {
+          "item": "carrot",
+          "quantity": 1
+        },
+        {
+          "item": "onion",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "stew",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "grape_juice",
+      "name": "Grape juice",
+      "building": "kitchen",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "grape",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "juice",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "wine",
+      "name": "Wine",
+      "building": "kitchen",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "grape",
+          "quantity": 3
+        }
+      ],
+      "outputs": [
+        {
+          "item": "wine",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 3,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "fish_stew",
+      "name": "Fish stew",
+      "building": "kitchen",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "fish",
+          "quantity": 1
+        },
+        {
+          "item": "potato",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "stew",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "roasted_vegetables",
+      "name": "Roasted vegetables",
+      "building": "kitchen",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "turnip",
+          "quantity": 1
+        },
+        {
+          "item": "carrot",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "roasted_vegetables",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "bread",
+      "name": "Bread",
+      "building": "bakery",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "flour",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "bread",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cornbread",
+      "name": "Cornbread",
+      "building": "bakery",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "corn",
+          "quantity": 1
+        },
+        {
+          "item": "flour",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "bread",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "apple_pie",
+      "name": "Apple pie",
+      "building": "bakery",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "apple",
+          "quantity": 1
+        },
+        {
+          "item": "flour",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "pie",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cake",
+      "name": "Cake",
+      "building": "bakery",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "flour",
+          "quantity": 2
+        },
+        {
+          "item": "egg",
+          "quantity": 1
+        },
+        {
+          "item": "milk",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "cake",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "pumpkin_pie",
+      "name": "Pumpkin pie",
+      "building": "bakery",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "pumpkin",
+          "quantity": 1
+        },
+        {
+          "item": "flour",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "pie",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "strawberry_tart",
+      "name": "Strawberry tart",
+      "building": "bakery",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "strawberry",
+          "quantity": 2
+        },
+        {
+          "item": "flour",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "pie",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "plank",
+      "name": "Plank",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "wood",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "plank",
+          "quantity": 2
+        }
+      ],
+      "durationTicks": 0,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "rope",
+      "name": "Rope",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "flax",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "rope",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "brick",
+      "name": "Brick",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "clay",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "brick",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "charcoal",
+      "name": "Charcoal",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "wood",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "charcoal",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "fence",
+      "name": "Fence",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "plank",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "fence",
+          "quantity": 2
+        }
+      ],
+      "durationTicks": 0,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "bucket",
+      "name": "Bucket",
+      "building": "workshop",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "plank",
+          "quantity": 1
+        },
+        {
+          "item": "metal_bar",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "bucket",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "metal_bar",
+      "name": "Metal bar",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "iron_ore",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "metal_bar",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "tool",
+      "name": "Tool",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "plank",
+          "quantity": 1
+        },
+        {
+          "item": "metal_bar",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "tool",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "furniture",
+      "name": "Furniture",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "plank",
+          "quantity": 2
+        },
+        {
+          "item": "cloth",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "furniture",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 3,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "iron_pot",
+      "name": "Iron pot",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "metal_bar",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "pot",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "lantern",
+      "name": "Lantern",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "metal_bar",
+          "quantity": 1
+        },
+        {
+          "item": "charcoal",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "lantern",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "wooden_crate",
+      "name": "Wooden crate",
+      "building": "workshop",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "plank",
+          "quantity": 3
+        }
+      ],
+      "outputs": [
+        {
+          "item": "crate",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "thread",
+      "name": "Thread",
+      "building": "loom",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "cotton",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "thread",
+          "quantity": 2
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "cloth",
+      "name": "Cloth",
+      "building": "loom",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "thread",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "cloth",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "wool_cloth",
+      "name": "Wool cloth",
+      "building": "loom",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "wool",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "cloth",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "blanket",
+      "name": "Blanket",
+      "building": "loom",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "cloth",
+          "quantity": 2
+        },
+        {
+          "item": "wool",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "blanket",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "clothes",
+      "name": "Clothes",
+      "building": "loom",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "cloth",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "clothes",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "tapestry",
+      "name": "Tapestry",
+      "building": "loom",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "cloth",
+          "quantity": 3
+        },
+        {
+          "item": "thread",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "tapestry",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 3,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "dried_fish",
+      "name": "Dried fish",
+      "building": "dock",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "fish",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "dried_fish",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 1,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "bait",
+      "name": "Bait",
+      "building": "dock",
+      "buildingLevel": 1,
+      "inputs": [
+        {
+          "item": "fish",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "bait",
+          "quantity": 2
+        }
+      ],
+      "durationTicks": 0,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "fish_oil",
+      "name": "Fish oil",
+      "building": "dock",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "fish",
+          "quantity": 3
+        }
+      ],
+      "outputs": [
+        {
+          "item": "fish_oil",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    },
+    {
+      "id": "smoked_fish",
+      "name": "Smoked fish",
+      "building": "dock",
+      "buildingLevel": 2,
+      "inputs": [
+        {
+          "item": "fish",
+          "quantity": 2
+        },
+        {
+          "item": "charcoal",
+          "quantity": 1
+        }
+      ],
+      "outputs": [
+        {
+          "item": "smoked_fish",
+          "quantity": 1
+        }
+      ],
+      "durationTicks": 2,
+      "unlockedByDefault": true
+    }
+  ],
+  "buildings": [
+    {
+      "id": "home",
+      "name": "Home",
+      "biomeLocks": null,
+      "maxLevel": 3,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [],
+          "energyCost": 0,
+          "durationTicks": 0,
+          "storageCapacity": 50,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "stone",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 100,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 3,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 20
+            },
+            {
+              "item": "brick",
+              "quantity": 10
+            }
+          ],
+          "energyCost": 20,
+          "durationTicks": 0,
+          "storageCapacity": 200,
+          "unlocksRecipes": []
+        }
+      ]
+    },
+    {
+      "id": "field",
+      "name": "Field",
+      "biomeLocks": null,
+      "maxLevel": 3,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [],
+          "energyCost": 0,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 3,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "rope",
+              "quantity": 2
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": []
+        }
+      ]
+    },
+    {
+      "id": "storehouse",
+      "name": "Storehouse",
+      "biomeLocks": null,
+      "maxLevel": 3,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [],
+          "energyCost": 0,
+          "durationTicks": 0,
+          "storageCapacity": 100,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 15
+            },
+            {
+              "item": "stone",
+              "quantity": 10
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 250,
+          "unlocksRecipes": []
+        },
+        {
+          "level": 3,
+          "cost": [
+            {
+              "item": "brick",
+              "quantity": 20
+            },
+            {
+              "item": "metal_bar",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 20,
+          "durationTicks": 0,
+          "storageCapacity": 500,
+          "unlocksRecipes": []
+        }
+      ]
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen",
+      "biomeLocks": null,
+      "maxLevel": 2,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "stone",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "flour",
+            "cheese",
+            "butter",
+            "berry_jam",
+            "carrot_soup",
+            "mushroom_soup",
+            "herb_tea"
+          ]
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "metal_bar",
+              "quantity": 5
+            },
+            {
+              "item": "brick",
+              "quantity": 10
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "vegetable_stew",
+            "grape_juice",
+            "wine",
+            "fish_stew",
+            "roasted_vegetables"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery",
+      "biomeLocks": null,
+      "maxLevel": 2,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "brick",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "bread",
+            "cornbread"
+          ]
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "metal_bar",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "apple_pie",
+            "cake",
+            "pumpkin_pie",
+            "strawberry_tart"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "workshop",
+      "name": "Workshop",
+      "biomeLocks": null,
+      "maxLevel": 2,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "stone",
+              "quantity": 10
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "plank",
+            "rope",
+            "brick",
+            "charcoal",
+            "fence",
+            "bucket"
+          ]
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "metal_bar",
+              "quantity": 10
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "metal_bar",
+            "tool",
+            "furniture",
+            "iron_pot",
+            "lantern",
+            "wooden_crate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "loom",
+      "name": "Loom",
+      "biomeLocks": null,
+      "maxLevel": 2,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 10
+            },
+            {
+              "item": "wool",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "thread",
+            "cloth",
+            "wool_cloth"
+          ]
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "metal_bar",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "blanket",
+            "clothes",
+            "tapestry"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dock",
+      "name": "Dock",
+      "biomeLocks": [
+        "riverside",
+        "coast"
+      ],
+      "maxLevel": 2,
+      "levels": [
+        {
+          "level": 1,
+          "cost": [
+            {
+              "item": "plank",
+              "quantity": 15
+            },
+            {
+              "item": "rope",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 10,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "dried_fish",
+            "bait"
+          ]
+        },
+        {
+          "level": 2,
+          "cost": [
+            {
+              "item": "metal_bar",
+              "quantity": 5
+            }
+          ],
+          "energyCost": 15,
+          "durationTicks": 0,
+          "storageCapacity": 0,
+          "unlocksRecipes": [
+            "fish_oil",
+            "smoked_fish"
+          ]
+        }
+      ]
+    }
+  ],
+  "biomes": [
+    {
+      "id": "meadow",
+      "name": "Meadow",
+      "traits": {
+        "soil": 7,
+        "water": 5,
+        "light": 8
+      }
+    },
+    {
+      "id": "forest_edge",
+      "name": "Forest edge",
+      "traits": {
+        "soil": 6,
+        "water": 6,
+        "light": 5
+      }
+    },
+    {
+      "id": "riverside",
+      "name": "Riverside",
+      "traits": {
+        "soil": 8,
+        "water": 9,
+        "light": 6
+      }
+    },
+    {
+      "id": "coast",
+      "name": "Coast",
+      "traits": {
+        "soil": 4,
+        "water": 8,
+        "light": 8
+      }
+    },
+    {
+      "id": "hills",
+      "name": "Hills",
+      "traits": {
+        "soil": 5,
+        "water": 4,
+        "light": 7
+      }
+    }
+  ],
+  "weather": [
+    {
+      "id": "clear",
+      "name": "Clear",
+      "countsAsWatering": false,
+      "failureChance": 0.0,
+      "frostDamage": false
+    },
+    {
+      "id": "rain",
+      "name": "Rain",
+      "countsAsWatering": true,
+      "failureChance": 0.0,
+      "frostDamage": false
+    },
+    {
+      "id": "drought",
+      "name": "Drought",
+      "countsAsWatering": false,
+      "failureChance": 0.1,
+      "frostDamage": false
+    },
+    {
+      "id": "frost",
+      "name": "Frost",
+      "countsAsWatering": false,
+      "failureChance": 0.05,
+      "frostDamage": true
+    }
+  ],
+  "goals": [
+    {
+      "id": "village_storehouse",
+      "kind": "collective_build",
+      "title": "Raise the village storehouse",
+      "requires": [
+        {
+          "item": "plank",
+          "quantity": 20
+        },
+        {
+          "item": "stone",
+          "quantity": 10
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "map_area",
+          "id": "east_meadow"
+        }
+      ],
+      "durationTicks": 14
+    },
+    {
+      "id": "summer_festival",
+      "kind": "festival",
+      "title": "Summer festival",
+      "requires": [
+        {
+          "item": "bread",
+          "quantity": 10
+        },
+        {
+          "item": "jam",
+          "quantity": 5
+        },
+        {
+          "item": "juice",
+          "quantity": 5
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "recipe",
+          "id": "cake"
+        }
+      ],
+      "durationTicks": 7
+    },
+    {
+      "id": "bridge",
+      "kind": "collective_build",
+      "title": "Build the river bridge",
+      "requires": [
+        {
+          "item": "plank",
+          "quantity": 30
+        },
+        {
+          "item": "brick",
+          "quantity": 20
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "map_area",
+          "id": "west_forest"
+        }
+      ],
+      "durationTicks": 21
+    },
+    {
+      "id": "community_kitchen",
+      "kind": "collective_build",
+      "title": "Community kitchen",
+      "requires": [
+        {
+          "item": "plank",
+          "quantity": 20
+        },
+        {
+          "item": "metal_bar",
+          "quantity": 10
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "recipe",
+          "id": "herb_tea"
+        }
+      ],
+      "durationTicks": 14
+    },
+    {
+      "id": "forest_clearing",
+      "kind": "collective_build",
+      "title": "Clear the forest",
+      "requires": [
+        {
+          "item": "wood",
+          "quantity": 40
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "wild_zone",
+          "id": "deep_forest"
+        }
+      ],
+      "durationTicks": 14
+    },
+    {
+      "id": "autumn_harvest",
+      "kind": "festival",
+      "title": "Autumn harvest",
+      "requires": [
+        {
+          "item": "pumpkin",
+          "quantity": 10
+        },
+        {
+          "item": "potato",
+          "quantity": 10
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "crop",
+          "id": "mushroom"
+        }
+      ],
+      "durationTicks": 7
+    },
+    {
+      "id": "winter_shelter",
+      "kind": "collective_build",
+      "title": "Winter shelter",
+      "requires": [
+        {
+          "item": "cloth",
+          "quantity": 15
+        },
+        {
+          "item": "blanket",
+          "quantity": 5
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "building",
+          "id": "loom"
+        }
+      ],
+      "durationTicks": 14
+    },
+    {
+      "id": "fishing_spot",
+      "kind": "collective_build",
+      "title": "Stock the fishing spot",
+      "requires": [
+        {
+          "item": "rope",
+          "quantity": 5
+        },
+        {
+          "item": "bucket",
+          "quantity": 5
+        }
+      ],
+      "rewards": [
+        {
+          "kind": "wild_zone",
+          "id": "lake_shore"
+        }
+      ],
+      "durationTicks": 10
+    }
+  ],
+  "phrases": [
+    {
+      "id": "greeting",
+      "text": "Hello, neighbour!"
+    },
+    {
+      "id": "thanks",
+      "text": "Thank you!"
+    },
+    {
+      "id": "nice_plot",
+      "text": "Your plot looks lovely."
+    },
+    {
+      "id": "good_trade",
+      "text": "A fair trade."
+    },
+    {
+      "id": "need_help",
+      "text": "Could you lend a hand?"
+    },
+    {
+      "id": "helping",
+      "text": "Happy to help."
+    },
+    {
+      "id": "good_weather",
+      "text": "Lovely weather today."
+    },
+    {
+      "id": "bad_weather",
+      "text": "The weather is rough."
+    },
+    {
+      "id": "harvest_time",
+      "text": "Harvest time!"
+    },
+    {
+      "id": "nice_to_meet",
+      "text": "Nice to meet you."
+    },
+    {
+      "id": "see_you",
+      "text": "See you at the next tick."
+    },
+    {
+      "id": "good_luck",
+      "text": "Good luck out there."
+    },
+    {
+      "id": "trade_offer",
+      "text": "I have an offer for you."
+    },
+    {
+      "id": "no_thanks",
+      "text": "No thanks, maybe later."
+    },
+    {
+      "id": "maybe_later",
+      "text": "Maybe next time."
+    },
+    {
+      "id": "cheer",
+      "text": "Three cheers for the village!"
+    }
+  ],
+  "wildNodes": [
+    {
+      "id": "berry_bush",
+      "resource": "berries",
+      "capacity": 20,
+      "regrowRate": 3
+    },
+    {
+      "id": "wood_grove",
+      "resource": "wood",
+      "capacity": 30,
+      "regrowRate": 4
+    },
+    {
+      "id": "stone_outcrop",
+      "resource": "stone",
+      "capacity": 20,
+      "regrowRate": 2
+    },
+    {
+      "id": "river_fish",
+      "resource": "fish",
+      "capacity": 25,
+      "regrowRate": 5
+    },
+    {
+      "id": "herb_patch",
+      "resource": "herb",
+      "capacity": 15,
+      "regrowRate": 2
+    },
+    {
+      "id": "clay_pit",
+      "resource": "clay",
+      "capacity": 15,
+      "regrowRate": 1
+    },
+    {
+      "id": "iron_vein",
+      "resource": "iron_ore",
+      "capacity": 10,
+      "regrowRate": 1
+    },
+    {
+      "id": "apple_orchard",
+      "resource": "apple",
+      "capacity": 18,
+      "regrowRate": 3
+    }
+  ],
+  "decorations": [
+    {
+      "id": "flower_pot",
+      "name": "Flower pot",
+      "cost": [
+        {
+          "item": "clay",
+          "quantity": 2
+        },
+        {
+          "item": "herb",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": "bench",
+      "name": "Bench",
+      "cost": [
+        {
+          "item": "plank",
+          "quantity": 3
+        }
+      ]
+    },
+    {
+      "id": "rug",
+      "name": "Rug",
+      "cost": [
+        {
+          "item": "cloth",
+          "quantity": 2
+        }
+      ]
+    },
+    {
+      "id": "lantern_post",
+      "name": "Lantern post",
+      "cost": [
+        {
+          "item": "lantern",
+          "quantity": 1
+        },
+        {
+          "item": "plank",
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "id": "bird_bath",
+      "name": "Bird bath",
+      "cost": [
+        {
+          "item": "stone",
+          "quantity": 3
+        }
+      ]
+    },
+    {
+      "id": "signpost",
+      "name": "Signpost",
+      "cost": [
+        {
+          "item": "plank",
+          "quantity": 2
+        },
+        {
+          "item": "charcoal",
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}
