@@ -1,0 +1,25 @@
+{
+  "scheduledAt": "2026-11-07T20:00:00.000Z",
+  "header": {
+    "v": 1,
+    "worldSeed": "seed-1",
+    "tick": 5,
+    "generatorVersion": "gen-1",
+    "contentVersion": "test-content-1",
+    "rulesVersion": "1.0.0"
+  },
+  "events": [
+    {
+      "tick": 5,
+      "sequence": 0,
+      "version": 1,
+      "type": "order_resolved",
+      "payload": {
+        "orderId": "o1",
+        "playerId": "p1",
+        "orderType": "travel"
+      }
+    }
+  ],
+  "stateHash": "81ee62ed49987a6b6c638ec57700e2c4f17dd8e64c7911d6a47fdb552f0c4705"
+}
