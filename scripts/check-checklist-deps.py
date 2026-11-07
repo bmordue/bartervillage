@@ -5,7 +5,7 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ID_RE = re.compile(r"^- \[ \] \*\*([A-Z0-9.]+)\*\*")
+ID_RE = re.compile(r"^- \[[ xX]\] \*\*([A-Z0-9.]+)\*\*")
 DEP_RE = re.compile(r"_Depends on: (.*)\._$")
 BLOCKED_RE = re.compile(r"; blocked by ([A-Z0-9.,\- ]+?)\._$")
 BLOCKS_RE = re.compile(r"_Blocks: (.*?)(?:\. Informs: .*)?\._$")
@@ -53,6 +53,7 @@ def parse(path):
                 if part.strip()
             ]
         tasks[task_id] = {
+            "done": line.lstrip().startswith("- [x]") or line.lstrip().startswith("- [X]"),
             "deps": deps,
             "blocked": blocked,
             "blocks": blocks,
@@ -155,7 +156,8 @@ def main():
     tasks, order = parse(args.path)
     problems, cycles, edge_count = check(tasks, order)
 
-    print(f"tasks: {len(tasks)}")
+    done = sum(1 for task in tasks.values() if task["done"])
+    print(f"tasks: {len(tasks)} ({done} done, {len(tasks) - done} remaining)")
     print(f"edges: {edge_count}")
     if problems:
         print("problems:")

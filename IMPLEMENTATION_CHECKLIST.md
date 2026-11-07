@@ -65,7 +65,7 @@
 - [x] **M1.10** Add a seeded PRNG shared by map generation and tick resolution. _Depends on: M1.01._
 - [x] **M1.11** Add canonical JSON serialization and a state-hash utility. _Depends on: M1.09._
 - [x] **M1.12** Add an injectable clock used only for deadline scheduling. _Depends on: M1.01._
-- [ ] **M1.13** Enforce rules-package boundaries: no I/O, database, network, ambient time or ambient RNG. _Depends on: M1.02, M1.08._
+- [x] **M1.13** Enforce rules-package boundaries: no I/O, database, network, ambient time or ambient RNG. _Depends on: M1.02, M1.08._
 
 ## Milestone 2: Rules core with golden-log tests (spec §16.2)
 
