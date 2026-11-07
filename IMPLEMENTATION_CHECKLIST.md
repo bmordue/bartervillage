@@ -43,8 +43,8 @@
 
 - [x] **CT.01** Rules unit-test harness. _Depends on: M1.03._
 - [x] **CT.02** Property-test harness for invariants. _Depends on: CT.01, M1.09._
-- [ ] **CT.03** Golden tick-log harness with fixed-clock injection; compares both the event sequence and the final state hash. _Depends on: CT.01, M1.07, M1.08, M1.09, M1.10, M1.11, M1.12._
-- [ ] **CT.04** Determinism tests: the same seed, tick and versions produce identical events and state hash with no wall-clock time or unordered iteration. _Depends on: CT.03, M1.07, M1.10._
+- [x] **CT.03** Golden tick-log harness with fixed-clock injection; compares both the event sequence and the final state hash. _Depends on: CT.01, M1.07, M1.08, M1.09, M1.10, M1.11, M1.12._
+- [x] **CT.04** Determinism tests: the same seed, tick and versions produce identical events and state hash with no wall-clock time or unordered iteration. _Depends on: CT.03, M1.07, M1.10._
 - [ ] **CT.05** API/database integration-test harness. _Depends on: M3.05, M4.B01._
 - [ ] **CT.06** End-to-end harness for onboarding, ordering, tick resolution and replay playback. _Depends on: M4.A15, M4.B02, M4.C05, M4.C08, M5.B02, M5.C01._
 - [ ] **CT.07** 28-tick, 20-player soak and performance harness. _Depends on: CT.05, M3.08, M4.A05, M4.A15, M4.A18._
