@@ -252,7 +252,6 @@ The rules are deterministic. The only wall-clock input is scheduling the next de
 
 ## 15. Open questions and risks
 
-- **Ready-order fairness:** conflicts reward players who ready early. Consider whether barter conflicts need a fairer tie-break in a later version; v1 keeps queue order for simplicity.
 - **Energy budget and costs, goodwill tuning, phrase book contents, final biome and content lists:** to be defined in content JSON and tuned in playtesting.
 - **Art licensing:** verify each pack's licence is compatible with how you publish it before adding it to the repo.
 - **Push on iOS:** requires the web app to be installed to the home screen; treat push as best-effort.
