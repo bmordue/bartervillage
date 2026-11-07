@@ -71,7 +71,7 @@
 
 ### Orders, ready state and energy
 
-- [ ] **M2.A01** Order queue model with player, tick, sequence, type, payload, status and failure reason (spec §13). _Depends on: M1.09._
+- [x] **M2.A01** Order queue model with player, tick, sequence, type, payload, status and failure reason (spec §13). _Depends on: M1.09._
 - [ ] **M2.A02** Implement execution for plant, harvest, tend, feed, build, upgrade, craft, travel, forage, fish and the barter order types (post offer, post wanted request, cancel offer, accept offer and counter-offer), plus place decoration; add help and gift in Milestone 6 and goal contributions in Milestone 7 (spec §13). _Depends on: M1.08, M1.10, M2.A01._
 - [ ] **M2.A03** Emit the event types for order resolution, avatar paths, crops, animals, construction, crafting, wild nodes and barter; add weather, goals, seasons, gifts, help and player-joined events in their milestones (spec §13). _Depends on: M1.09, M2.A02._
 - [ ] **M2.A04** Atomic order execution: validate all preconditions, then execute; a failed order logs a reason, spends no energy or goods, releases any locks and does not stop the next order (spec §4.2). _Depends on: M2.A02._
