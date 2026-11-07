@@ -41,8 +41,8 @@
 
 ## Cross-cutting test infrastructure (spec §12)
 
-- [ ] **CT.01** Rules unit-test harness. _Depends on: M1.03._
-- [ ] **CT.02** Property-test harness for invariants. _Depends on: CT.01, M1.09._
+- [x] **CT.01** Rules unit-test harness. _Depends on: M1.03._
+- [x] **CT.02** Property-test harness for invariants. _Depends on: CT.01, M1.09._
 - [ ] **CT.03** Golden tick-log harness with fixed-clock injection; compares both the event sequence and the final state hash. _Depends on: CT.01, M1.07, M1.08, M1.09, M1.10, M1.11, M1.12._
 - [ ] **CT.04** Determinism tests: the same seed, tick and versions produce identical events and state hash with no wall-clock time or unordered iteration. _Depends on: CT.03, M1.07, M1.10._
 - [ ] **CT.05** API/database integration-test harness. _Depends on: M3.05, M4.B01._
