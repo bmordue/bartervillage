@@ -59,7 +59,7 @@
 - [x] **M1.04** Add CI covering lint, type-check, unit tests, property tests and golden logs. _Depends on: M1.02, M1.03._
 - [x] **M1.05** Add a Nix flake and dev shell pinning Node and required tooling. _Depends on: M1.01._
 - [x] **M1.06** Add the MIT or Apache licence and a separate art-asset credits file. _Depends on: M1.01._
-- [ ] **M1.07** Define version identities for rules, content and generator, and include them in every tick header. _Depends on: M1.09._
+- [x] **M1.07** Define version identities for rules, content and generator, and include them in every tick header. _Depends on: M1.09._
 - [ ] **M1.08** Create the pure rules package entry point: load state, resolve orders, return events and a state hash. _Depends on: M1.07, M1.09, M1.10, M1.11, M1.12._
 - [x] **M1.09** Define shared domain types for world state, players, plots, inventory, orders, events, posts and content, including the complete order-type and event-type enums (spec §13). _Depends on: M1.01._
 - [x] **M1.10** Add a seeded PRNG shared by map generation and tick resolution. _Depends on: M1.01._
