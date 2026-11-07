@@ -1,6 +1,6 @@
 # Barter Village: Game Specification
 
-*Working title. Draft 1, compiled 6 November 2026 from the design Q&A.*
+*Working title. Draft 2, revised 7 November 2026.*
 
 ## 1. Overview
 
@@ -22,6 +22,13 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 - Code licence: MIT or Apache. Art assets are licensed separately, with a credits file.
 - **Out of scope for v1:** currency or coins of any kind, competitive actions (raids, theft), free-text chat, mobile-first UI, real-time movement, multiple worlds.
 
+**v1 acceptance criteria:**
+- 20 concurrent players can complete a tick resolution in <60s on a single VPS.
+- A new player can board, queue a full day's orders, and watch the replay in <15 minutes on first tick.
+- Server is authoritative: a tampered client cannot spend energy/goods it does not have.
+- Tick resolution is atomic: a crash mid-tick leaves no partial state; replay log matches resolved state.
+- Nightly backup restores to a fresh VPS and passes golden-log tests.
+
 ## 4. Time and turns
 
 ### 4.1 The tick
@@ -30,25 +37,32 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 - A tick fires when every player has marked ready, or at the host-set fixed daily deadline, whichever comes first.
 - A worker checks every minute, so a tick can start up to a minute after the last player readies.
 - While a tick resolves, edits are rejected with a “tick in progress” message.
+- Early tick: the next deadline is always the next fixed daily deadline after resolution — never immediately re-armed.
 
 ### 4.2 Ready state and resolution order
 
-- Marking ready fixes the player's place in the resolution queue. A player can un-ready to edit, but goes to the back of the queue.
-- At the deadline, players who queued orders but never marked ready have their orders run, resolved after everyone who was ready.
-- Within one player's turn, orders run in their own queue order.
-- Queue order only matters for conflicts, such as two players accepting the same offer. Wild resource claims are split evenly and do not depend on order.
+- Marking ready fixes the player's position in the resolution queue. A player can un-ready to edit, but goes to the back of the queue.
+- Validated queue order is: (1) ready players by ready position ascending, (2) unready players by player ID ascending. The same order applies to any player-vs-player contention (e.g. accepting the same offer).
+- Within one player's turn, orders run in queue order.
+- Wild resource claims do not depend on order — see §6.2 for the split formula.
+- Failure handling: a failed order logs a reason, costs no energy and no goods, and the next order in that player's queue still runs.
 
 ### 4.3 Energy
 
-- Every player gets the same fixed daily energy budget.
+- Every player gets the same fixed daily energy budget (tunable constant, default 100 in v1 playtest build).
 - Actions cost energy. Building upgrades cost goods, energy and waiting ticks.
-- Travel is free within your own region and costs energy beyond it. Helping on another player's plot costs the helper's energy.
-- Batch orders (“fill this row or area”) keep the click count manageable for a 15-minute session.
-- The exact budget and per-action costs are to be tuned in playtesting.
+- Travel is free within your own region and costs energy beyond it (cost = 5 per region boundary crossed, tunable). Helping on another player's plot costs the helper's energy.
+- Batch orders ("fill this row or area") keep the click count manageable for a 15-minute session.
+- Exact budget and per-action costs are defined in the content JSON (see §12) and tuned in playtesting.
 
 ### 4.4 Missed ticks
 
-- A player's plot always persists. If they miss ticks, simple default orders apply (for example, auto-harvest). Plots are never reclaimed.
+- A player's plot always persists. Plots are never reclaimed.
+- Default orders applied on a missed tick, in this order, when enabled by the player (all on by default):
+  1. Auto-water unwatered crops on own plot.
+  2. Auto-harvest ripe crops on own plot.
+  3. Auto-feed fed animals on own plot.
+- Defaults respect energy and capacity: they stop when energy or storage is exhausted, log what they did, and never queue expensive actions (building, crafting, trading).
 
 ## 5. The map
 
@@ -60,6 +74,7 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 - **Wild zones** hold limited resources that regrow slowly and can be depleted by over-harvesting. Shared water zones support fishing.
 - Shared goals can unlock new map areas or wild zones.
 - Avatars appear on the map through the replay, which is how players see each other moving between locations.
+- Region geometry: regions have a stable ID, a grid coordinate (x, y), and per-plot tile coordinates. Travel cost in §4.3 is computed from grid distance between origin and destination regions.
 
 ## 6. Plots, buildings and production
 
@@ -75,7 +90,7 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 - **Crops:** about 15 in v1. Growth takes 1 to 7 ticks (up to a season). The current season decides which crops can grow.
 - **Crop failure:** caused by weather, neglect (untended or unwatered crops) and random pests or blight. Failure is per tile, so a field can partly fail. Stored goods are never lost.
 - **Animals and livestock:** need daily feeding orders, which cost energy. Unfed animals skip production that tick and nothing else happens.
-- **Foraging:** done in wild zones by travelling there and issuing a claim order. Yields are split evenly among claimants.
+- **Foraging:** done in wild zones by travelling there and issuing a claim order. Yields are split evenly among valid claimants: each claimant gets `floor(nodeYield / claimantCount)` units, the remainder stays on the node, and claims that fail travel/energy validation do not count.
 - **Fishing:** at your own dock (biome-locked) and at shared wild water zones.
 - **Cooking and baking, and crafting** (wood, metal, textiles): about 40 recipes in v1. Time varies by recipe: instant at the next tick, or N ticks through a per-building queue.
 - **Recipe discovery:** gated by building level, with some recipes unlocked by shared goals.
@@ -84,16 +99,20 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 ## 7. The barter economy
 
 - There is **no currency**. Goods are traded for goods.
-- All offers are public, on one shared board. Players can post **offers** (“I give X, I want Y”) and **wanted requests** (“I want Y”), and either can receive **counter-offers**.
-- Posting an offer locks the offered goods, up to what the player holds. Offers stay open until cancelled. When a counter-offer is made, the original offer stays open alongside it.
+- All offers are public, on one shared board. Players can post **offers** ("I give X, I want Y") and **wanted requests** ("I want Y"), and either can receive **counter-offers**.
+- Posting an offer locks the offered goods, up to what the player holds. Offers stay open until cancelled or expired. Default expiry is 7 ticks, configurable by the poster between 1 and 28 ticks.
+- Offers are all-or-nothing: no partial fills in v1.
+- When a counter-offer is made, the original offer stays open alongside it. Both lock their own goods independently.
+- Cap: a player may have at most 10 open offers + counter-offers combined in v1.
+- **Counter-offer lifecycle:** if the original offer it counters is accepted, cancelled, or expires, all its counter-offers auto-cancel and release their locked goods. Accepting a counter-offer resolves it like a normal offer and cancels the original it counters (releasing its locks).
 - Everything settles at the tick, so one negotiation round takes one day.
-- The UI must show free stock (held minus locked) clearly.
+- The UI must show free stock (held minus locked) clearly. The server enforces that locked goods cannot be spent, gifted, or re-offered.
 
 ## 8. Social interaction
 
 - Visitors can look at plots and trade, and can do cooperative extras: gifts and helping with chores.
 - When a visitor helps with a chore, the helper pays the energy, the host gets the benefit, and the helper earns a small goodwill bonus.
-- **Goodwill is cosmetic only** (score, badges, decorations). It is not tradeable and has no functional effect, so it cannot become a currency.
+- **Goodwill is cosmetic only** (score, badges, decorations). It is not tradeable and has no functional effect, so it cannot become a currency. Formula in v1: +1 per helped chore, +5 per gift, displayed only.
 - Communication is a limited **phrase book**: players choose from a fixed list of phrases. This needs no moderation and is easy to localise.
 
 ## 9. Seasons, weather and shared goals
@@ -108,10 +127,11 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 - After each tick, the client replays everything that happened everywhere. Players can replay the most recent tick as many times as they like and follow different locations.
 - The server writes the full event log, including complete avatar movement paths. The client only plays it back.
 - Players only see the latest tick, but every tick's log is archived on the server.
+- Replay events carry a schema version (`v: 1`) and world seed + tick number so golden-log tests can verify deterministic output.
 
 ## 11. Presentation
 
-- 32x32 pixel tiles from free-licensed packs (for example OpenGameArt or Kenney). Keep a credits file and check each pack's licence terms.
+- 32x32 pixel tiles from free-licensed packs (for example OpenGameArt or Kenney). Keep a credits file and check each pack's licence terms. Every pack must be verified compatible with redistribution before use.
 - PixiJS renders the map and replay. Preact (or vanilla TypeScript) builds the panels for orders, market and inventory.
 - Desktop-first layout. Optional music and sound effects.
 - A short guided first tick onboards new players.
@@ -127,7 +147,7 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 | Tick worker | Separate worker process or systemd timer that polls every minute and resolves each tick in one transaction |
 | Live updates | Client polling |
 | State storage | Current-state tables plus an archived event log for every tick |
-| Content | JSON files validated by a schema |
+| Content | JSON files validated by a schema (energy costs, recipes, crops, buildings, biomes, phrase book) |
 | Client rules | Light checks only (energy, basic validity). The server is authoritative |
 | Auth | Passkeys plus Discord and GitHub OAuth, with no passwords. WebAuthn needs HTTPS and a stable domain |
 | Push | Web push |
@@ -136,35 +156,37 @@ A persistent, shared, turn-based farming and crafting world for fewer than 20 fr
 | Testing | Rules unit tests plus golden tick logs |
 | Admin | Config file and the database only |
 
+Threat model (v1): a modified client can only queue orders it could queue from the genuine UI; every order is re-validated server-side against current state, energy, capacity, and locks before resolution. No passwords stored; OAuth tokens and passkey credentials are the only secrets.
+
 ## 13. Data model sketch
 
-**Entities:** players, credentials, push subscriptions, world (seed, current tick, season, deadline), regions, tiles, plots, buildings, inventory (quantity and locked quantity), orders (player, tick, sequence, type, payload, status), ready state (with ready position), offers and counter-offers, wild nodes, goals and contributions, goodwill, decorations, archived events (tick, sequence, type, payload).
+**Entities:** players, credentials, push subscriptions, world (seed, current tick, season, deadline), regions (id, grid x/y), tiles (region, x, y, type, biome, traits), plots (player, region, site coords), buildings (plot, type, level, queue), inventory (plot/player, item, quantity, locked quantity), orders (player, tick, sequence, type, payload, status), ready state (player, tick, ready position), offers and counter-offers (poster, gives, wants, locked, expiry tick, status, parent offer id), wild nodes (region, coords, resource, amount, regrow rate), goals and contributions, goodwill (player, score), decorations, archived events (tick, sequence, version, type, payload) plus avatar paths.
 
 **Order types:** plant, harvest, tend, feed, build, upgrade, craft, travel or visit, help with chore, gift, forage, fish, post offer, cancel offer, accept offer, counter-offer, contribute to goal, place decoration.
 
 **Event types:** order resolved or failed, avatar path, crop grown or failed, weather, blight, animal produced, craft completed, trade completed, gift, help, goal progress, season change, node depleted or regrown.
 
+Constraints: `locked <= quantity` enforced in DB and server; at most one ready entry per player per tick; expired offers cannot be accepted; node amount never goes below 0.
+
 ## 14. Tick resolution (proposed algorithm)
 
 1. Lock out edits and load the world state.
 2. Seed the RNG from the world seed and the tick number.
-3. Order players by ready position, then run each player's orders in queue order. Validate every order against the current state (energy, goods, conflicts) and log failures.
-4. Run the world update: weather, crop growth, blight, animal production, crafting progress, wild regrowth, goal checks and season rollover.
-5. Write the event log, advance the tick, set the next deadline, unlock, and send push notifications.
+3. Run the world update first: weather, crop growth, blight, animal production, crafting progress, wild regrowth, goal checks and season rollover. This gives orders correct post-growth state (e.g. ripe crops to harvest).
+4. Order players: ready by ready position, then unready by player ID. Run each player's orders in queue order, validating against current state (energy, goods, capacity, locks, conflicts) and logging failures.
+5. Resolve wild claim splits (formula in §6.2) as part of the forage orders in step 4, using the claimant set collected from all valid forage orders queued for that tick.
+6. Write the event log, advance the tick, set the next deadline (next fixed daily deadline), unlock, and send push notifications.
 
 Everything runs in one database transaction, so a crash leaves the previous tick intact.
 
 ## 15. Open questions and risks
 
-- **Unready players' order:** how are late players resolved relative to each other? Proposal: by player ID.
-- **Ready-order fairness:** conflicts reward players who ready early. Consider whether barter conflicts need a fairer tie-break.
-- **Counter-offer lifecycle:** what happens to counters, and their locked goods, when the original offer is accepted? Proposal: auto-cancel and release.
-- **Open offers lock goods indefinitely:** consider a cap on simultaneous open offers.
-- **Early ticks:** after an early tick, does the next deadline stay at the fixed daily time?
-- **Order of player orders vs world update** in the tick (step 3 vs step 4) needs confirming.
-- **Energy budget and costs, goodwill formula, regions and travel-cost model, phrase book contents, final biome and content lists:** all to be defined.
-- **Art licensing:** verify each pack's licence is compatible with how you publish it.
+- **Ready-order fairness:** conflicts reward players who ready early. Consider whether barter conflicts need a fairer tie-break in a later version; v1 keeps queue order for simplicity.
+- **Energy budget and costs, goodwill tuning, phrase book contents, final biome and content lists:** to be defined in content JSON and tuned in playtesting.
+- **Art licensing:** verify each pack's licence is compatible with how you publish it before adding to the repo.
 - **Push on iOS:** requires the web app to be installed to the home screen.
+
+Resolved in this draft: unready-player tie-break (player ID), counter-offer cascade (auto-cancel on parent resolution), offer lock cap (10) and expiry (default 7 ticks), early-tick deadline rule, player-orders-vs-world-update order (world first, then orders), wild split formula, missed-tick defaults.
 
 ## 16. Suggested milestones
 
