@@ -99,7 +99,7 @@
 - [x] **M2.B03** Watering and tending orders at tick T set flags used by the T+1 world update, then reset (spec §6.2). _Depends on: M2.A02, M2.B01._
 - [x] **M2.B04** A newly planted crop starts unwatered and untended; later orders in the same queue can water or tend it (spec §6.2). _Depends on: M2.B01, M2.B03._
 - [x] **M2.B05** Crop failure per tile from weather, neglect, pests or blight; failure destroys only that tile's crop, leaves stored goods untouched and allows replanting (spec §6.2). _Depends on: M2.B01, M2.B03, M2.B07._
-- [ ] **M2.B06** Crops that cannot grow in the new season wither at season rollover (spec §6.2, §9). _Depends on: M2.B01, M7.01; blocked by D.11._
+- [x] **M2.B06** Crops that cannot grow in the new season wither at season rollover (spec §6.2, §9). _Depends on: M2.B01, M7.01; blocked by D.11._
 - [x] **M2.B07** Weather effects on crops: rain counts as watering, drought requires watering and raises failure chance, frost damages or fails frost-sensitive crops, clear has no modifier (spec §9). _Depends on: M2.B01, M2.B03, M3.16, M7.03._
 - [x] **M2.B08** One crop per plot tile; planting and harvesting respect capacity and inventory rules (spec §13). _Depends on: M2.B01, M2.D06, M2.D07._
 - [x] **M2.B09** Animals require daily feeding orders that cost energy; a feed at tick T satisfies the T+1 production check (spec §6.2). _Depends on: M2.A02, M2.A11, M2.A12, M3.16._
@@ -113,23 +113,23 @@
 - [x] **M2.C04** A valid claim reserves energy and records the claim during the player's turn without applying yield yet (spec §6.2, §4.3). _Depends on: M2.A02, M2.C03._
 - [x] **M2.C05** At most one claim per player per node per tick (spec §6.2, §13). _Depends on: M2.C03._
 - [x] **M2.C06** Claimant sets are fixed after all player turns; invalid claims are excluded (spec §6.2). _Depends on: M2.A09, M2.C03._
-- [ ] **M2.C07** Each claimant receives `floor(nodeYield / claimantCount)` units; the remainder stays on the node, and a zero share still spends the reserved energy (spec §6.2). _Depends on: M2.C06; blocked by D.06._
+- [x] **M2.C07** Each claimant receives `floor(nodeYield / claimantCount)` units; the remainder stays on the node, and a zero share still spends the reserved energy (spec §6.2). _Depends on: M2.C06; blocked by D.06._
 - [ ] **M2.C08** Shares apply in queue order, capped by free storage; overflow stays on the node and is logged as a partial fill (spec §6.2). _Depends on: M2.A10, M2.C07, M2.D06._
 - [ ] **M2.C09** Dock fishing is private with no split; shared-water fishing uses the same claim-and-split rule as foraging (spec §6.2). _Depends on: M2.C07, M2.D01._
 - [ ] **M2.C10** Docks are biome-locked to riverside or coast sites (spec §6.1). _Depends on: M2.D01, M3.13._
 
 ### Buildings, storage and crafting
 
-- [ ] **M2.D01** Building types with levels and biome locks (spec §6.1). _Depends on: M1.09, M3.13, M3.16._
-- [ ] **M2.D02** Upgrades unlock recipes, raise capacity or improve speed according to content (spec §6.1). _Depends on: M2.D01, M3.16._
-- [ ] **M2.D03** Upgrades cost goods, energy and waiting ticks; an upgrade ordered at tick T with duration N completes at the start of tick T+N, before orders (spec §6.1). _Depends on: M2.A11, M2.D01._
-- [ ] **M2.D04** At most one construction or upgrade per building at a time; a second upgrade order fails until the first completes (spec §6.1). _Depends on: M2.D01, M2.D03._
+- [x] **M2.D01** Building types with levels and biome locks (spec §6.1). _Depends on: M1.09, M3.13, M3.16._
+- [x] **M2.D02** Upgrades unlock recipes, raise capacity or improve speed according to content (spec §6.1). _Depends on: M2.D01, M3.16._
+- [x] **M2.D03** Upgrades cost goods, energy and waiting ticks; an upgrade ordered at tick T with duration N completes at the start of tick T+N, before orders (spec §6.1). _Depends on: M2.A11, M2.D01._
+- [x] **M2.D04** At most one construction or upgrade per building at a time; a second upgrade order fails until the first completes (spec §6.1). _Depends on: M2.D01, M2.D03._
 - [ ] **M2.D05** Construction inputs lock when the order is queued and are consumed when work starts (spec §6.1). _Depends on: M2.A04, M2.D01, M2.D03, M2.D06._
 - [x] **M2.D06** Storage capacity per storage building, raised by upgrades; locked goods occupy capacity and free stock is held minus locked (spec §6.1). _Depends on: M1.09, M2.D01, M2.D02._
 - [x] **M2.D07** Inventory uses plain stackable goods with no quality tiers and no spoilage (spec §6.1). _Depends on: M1.09, M2.D06._
-- [ ] **M2.D08** Instant recipes produce during the tick's order phase (spec §6.2). _Depends on: M2.A02, M2.D01, M3.16._
-- [ ] **M2.D09** Timed recipes enter a per-building FIFO queue when the order resolves; an idle building starts immediately and queued jobs start when the previous job completes (spec §6.2). _Depends on: M2.D01, M2.D08._
-- [ ] **M2.D10** A job starting at tick S with duration N completes at the start of tick S+N, with one job per building at a time (spec §6.2). _Depends on: M2.D09._
+- [x] **M2.D08** Instant recipes produce during the tick's order phase (spec §6.2). _Depends on: M2.A02, M2.D01, M3.16._
+- [x] **M2.D09** Timed recipes enter a per-building FIFO queue when the order resolves; an idle building starts immediately and queued jobs start when the previous job completes (spec §6.2). _Depends on: M2.D01, M2.D08._
+- [x] **M2.D10** A job starting at tick S with duration N completes at the start of tick S+N, with one job per building at a time (spec §6.2). _Depends on: M2.D09._
 - [ ] **M2.D11** Craft inputs lock when the order is queued and are consumed when the job starts; removing the order before the tick releases the lock, and resolved jobs cannot be cancelled (spec §6.2). _Depends on: M2.A06, M2.D05, M2.D09._
 - [ ] **M2.D12** Recipe discovery is gated by building level and shared-goal unlocks; unlocks take effect at the start of the next tick after the goal succeeds (spec §6.2). _Depends on: M2.D02, M7.10._
 - [ ] **M2.D13** Decorations are cosmetic, placed on a plot, crafted or earned via goodwill or shared goals, and do not affect production (spec §6.2). _Depends on: M2.A02, M3.16, M6.12, M7.11._
@@ -141,10 +141,10 @@
 - [x] **M2.E03** Wanted requests lock nothing, request proposals and cannot be accepted directly; they settle by accepting a counter-offer (spec §7). _Depends on: M2.E01._
 - [ ] **M2.E04** Counter-offers lock only the counterer's side; the wanter's side locks when the wanter accepts (spec §7). _Depends on: M2.E01, M2.E02._
 - [ ] **M2.E05** Posting a counter-offer leaves the original post open; the original and the counter lock their own goods independently (spec §7). _Depends on: M2.E04._
-- [ ] **M2.E06** Counters are one level deep and cannot themselves be countered (spec §7). _Depends on: M2.E01; blocked by D.17._
+- [x] **M2.E06** Counters are one level deep and cannot themselves be countered (spec §7). _Depends on: M2.E01; blocked by D.17._
 - [ ] **M2.E07** Expiry semantics: a post made at tick T is acceptable from T+1 and expires at the start of `expiryTick + 1`; expiry is configurable from 1 to 28 ticks, default 7 (spec §7). _Depends on: M2.E01._
 - [ ] **M2.E08** Posts stay open until cancelled or expired (spec §7). _Depends on: M2.E01, M2.E07._
-- [ ] **M2.E09** A player may have at most 10 open offers, wanted requests and counter-offers combined (spec §7). _Depends on: M2.E01; blocked by D.13._
+- [x] **M2.E09** A player may have at most 10 open offers, wanted requests and counter-offers combined (spec §7). _Depends on: M2.E01; blocked by D.13._
 - [ ] **M2.E10** Direct acceptance, cancellation or expiry of a parent auto-cancels all its counter-offers and releases their locks (spec §7). _Depends on: M2.E04, M2.E07._
 - [ ] **M2.E11** Accepting a counter-offer settles it as a trade, cancels the parent and cancels all sibling counters, without cancelling the accepted counter itself (spec §7). _Depends on: M2.E04, M2.E10._
 - [ ] **M2.E12** A counter-offer is valid only if its parent is still open at the end of the tick in which the counter was posted; otherwise the counter is cancelled and its locks release (spec §7). _Depends on: M2.A09, M2.E04, M2.E07._
@@ -161,11 +161,11 @@
 
 ### Invariants and property tests
 
-- [ ] **M2.F01** `locked <= quantity` in every state transition; one inventory row per plot and item (spec §13). _Depends on: CT.02, M2.D06, M2.D07._
-- [ ] **M2.F02** One player per plot and one plot per player; plots persist forever and are never reclaimed (spec §13, §4.4). _Depends on: CT.02, M3.01, M3.09._
-- [ ] **M2.F03** At most one ready entry per player per tick; ready positions are unique per tick (spec §13). _Depends on: CT.02, M2.A07._
-- [ ] **M2.F04** At most one wild-node claim per player per node per tick (spec §13). _Depends on: CT.02, M2.C05._
-- [ ] **M2.F05** Node amount stays between 0 and its capacity (spec §13). _Depends on: CT.02, M2.C01._
+- [x] **M2.F01** `locked <= quantity` in every state transition; one inventory row per plot and item (spec §13). _Depends on: CT.02, M2.D06, M2.D07._
+- [x] **M2.F02** One player per plot and one plot per player; plots persist forever and are never reclaimed (spec §13, §4.4). _Depends on: CT.02, M3.01, M3.09._
+- [x] **M2.F03** At most one ready entry per player per tick; ready positions are unique per tick (spec §13). _Depends on: CT.02, M2.A07._
+- [x] **M2.F04** At most one wild-node claim per player per node per tick (spec §13). _Depends on: CT.02, M2.C05._
+- [x] **M2.F05** Node amount stays between 0 and its capacity (spec §13). _Depends on: CT.02, M2.C01._
 - [ ] **M2.F06** Post quantities are positive; expiry is 1 to 28 ticks; a counter's parent must be open; counter depth is at most one; wanted requests have no locked side; expired posts cannot be accepted; one crop per plot tile (spec §13). _Depends on: CT.02, M2.B08, M2.E01-M2.E20._
 - [ ] **M2.F07** A failed order cannot change state (spec §13). _Depends on: CT.02, M2.A04._
 - [ ] **M2.F08** Every inventory change is recorded in the event log; conservation tests cover production and consumption (spec §13). _Depends on: CT.08, M2.A03, M2.D07._
@@ -182,10 +182,10 @@
 - [x] **M3.07** Persist the generated map explicitly; existing plots never move and existing regions never regenerate (spec §5). _Depends on: M3.01, M3.05, M3.06; blocked by D.14._
 - [x] **M3.08** Append new regions in deterministic order as players join; append a region when no open site remains (spec §5). _Depends on: M3.06, M3.07._
 - [x] **M3.09** New players choose from currently open sites; site claims are transactional and simultaneous claims resolve first-write-wins (spec §5). _Depends on: M3.07, M3.08; blocked by D.14._
-- [ ] **M3.10** Every new plot starts with a home, a field and a storehouse (spec §6.1). _Depends on: M2.D01, M3.07, M3.09._
+- [x] **M3.10** Every new plot starts with a home, a field and a storehouse (spec §6.1). _Depends on: M2.D01, M3.07, M3.09._
 - [x] **M3.11** Region geometry with stable ID, grid coordinates, per-plot tile coordinates, and travel cost derived from Manhattan distance (spec §5). _Depends on: M1.09, M3.01, M3.06._
 - [x] **M3.12** World-generation constants for region size, plot count and the approximately 12x12 plot size (spec §5, §6.1). _Depends on: M3.06._
-- [ ] **M3.13** Sites carry biome and traits (soil, water, light) (spec §5). _Depends on: M3.01, M3.06, M3.16; blocked by D.04._
+- [x] **M3.13** Sites carry biome and traits (soil, water, light) (spec §5). _Depends on: M3.01, M3.06, M3.16; blocked by D.04._
 - [ ] **M3.14** Regions contain player plots, world-owned commons and wild zones; shared buildings are funded only by goals (spec §5). _Depends on: M3.06, M3.07, M7.05._
 - [ ] **M3.15** Wild nodes in commons and wild zones are public and shared; shared water zones exist for fishing (spec §5). _Depends on: M2.C01, M3.14._
 - [x] **M3.16** Versioned content JSON with a validator for energy costs, recipes, crops, buildings, biomes, weather modifiers, goals and the phrase book (spec §12). _Depends on: M1.07, M1.09._
@@ -307,7 +307,7 @@
 ## Milestone 7: Seasons, weather, shared goals and web push (spec §16.7)
 
 - [x] **M7.01** Season length of 7 ticks, four seasons and a 28-tick year (spec §9). _Depends on: M1.09, M3.01._
-- [ ] **M7.02** Season rollover as the first world-update step, including withering invalid crops and leaving stored goods unaffected (spec §9). _Depends on: M2.B06, M7.01._
+- [x] **M7.02** Season rollover as the first world-update step, including withering invalid crops and leaving stored goods unaffected (spec §9). _Depends on: M2.B06, M7.01._
 - [x] **M7.03** Seeded weather roll each tick for clear, rain, drought and frost (spec §9). _Depends on: M1.10, M7.01._
 - [x] **M7.04** Apply weather modifiers from content JSON and log the weather result in the replay (spec §9). _Depends on: M2.B07, M3.16, M7.03._
 - [ ] **M7.05** Shared goals: collective builds funded by contributed goods and seasonal festivals with group quotas (spec §9). _Depends on: M3.01, M3.16._
@@ -354,20 +354,20 @@
 
 ## Decisions to close (spec §15)
 
-- [ ] **D.01** **Decision:** final energy budget and per-action costs (spec §4.3, §15). _Blocks: M8.06, M8.09. Informs: M2.A11, M2.A12._
-- [ ] **D.02** **Decision:** goodwill tuning (spec §8, §15). _Blocks: M6.12, M8.06, M8.09. Informs: M6.08, M6.09._
-- [ ] **D.03** **Decision:** phrase book contents (spec §8, §15). _Blocks: M6.13, M8.07, M8.12._
-- [ ] **D.04** **Decision:** final biome and content lists (spec §5, §15). _Blocks: M3.13, M8.01-M8.05, M8.09. Informs: M3.06, M3.16._
-- [ ] **D.05** **Decision:** whether missed-tick defaults include tending (spec §4.4, §15). _Blocks: M2.A17-M2.A20, M8.06._
-- [ ] **D.06** **Decision:** zero-share forage handling, either block the claim or warn in the UI (spec §15). _Blocks: M2.C07, M2.C08, M5.B06. Informs: M2.C03._
-- [ ] **D.07** **Decision:** keep one-way travel with a free return home or revise it (spec §15). _Blocks: M2.A13-M2.A15, M8.06. Informs: M2.A16._
-- [ ] **D.08** **Decision:** wild depletion tuning and depletion warnings (spec §15). _Blocks: M2.C01, M2.C02, M8.05. Informs: M5.B06._
+- [x] **D.01** **Decision:** final energy budget and per-action costs (spec §4.3, §15). _Blocks: M8.06, M8.09. Informs: M2.A11, M2.A12._
+- [x] **D.02** **Decision:** goodwill tuning (spec §8, §15). _Blocks: M6.12, M8.06, M8.09. Informs: M6.08, M6.09._
+- [x] **D.03** **Decision:** phrase book contents (spec §8, §15). _Blocks: M6.13, M8.07, M8.12._
+- [x] **D.04** **Decision:** final biome and content lists (spec §5, §15). _Blocks: M3.13, M8.01-M8.05, M8.09. Informs: M3.06, M3.16._
+- [x] **D.05** **Decision:** whether missed-tick defaults include tending (spec §4.4, §15). _Blocks: M2.A17-M2.A20, M8.06._
+- [x] **D.06** **Decision:** zero-share forage handling, either block the claim or warn in the UI (spec §15). _Blocks: M2.C07, M2.C08, M5.B06. Informs: M2.C03._
+- [x] **D.07** **Decision:** keep one-way travel with a free return home or revise it (spec §15). _Blocks: M2.A13-M2.A15, M8.06. Informs: M2.A16._
+- [x] **D.08** **Decision:** wild depletion tuning and depletion warnings (spec §15). _Blocks: M2.C01, M2.C02, M8.05. Informs: M5.B06._
 - [ ] **D.09** **Decision:** tick-failure alerting and safe manual retry path (spec §15). _Blocks: M4.A32, M9.11._
 - [ ] **D.10** **Decision:** replay payload size strategy, including compression or snapshot reconstruction (spec §15). _Blocks: M5.C01, M5.C03._
-- [ ] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
+- [x] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
 - [ ] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07._
-- [ ] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
+- [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
 - [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
 - [ ] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
 - [ ] **D.16** **Decision:** verify art-pack licensing before adding assets (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
-- [ ] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._
+- [x] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._
