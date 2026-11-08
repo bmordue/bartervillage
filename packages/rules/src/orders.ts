@@ -10,6 +10,7 @@ import type {
   ContentPack,
   Order,
   OrderPayloadMap,
+  ItemStack,
   OrderType,
   Player,
   RegionId,
@@ -36,6 +37,8 @@ export interface OrderExecutionContext {
   path: RegionId[];
   /** The tick event log, supplied by the engine so handlers can emit events. */
   events?: EventLog;
+  /** Goods already locked at queue time, if this order locks inputs. */
+  preLockedItems?: ItemStack[];
 }
 
 export type OrderHandler<K extends OrderType = OrderType> = (

@@ -253,7 +253,8 @@ export function registerBarterHandlers(): void {
     if (openPostCount(state, player.id) >= MAX_OPEN_POSTS) {
       return orderFailed(`At most ${MAX_OPEN_POSTS} open posts are allowed`);
     }
-    if (!canLockFreeStock(state, player.id, payload.gives)) {
+    const prelocked = context.preLockedItems;
+    if (!prelocked && !canLockFreeStock(state, player.id, payload.gives)) {
       return orderFailed("Not enough free stock for the offered goods");
     }
     const cost = orderEnergyCost(content, context.order.type);
@@ -261,7 +262,9 @@ export function registerBarterHandlers(): void {
       return orderFailed(`Not enough energy (needs ${cost})`);
     }
 
-    lockItems(state, player.plotId, payload.gives);
+    if (!prelocked) {
+      lockItems(state, player.plotId, payload.gives);
+    }
     spendEnergy(player, cost);
     const expiryTick = state.world.currentTick + payload.expiryTicks;
     const offer: Offer = {
@@ -359,7 +362,8 @@ export function registerBarterHandlers(): void {
     if (openPostCount(state, player.id) >= MAX_OPEN_POSTS) {
       return orderFailed(`At most ${MAX_OPEN_POSTS} open posts are allowed`);
     }
-    if (!canLockFreeStock(state, player.id, payload.gives)) {
+    const prelocked = context.preLockedItems;
+    if (!prelocked && !canLockFreeStock(state, player.id, payload.gives)) {
       return orderFailed("Not enough free stock for the counter-offer goods");
     }
     const cost = orderEnergyCost(content, context.order.type);
@@ -367,7 +371,9 @@ export function registerBarterHandlers(): void {
       return orderFailed(`Not enough energy (needs ${cost})`);
     }
 
-    lockItems(state, player.plotId, payload.gives);
+    if (!prelocked) {
+      lockItems(state, player.plotId, payload.gives);
+    }
     spendEnergy(player, cost);
     const offer: Offer = {
       id: `offer:${context.order.id}`,
@@ -458,7 +464,8 @@ export function registerBarterHandlers(): void {
     if (!buyer) {
       return orderFailed("Player has no plot");
     }
-    if (!canLockFreeStock(state, player.id, offer.wants)) {
+    const prelocked = context.preLockedItems;
+    if (!prelocked && !canLockFreeStock(state, player.id, offer.wants)) {
       return orderFailed("Not enough free stock to accept this post");
     }
     if (!lockedStockAvailable(state, offer.posterId, offer.gives)) {
@@ -475,13 +482,17 @@ export function registerBarterHandlers(): void {
       return orderFailed(`Not enough energy (needs ${cost})`);
     }
 
-    lockItems(state, player.plotId, offer.wants);
+    if (!prelocked) {
+      lockItems(state, player.plotId, offer.wants);
+    }
     spendEnergy(player, cost);
 
     const sellerConsumed = consumeLockedItems(state, seller.id, offer.gives);
     const buyerConsumed = consumeLockedItems(state, buyer.id, offer.wants);
     if (!sellerConsumed || !buyerConsumed) {
-      unlockItems(state, player.plotId, offer.wants);
+      if (!prelocked) {
+        unlockItems(state, player.plotId, offer.wants);
+      }
       return orderFailed("The trade could not be completed");
     }
     addItemsToPlot(state, content, seller.id, offer.wants);

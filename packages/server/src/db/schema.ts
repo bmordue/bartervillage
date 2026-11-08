@@ -344,6 +344,16 @@ CREATE TABLE avatar_paths (
 );
 `;
 
+const LOCKS_MIGRATION = `
+CREATE TABLE order_locks (
+  order_id TEXT PRIMARY KEY REFERENCES orders(id),
+  plot_id TEXT NOT NULL,
+  items_json TEXT NOT NULL
+);
+CREATE INDEX order_locks_order ON order_locks(order_id);
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
+  { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
 ];

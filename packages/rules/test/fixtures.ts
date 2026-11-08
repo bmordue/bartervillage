@@ -93,6 +93,7 @@ export function testWorldState(overrides: Partial<WorldState> = {}): WorldState 
     animals: [],
     inventory: [],
     orders: [],
+    orderLocks: [],
     ready: [],
     offers: [],
     wildNodes: [],

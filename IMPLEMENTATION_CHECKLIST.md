@@ -76,7 +76,7 @@
 - [x] **M2.A03** Emit the event types for order resolution, avatar paths, crops, animals, construction, crafting, wild nodes and barter; add weather, goals, seasons, gifts, help and player-joined events in their milestones (spec §13). _Depends on: M1.09, M2.A02._
 - [x] **M2.A04** Atomic order execution: validate all preconditions, then execute; a failed order logs a reason, spends no energy or goods, releases any locks and does not stop the next order (spec §4.2). _Depends on: M2.A02._
 - [x] **M2.A05** Batch orders expanded into per-unit orders at queue time, with each unit atomic and independently failable (spec §4.2). _Depends on: M2.A01, M2.A04._
-- [ ] **M2.A06** Queue editing before the tick, including removal of orders and release of their locks (spec §4.2). _Depends on: M2.A01, M2.A04, M2.D05, M2.E02._
+- [x] **M2.A06** Queue editing before the tick, including removal of orders and release of their locks (spec §4.2). _Depends on: M2.A01, M2.A04, M2.D05, M2.E02._
 - [x] **M2.A07** Ready state with monotonic, per-tick unique positions; un-readying allows edits and re-readying goes to the back of the queue (spec §4.2). _Depends on: M1.09, M2.A01._
 - [x] **M2.A08** A player may ready with an empty queue (spec §4.2). _Depends on: M2.A07._
 - [x] **M2.A09** Resolution order: ready players by ready position ascending, then unready players by player ID ascending; the same order applies to player-vs-player contention (spec §4.2). _Depends on: M2.A07._
@@ -124,40 +124,40 @@
 - [x] **M2.D02** Upgrades unlock recipes, raise capacity or improve speed according to content (spec §6.1). _Depends on: M2.D01, M3.16._
 - [x] **M2.D03** Upgrades cost goods, energy and waiting ticks; an upgrade ordered at tick T with duration N completes at the start of tick T+N, before orders (spec §6.1). _Depends on: M2.A11, M2.D01._
 - [x] **M2.D04** At most one construction or upgrade per building at a time; a second upgrade order fails until the first completes (spec §6.1). _Depends on: M2.D01, M2.D03._
-- [ ] **M2.D05** Construction inputs lock when the order is queued and are consumed when work starts (spec §6.1). _Depends on: M2.A04, M2.D01, M2.D03, M2.D06._
+- [x] **M2.D05** Construction inputs lock when the order is queued and are consumed when work starts (spec §6.1). _Depends on: M2.A04, M2.D01, M2.D03, M2.D06._
 - [x] **M2.D06** Storage capacity per storage building, raised by upgrades; locked goods occupy capacity and free stock is held minus locked (spec §6.1). _Depends on: M1.09, M2.D01, M2.D02._
 - [x] **M2.D07** Inventory uses plain stackable goods with no quality tiers and no spoilage (spec §6.1). _Depends on: M1.09, M2.D06._
 - [x] **M2.D08** Instant recipes produce during the tick's order phase (spec §6.2). _Depends on: M2.A02, M2.D01, M3.16._
 - [x] **M2.D09** Timed recipes enter a per-building FIFO queue when the order resolves; an idle building starts immediately and queued jobs start when the previous job completes (spec §6.2). _Depends on: M2.D01, M2.D08._
 - [x] **M2.D10** A job starting at tick S with duration N completes at the start of tick S+N, with one job per building at a time (spec §6.2). _Depends on: M2.D09._
-- [ ] **M2.D11** Craft inputs lock when the order is queued and are consumed when the job starts; removing the order before the tick releases the lock, and resolved jobs cannot be cancelled (spec §6.2). _Depends on: M2.A06, M2.D05, M2.D09._
+- [x] **M2.D11** Craft inputs lock when the order is queued and are consumed when the job starts; removing the order before the tick releases the lock, and resolved jobs cannot be cancelled (spec §6.2). _Depends on: M2.A06, M2.D05, M2.D09._
 - [ ] **M2.D12** Recipe discovery is gated by building level and shared-goal unlocks; unlocks take effect at the start of the next tick after the goal succeeds (spec §6.2). _Depends on: M2.D02, M7.10._
 - [ ] **M2.D13** Decorations are cosmetic, placed on a plot, crafted or earned via goodwill or shared goals, and do not affect production (spec §6.2). _Depends on: M2.A02, M3.16, M6.12, M7.11._
 
 ### Barter
 
 - [x] **M2.E01** Post types: offer, wanted request and counter-offer, with gives, wants, quantity, expiry, status and parent offer ID (spec §7, §13). _Depends on: M1.09._
-- [ ] **M2.E02** Offers lock the offered goods at queue time; removing or failing the order releases the lock (spec §7). _Depends on: M2.A04, M2.D06, M2.D07, M2.E01._
+- [x] **M2.E02** Offers lock the offered goods at queue time; removing or failing the order releases the lock (spec §7). _Depends on: M2.A04, M2.D06, M2.D07, M2.E01._
 - [x] **M2.E03** Wanted requests lock nothing, request proposals and cannot be accepted directly; they settle by accepting a counter-offer (spec §7). _Depends on: M2.E01._
-- [ ] **M2.E04** Counter-offers lock only the counterer's side; the wanter's side locks when the wanter accepts (spec §7). _Depends on: M2.E01, M2.E02._
-- [ ] **M2.E05** Posting a counter-offer leaves the original post open; the original and the counter lock their own goods independently (spec §7). _Depends on: M2.E04._
+- [x] **M2.E04** Counter-offers lock only the counterer's side; the wanter's side locks when the wanter accepts (spec §7). _Depends on: M2.E01, M2.E02._
+- [x] **M2.E05** Posting a counter-offer leaves the original post open; the original and the counter lock their own goods independently (spec §7). _Depends on: M2.E04._
 - [x] **M2.E06** Counters are one level deep and cannot themselves be countered (spec §7). _Depends on: M2.E01; blocked by D.17._
-- [ ] **M2.E07** Expiry semantics: a post made at tick T is acceptable from T+1 and expires at the start of `expiryTick + 1`; expiry is configurable from 1 to 28 ticks, default 7 (spec §7). _Depends on: M2.E01._
-- [ ] **M2.E08** Posts stay open until cancelled or expired (spec §7). _Depends on: M2.E01, M2.E07._
+- [x] **M2.E07** Expiry semantics: a post made at tick T is acceptable from T+1 and expires at the start of `expiryTick + 1`; expiry is configurable from 1 to 28 ticks, default 7 (spec §7). _Depends on: M2.E01._
+- [x] **M2.E08** Posts stay open until cancelled or expired (spec §7). _Depends on: M2.E01, M2.E07._
 - [x] **M2.E09** A player may have at most 10 open offers, wanted requests and counter-offers combined (spec §7). _Depends on: M2.E01; blocked by D.13._
-- [ ] **M2.E10** Direct acceptance, cancellation or expiry of a parent auto-cancels all its counter-offers and releases their locks (spec §7). _Depends on: M2.E04, M2.E07._
-- [ ] **M2.E11** Accepting a counter-offer settles it as a trade, cancels the parent and cancels all sibling counters, without cancelling the accepted counter itself (spec §7). _Depends on: M2.E04, M2.E10._
-- [ ] **M2.E12** A counter-offer is valid only if its parent is still open at the end of the tick in which the counter was posted; otherwise the counter is cancelled and its locks release (spec §7). _Depends on: M2.A09, M2.E04, M2.E07._
-- [ ] **M2.E13** Acceptance is an order that locks the accepter's side at queue time (spec §7). _Depends on: M2.A01, M2.E01, M2.E02._
-- [ ] **M2.E14** A failed acceptance releases only its own locks; locks belonging to the accepter's other open posts remain (spec §7). _Depends on: M2.A04, M2.E13._
-- [ ] **M2.E15** Accepting your own post is invalid, and a player cannot counter their own post (spec §7). _Depends on: M2.E01._
-- [ ] **M2.E16** A counter-offer can be accepted only by the poster of its parent post (spec §7). _Depends on: M2.E04._
-- [ ] **M2.E17** A negotiation is the parent post plus all counters; the first successful acceptance in queue order settles it, and every later acceptance for that negotiation fails (spec §7). _Depends on: M2.A09, M2.E10, M2.E11._
-- [ ] **M2.E18** If the accepter lacks goods or capacity at resolution, the acceptance fails; the accepted post stays open and keeps its locks (spec §7). _Depends on: M2.D06, M2.E13._
-- [ ] **M2.E19** Capacity checks include locked goods (spec §7). _Depends on: M2.D06._
-- [ ] **M2.E20** All trades are all-or-nothing with no partial fills (spec §7). _Depends on: M2.E13._
-- [ ] **M2.E21** Locked goods cannot be spent, gifted, cooked, contributed or re-offered; free stock is exposed to the UI (spec §7, §13). _Depends on: M2.D06, M2.D11, M2.E02, M6.08, M7.07._
-- [ ] **M2.E22** Trades are board-wide and require no travel (spec §7). _Depends on: M2.E13._
+- [x] **M2.E10** Direct acceptance, cancellation or expiry of a parent auto-cancels all its counter-offers and releases their locks (spec §7). _Depends on: M2.E04, M2.E07._
+- [x] **M2.E11** Accepting a counter-offer settles it as a trade, cancels the parent and cancels all sibling counters, without cancelling the accepted counter itself (spec §7). _Depends on: M2.E04, M2.E10._
+- [x] **M2.E12** A counter-offer is valid only if its parent is still open at the end of the tick in which the counter was posted; otherwise the counter is cancelled and its locks release (spec §7). _Depends on: M2.A09, M2.E04, M2.E07._
+- [x] **M2.E13** Acceptance is an order that locks the accepter's side at queue time (spec §7). _Depends on: M2.A01, M2.E01, M2.E02._
+- [x] **M2.E14** A failed acceptance releases only its own locks; locks belonging to the accepter's other open posts remain (spec §7). _Depends on: M2.A04, M2.E13._
+- [x] **M2.E15** Accepting your own post is invalid, and a player cannot counter their own post (spec §7). _Depends on: M2.E01._
+- [x] **M2.E16** A counter-offer can be accepted only by the poster of its parent post (spec §7). _Depends on: M2.E04._
+- [x] **M2.E17** A negotiation is the parent post plus all counters; the first successful acceptance in queue order settles it, and every later acceptance for that negotiation fails (spec §7). _Depends on: M2.A09, M2.E10, M2.E11._
+- [x] **M2.E18** If the accepter lacks goods or capacity at resolution, the acceptance fails; the accepted post stays open and keeps its locks (spec §7). _Depends on: M2.D06, M2.E13._
+- [x] **M2.E19** Capacity checks include locked goods (spec §7). _Depends on: M2.D06._
+- [x] **M2.E20** All trades are all-or-nothing with no partial fills (spec §7). _Depends on: M2.E13._
+- [x] **M2.E21** Locked goods cannot be spent, gifted, cooked, contributed or re-offered; free stock is exposed to the UI (spec §7, §13). _Depends on: M2.D06, M2.D11, M2.E02, M6.08, M7.07._
+- [x] **M2.E22** Trades are board-wide and require no travel (spec §7). _Depends on: M2.E13._
 
 ### Invariants and property tests
 
@@ -167,7 +167,7 @@
 - [x] **M2.F04** At most one wild-node claim per player per node per tick (spec §13). _Depends on: CT.02, M2.C05._
 - [x] **M2.F05** Node amount stays between 0 and its capacity (spec §13). _Depends on: CT.02, M2.C01._
 - [ ] **M2.F06** Post quantities are positive; expiry is 1 to 28 ticks; a counter's parent must be open; counter depth is at most one; wanted requests have no locked side; expired posts cannot be accepted; one crop per plot tile (spec §13). _Depends on: CT.02, M2.B08, M2.E01-M2.E20._
-- [ ] **M2.F07** A failed order cannot change state (spec §13). _Depends on: CT.02, M2.A04._
+- [x] **M2.F07** A failed order cannot change state (spec §13). _Depends on: CT.02, M2.A04._
 - [ ] **M2.F08** Every inventory change is recorded in the event log; conservation tests cover production and consumption (spec §13). _Depends on: CT.08, M2.A03, M2.D07._
 - [ ] **M2.F09** Archived events are immutable with a unique `(tick, sequence)`; one state hash is stored per tick (spec §13). _Depends on: CT.03, M3.18, M4.A18._
 

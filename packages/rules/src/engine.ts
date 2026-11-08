@@ -6,6 +6,7 @@ import { appendMissedTickDefaults } from "./defaults.js";
 import { EventLog } from "./events.js";
 import { regrowWildNodes, resolveWildClaims } from "./forage.js";
 import "./handlers.js";
+import { discardOrderLock, preLockedItems } from "./locking.js";
 import { resolveOrder } from "./orders.js";
 import { runAnimalProduction } from "./animals.js";
 import { expirePosts } from "./barter.js";
@@ -24,6 +25,7 @@ import type {
 } from "./types.js";
 import { isSeasonRollover, rollWeather, seasonForTick, yearForTick } from "./seasons.js";
 import { makeTickHeader, tickSeedParts } from "./versions.js";
+import { releaseOrderLocks } from "./queue.js";
 import { refreshEnergy, regionById } from "./world.js";
 
 export interface ResolveTickInput {
@@ -122,6 +124,7 @@ export function resolvePlayerOrders(
     const reachable = new Set<RegionId>([home]);
     const path: RegionId[] = [];
     for (const order of ordersForPlayer(state, player)) {
+      const locked = preLockedItems(state, order.id);
       const outcome = resolveOrder({
         state,
         content,
@@ -131,8 +134,10 @@ export function resolvePlayerOrders(
         reachable,
         path,
         events,
+        ...(locked ? { preLockedItems: locked } : {}),
       });
       if (outcome.ok) {
+        discardOrderLock(state, order.id);
         order.status = "resolved";
         order.failureReason = null;
         events.emit("order_resolved", {
@@ -141,6 +146,7 @@ export function resolvePlayerOrders(
           orderType: order.type,
         });
       } else {
+        releaseOrderLocks(state, order.id);
         order.status = "failed";
         order.failureReason = outcome.reason;
         events.emit("order_failed", {

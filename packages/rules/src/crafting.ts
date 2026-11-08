@@ -121,11 +121,14 @@ function handleCraft(context: OrderExecutionContext): OrderOutcome {
     if (!canAddItems(state, content, plot.id, recipe.outputs)) {
       return orderFailed("Not enough storage capacity for the crafted goods");
     }
-    if (!lockItems(state, plot.id, recipe.inputs)) {
+    const prelocked = context.preLockedItems;
+    if (!prelocked && !lockItems(state, plot.id, recipe.inputs)) {
       return orderFailed(`Not enough free goods to craft ${recipe.id}`);
     }
     if (!spendEnergy(player, energyCost)) {
-      unlockItems(state, plot.id, recipe.inputs);
+      if (!prelocked) {
+        unlockItems(state, plot.id, recipe.inputs);
+      }
       return orderFailed(`Not enough energy to craft ${recipe.id}`);
     }
     consumeLockedItems(state, plot.id, recipe.inputs);
@@ -143,11 +146,14 @@ function handleCraft(context: OrderExecutionContext): OrderOutcome {
     return orderSucceeded;
   }
 
-  if (!lockItems(state, plot.id, recipe.inputs)) {
+  const prelocked = context.preLockedItems;
+  if (!prelocked && !lockItems(state, plot.id, recipe.inputs)) {
     return orderFailed(`Not enough free goods to craft ${recipe.id}`);
   }
   if (!spendEnergy(player, energyCost)) {
-    unlockItems(state, plot.id, recipe.inputs);
+    if (!prelocked) {
+      unlockItems(state, plot.id, recipe.inputs);
+    }
     return orderFailed(`Not enough energy to craft ${recipe.id}`);
   }
 

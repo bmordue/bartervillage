@@ -15,6 +15,7 @@ import type {
   Tick,
   WorldState,
 } from "./types.js";
+import { unlockItems } from "./inventory.js";
 
 export interface NewOrder<K extends OrderType = OrderType> {
   id: OrderId;
@@ -89,12 +90,26 @@ export function reorderQueue(
   });
 }
 
+/** Release any goods locked when this order was queued. */
+export function releaseOrderLocks(state: WorldState, orderId: OrderId): void {
+  const index = state.orderLocks.findIndex((lock) => lock.orderId === orderId);
+  if (index < 0) {
+    return;
+  }
+  const lock = state.orderLocks[index];
+  state.orderLocks.splice(index, 1);
+  if (lock) {
+    unlockItems(state, lock.plotId, lock.items);
+  }
+}
+
 export function cancelOrder(state: WorldState, orderId: OrderId): boolean {
   const order = findOrder(state, orderId);
   if (!order || order.status !== "queued") {
     return false;
   }
   order.status = "cancelled";
+  releaseOrderLocks(state, orderId);
   return true;
 }
 
@@ -108,6 +123,7 @@ export function removeOrder(state: WorldState, orderId: OrderId): Order | null {
   if (!order || order.status !== "queued") {
     return null;
   }
+  releaseOrderLocks(state, orderId);
   state.orders.splice(index, 1);
   return order;
 }

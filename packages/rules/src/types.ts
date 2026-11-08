@@ -513,6 +513,13 @@ export interface ReadyEntry {
   position: number;
 }
 
+/** Goods locked when a locking order is queued (spec §4.2, §6.1, §7). */
+export interface OrderLock {
+  orderId: OrderId;
+  plotId: PlotId;
+  items: ItemStack[];
+}
+
 // ---------------------------------------------------------------------------
 // Barter
 // ---------------------------------------------------------------------------
@@ -754,6 +761,7 @@ export interface WorldState {
   animals: Animal[];
   inventory: InventoryRow[];
   orders: Order[];
+  orderLocks: OrderLock[];
   ready: ReadyEntry[];
   offers: Offer[];
   wildNodes: WildNode[];

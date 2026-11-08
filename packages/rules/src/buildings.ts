@@ -140,11 +140,14 @@ function handleBuild(context: OrderExecutionContext): OrderOutcome {
   if (player.energy < level.energyCost) {
     return orderFailed(`Not enough energy to build ${payload.building}`);
   }
-  if (!lockItems(state, plot.id, level.cost)) {
+  const prelocked = context.preLockedItems;
+  if (!prelocked && !lockItems(state, plot.id, level.cost)) {
     return orderFailed(`Not enough free goods to build ${payload.building}`);
   }
   if (!spendEnergy(player, level.energyCost)) {
-    unlockItems(state, plot.id, level.cost);
+    if (!prelocked) {
+      unlockItems(state, plot.id, level.cost);
+    }
     return orderFailed(`Not enough energy to build ${payload.building}`);
   }
 
@@ -210,11 +213,14 @@ function handleUpgrade(context: OrderExecutionContext): OrderOutcome {
   if (player.energy < nextLevel.energyCost) {
     return orderFailed(`Not enough energy to upgrade ${building.type}`);
   }
-  if (!lockItems(state, plot.id, nextLevel.cost)) {
+  const prelocked = context.preLockedItems;
+  if (!prelocked && !lockItems(state, plot.id, nextLevel.cost)) {
     return orderFailed(`Not enough free goods to upgrade ${building.type}`);
   }
   if (!spendEnergy(player, nextLevel.energyCost)) {
-    unlockItems(state, plot.id, nextLevel.cost);
+    if (!prelocked) {
+      unlockItems(state, plot.id, nextLevel.cost);
+    }
     return orderFailed(`Not enough energy to upgrade ${building.type}`);
   }
 
