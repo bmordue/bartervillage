@@ -13,6 +13,7 @@ export * from "./invariants.js";
 export * from "./queue.js";
 export * from "./world.js";
 export * from "./inventory.js";
+export * from "./map.js";
 export * from "./animals.js";
 export * from "./barter.js";
 export * from "./buildings.js";
