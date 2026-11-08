@@ -177,11 +177,11 @@
 - [ ] **M3.02** Enforce the spec §13 constraints at the schema and rules layers. _Depends on: M2.F01-M2.F09, M3.01._
 - [ ] **M3.03** Ensure the schema, content and UI contain no currency or coin concept (spec §3, §7). _Depends on: M3.01, M3.16, M5.A01._
 - [x] **M3.04** Configure SQLite WAL mode, `busy_timeout` and a single-writer model using raw SQL. _Depends on: M3.01._
-- [ ] **M3.05** Add the database access layer without an ORM. _Depends on: M3.01, M3.04._
+- [x] **M3.05** Add the database access layer without an ORM. _Depends on: M3.01, M3.04._
 - [x] **M3.06** Deterministic map generator using the world seed and pinned `generator_version` (spec §5). _Depends on: M1.07, M1.09, M1.10, M3.16._
-- [ ] **M3.07** Persist the generated map explicitly; existing plots never move and existing regions never regenerate (spec §5). _Depends on: M3.01, M3.05, M3.06; blocked by D.14._
-- [ ] **M3.08** Append new regions in deterministic order as players join; append a region when no open site remains (spec §5). _Depends on: M3.06, M3.07._
-- [ ] **M3.09** New players choose from currently open sites; site claims are transactional and simultaneous claims resolve first-write-wins (spec §5). _Depends on: M3.07, M3.08; blocked by D.14._
+- [x] **M3.07** Persist the generated map explicitly; existing plots never move and existing regions never regenerate (spec §5). _Depends on: M3.01, M3.05, M3.06; blocked by D.14._
+- [x] **M3.08** Append new regions in deterministic order as players join; append a region when no open site remains (spec §5). _Depends on: M3.06, M3.07._
+- [x] **M3.09** New players choose from currently open sites; site claims are transactional and simultaneous claims resolve first-write-wins (spec §5). _Depends on: M3.07, M3.08; blocked by D.14._
 - [ ] **M3.10** Every new plot starts with a home, a field and a storehouse (spec §6.1). _Depends on: M2.D01, M3.07, M3.09._
 - [x] **M3.11** Region geometry with stable ID, grid coordinates, per-plot tile coordinates, and travel cost derived from Manhattan distance (spec §5). _Depends on: M1.09, M3.01, M3.06._
 - [x] **M3.12** World-generation constants for region size, plot count and the approximately 12x12 plot size (spec §5, §6.1). _Depends on: M3.06._
@@ -367,7 +367,7 @@
 - [ ] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
 - [ ] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07._
 - [ ] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
-- [ ] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
+- [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
 - [ ] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
 - [ ] **D.16** **Decision:** verify art-pack licensing before adding assets (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
 - [ ] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._

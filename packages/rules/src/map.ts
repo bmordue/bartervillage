@@ -27,6 +27,7 @@ export const REGION_WIDTH = REGION_BLOCKS * BLOCK_SIZE;
 export const REGION_HEIGHT = REGION_WIDTH;
 export const PLOT_SIZE = BLOCK_SIZE;
 export const PLOTS_PER_REGION = 4;
+export const MAP_REGION_COLUMNS = 8;
 export const COMMONS_PER_REGION = 4;
 
 const PLOT_BLOCKS: readonly (readonly [number, number])[] = [
@@ -235,13 +236,43 @@ export function appendRegion(
   generatorVersion = MAP_GENERATOR_VERSION,
 ): RegionGeneration {
   const nextIndex = state.regions.length;
-  const columns = Math.max(1, Math.ceil(Math.sqrt(nextIndex + 1)));
-  const x = nextIndex % columns;
-  const y = Math.floor(nextIndex / columns);
+  const x = nextIndex % MAP_REGION_COLUMNS;
+  const y = Math.floor(nextIndex / MAP_REGION_COLUMNS);
   const generated = generateRegion(state.world.config.seed, generatorVersion, x, y, content);
   state.regions.push(generated.region);
   state.tiles.push(...generated.tiles);
   state.plots.push(...generated.plots);
   state.wildNodes.push(...generated.wildNodes);
   return generated;
+}
+
+/** Plot sites that no player has claimed yet. */
+export function openSites(state: WorldState): Plot[] {
+  return state.plots
+    .filter((plot) => !plot.worldOwned && plot.playerId === null)
+    .sort((a, b) =>
+      a.regionId < b.regionId
+        ? -1
+        : a.regionId > b.regionId
+          ? 1
+          : a.siteY - b.siteY || a.siteX - b.siteX,
+    );
+}
+
+/**
+ * Append regions in deterministic order until at least `minimum` sites are
+ * open (spec §5; M3.08). Returns the number of regions appended.
+ */
+export function ensureOpenSites(
+  state: WorldState,
+  content: ContentPack,
+  minimum = 1,
+  generatorVersion = MAP_GENERATOR_VERSION,
+): number {
+  let appended = 0;
+  while (openSites(state).length < minimum) {
+    appendRegion(state, content, generatorVersion);
+    appended += 1;
+  }
+  return appended;
 }

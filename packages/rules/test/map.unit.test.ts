@@ -3,6 +3,8 @@ import { content } from "@bartervillage/content";
 import {
   appendRegion,
   BLOCK_SIZE,
+  ensureOpenSites,
+  openSites,
   generateRegion,
   MAP_GENERATOR_VERSION,
   PLOTS_PER_REGION,
@@ -63,5 +65,14 @@ describe("map generation", () => {
     expect(first.tiles).toEqual(snapshot.tiles);
     expect(first.plots).toEqual(snapshot.plots);
     expect(state.regions).toHaveLength(2);
+  });
+});
+
+describe("open sites", () => {
+  it("appends regions until the requested number of sites is open", () => {
+    const state = testWorldState({ regions: [], tiles: [], plots: [], wildNodes: [] });
+    const appended = ensureOpenSites(state, content, 6);
+    expect(appended).toBe(2);
+    expect(openSites(state)).toHaveLength(8);
   });
 });
