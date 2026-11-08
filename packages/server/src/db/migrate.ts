@@ -3,27 +3,26 @@
  */
 
 import { createRequire } from "node:module";
-import type { DatabaseSync as SQLiteDatabase } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import { MIGRATIONS, type Migration } from "./schema.js";
 
 const require = createRequire(import.meta.url);
-const { DatabaseSync } = require("node:sqlite") as typeof import("node:sqlite");
-
-export type { SQLiteDatabase };
+const sqlite = require("node:sqlite") as { DatabaseSync: new (path: string) => DatabaseSync };
+const { DatabaseSync: openSQLite } = sqlite;
 
 export interface DatabaseOptions {
   path?: string;
   busyTimeoutMs?: number;
 }
 
-export function configureDatabase(db: SQLiteDatabase, busyTimeoutMs = 5000): void {
+export function configureDatabase(db: DatabaseSync, busyTimeoutMs = 5000): void {
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA foreign_keys = ON");
   db.exec(`PRAGMA busy_timeout = ${Math.max(0, Math.trunc(busyTimeoutMs))}`);
   db.exec("PRAGMA synchronous = NORMAL");
 }
 
-export function appliedVersions(db: SQLiteDatabase): number[] {
+export function appliedVersions(db: DatabaseSync): number[] {
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY,
@@ -37,10 +36,7 @@ export function appliedVersions(db: SQLiteDatabase): number[] {
   return rows.map((row) => row.version);
 }
 
-export function migrate(
-  db: SQLiteDatabase,
-  migrations: readonly Migration[] = MIGRATIONS,
-): number[] {
+export function migrate(db: DatabaseSync, migrations: readonly Migration[] = MIGRATIONS): number[] {
   const applied = new Set(appliedVersions(db));
   const ran: number[] = [];
   for (const migration of migrations) {
@@ -65,8 +61,8 @@ export function migrate(
   return ran;
 }
 
-export function openDatabase(options: DatabaseOptions = {}): SQLiteDatabase {
-  const db = new DatabaseSync(options.path ?? ":memory:");
+export function openDatabase(options: DatabaseOptions = {}): DatabaseSync {
+  const db = new openSQLite(options.path ?? ":memory:");
   configureDatabase(db, options.busyTimeoutMs);
   migrate(db);
   return db;
