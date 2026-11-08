@@ -44,6 +44,7 @@ export function testPlayer(overrides: Partial<Player> = {}): Player {
     name: "Player One",
     plotId: "plot1",
     joinedTick: 0,
+    energy: 100,
     defaults: { ...DEFAULT_MISSED_TICK_DEFAULTS },
     ...overrides,
   };

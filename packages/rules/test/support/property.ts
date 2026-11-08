@@ -109,6 +109,7 @@ export function playersArb(): fc.Arbitrary<Player[]> {
         name: `Player ${id}`,
         plotId: `plot${id}`,
         joinedTick: 0,
+        energy: 100,
         defaults: { harvest: true, water: true, feed: true, tend: false },
       })),
     );

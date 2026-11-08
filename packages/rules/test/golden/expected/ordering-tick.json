@@ -24,13 +24,73 @@
       "tick": 5,
       "sequence": 1,
       "version": 1,
+      "type": "avatar_path",
+      "payload": {
+        "path": {
+          "playerId": "p1",
+          "tick": 5,
+          "from": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "via": [
+            {
+              "regionId": "r2",
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "to": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "returnedHome": true
+        }
+      }
+    },
+    {
+      "tick": 5,
+      "sequence": 2,
+      "version": 1,
       "type": "order_resolved",
       "payload": {
         "orderId": "a",
         "playerId": "p2",
         "orderType": "travel"
       }
+    },
+    {
+      "tick": 5,
+      "sequence": 3,
+      "version": 1,
+      "type": "avatar_path",
+      "payload": {
+        "path": {
+          "playerId": "p2",
+          "tick": 5,
+          "from": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "via": [
+            {
+              "regionId": "r2",
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "to": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "returnedHome": true
+        }
+      }
     }
   ],
-  "stateHash": "b05eb53b50d3304363cae2d53262af8da844eb85d0abf30a73e603cd00070191"
+  "stateHash": "8a5fd272cb3d8868579f204417a1865d54ef5cd4824437d584c8baf404c28ec1"
 }

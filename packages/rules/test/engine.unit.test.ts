@@ -31,10 +31,14 @@ describe("resolveTick entry point", () => {
     const state = testWorldState({ orders: [testOrder()] });
     const result = resolveTick({ state, content: testContent() });
     expect(result.state.orders[0]?.status).toBe("resolved");
-    expect(result.events).toHaveLength(1);
+    expect(result.events.map((event) => event.type)).toEqual(["order_resolved", "avatar_path"]);
     expect(result.events[0]).toMatchObject({
       type: "order_resolved",
       payload: { orderId: "o1", playerId: "p1", orderType: "travel" },
+    });
+    expect(result.events[1]).toMatchObject({
+      type: "avatar_path",
+      payload: { path: { playerId: "p1", returnedHome: true } },
     });
   });
 
@@ -73,7 +77,11 @@ describe("resolveTick entry point", () => {
       ],
     });
     const result = resolveTick({ state, content: testContent() });
-    expect(result.events.map((event) => event.payload)).toEqual([
+    expect(
+      result.events
+        .filter((event) => event.type === "order_resolved")
+        .map((event) => event.payload),
+    ).toEqual([
       { orderId: "b", playerId: "p1", orderType: "travel" },
       { orderId: "a", playerId: "p2", orderType: "travel" },
     ]);

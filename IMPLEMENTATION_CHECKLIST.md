@@ -81,10 +81,10 @@
 - [ ] **M2.A08** A player may ready with an empty queue (spec §4.2). _Depends on: M2.A07._
 - [ ] **M2.A09** Resolution order: ready players by ready position ascending, then unready players by player ID ascending; the same order applies to player-vs-player contention (spec §4.2). _Depends on: M2.A07._
 - [ ] **M2.A10** Within a player's turn, orders run in queue order (spec §4.2). _Depends on: M2.A01, M2.A09._
-- [ ] **M2.A11** Daily energy budget from content JSON, refreshed each tick with no carry-over (spec §4.3). _Depends on: M1.09, M3.16._
+- [x] **M2.A11** Daily energy budget from content JSON, refreshed each tick with no carry-over (spec §4.3). _Depends on: M1.09, M3.16._
 - [ ] **M2.A12** Per-action energy costs from content JSON, with actions failing when energy is insufficient (spec §4.3). _Depends on: M2.A02, M2.A11._
-- [ ] **M2.A13** Travel costs: free within the player's own region, 5 energy per region boundary crossed, diagonal neighbours count as two steps (spec §4.3, §5). _Depends on: M2.A11, M2.A12, M3.11; blocked by D.07._
-- [ ] **M2.A14** Avatars start each tick at their own plot; one-way travel orders move them, and they return home at the end of the tick at no extra cost (spec §4.3, §5). _Depends on: M2.A02, M2.A13._
+- [x] **M2.A13** Travel costs: free within the player's own region, 5 energy per region boundary crossed, diagonal neighbours count as two steps (spec §4.3, §5). _Depends on: M2.A11, M2.A12, M3.11; blocked by D.07._
+- [x] **M2.A14** Avatars start each tick at their own plot; one-way travel orders move them, and they return home at the end of the tick at no extra cost (spec §4.3, §5). _Depends on: M2.A02, M2.A13._
 - [ ] **M2.A15** Orders acting on a remote site validate that an earlier travel order in the same queue reached that region (spec §4.2, §4.3). _Depends on: M2.A10, M2.A13, M2.A14._
 - [ ] **M2.A16** Help energy is paid by the helper; travel is paid by the travel order; the host pays nothing (spec §4.3). _Depends on: M2.A02, M2.A11; help order: M6.09._
 - [ ] **M2.A17** Missed-tick defaults appended after explicit orders for unready players: auto-harvest, then auto-water, then auto-feed (spec §4.4). _Depends on: M2.A09, M2.A10, M2.B01, M2.B09; blocked by D.05._
@@ -125,8 +125,8 @@
 - [ ] **M2.D03** Upgrades cost goods, energy and waiting ticks; an upgrade ordered at tick T with duration N completes at the start of tick T+N, before orders (spec §6.1). _Depends on: M2.A11, M2.D01._
 - [ ] **M2.D04** At most one construction or upgrade per building at a time; a second upgrade order fails until the first completes (spec §6.1). _Depends on: M2.D01, M2.D03._
 - [ ] **M2.D05** Construction inputs lock when the order is queued and are consumed when work starts (spec §6.1). _Depends on: M2.A04, M2.D01, M2.D03, M2.D06._
-- [ ] **M2.D06** Storage capacity per storage building, raised by upgrades; locked goods occupy capacity and free stock is held minus locked (spec §6.1). _Depends on: M1.09, M2.D01, M2.D02._
-- [ ] **M2.D07** Inventory uses plain stackable goods with no quality tiers and no spoilage (spec §6.1). _Depends on: M1.09, M2.D06._
+- [x] **M2.D06** Storage capacity per storage building, raised by upgrades; locked goods occupy capacity and free stock is held minus locked (spec §6.1). _Depends on: M1.09, M2.D01, M2.D02._
+- [x] **M2.D07** Inventory uses plain stackable goods with no quality tiers and no spoilage (spec §6.1). _Depends on: M1.09, M2.D06._
 - [ ] **M2.D08** Instant recipes produce during the tick's order phase (spec §6.2). _Depends on: M2.A02, M2.D01, M3.16._
 - [ ] **M2.D09** Timed recipes enter a per-building FIFO queue when the order resolves; an idle building starts immediately and queued jobs start when the previous job completes (spec §6.2). _Depends on: M2.D01, M2.D08._
 - [ ] **M2.D10** A job starting at tick S with duration N completes at the start of tick S+N, with one job per building at a time (spec §6.2). _Depends on: M2.D09._

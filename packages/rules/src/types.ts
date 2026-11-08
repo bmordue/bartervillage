@@ -237,6 +237,8 @@ export interface Player {
   name: string;
   plotId: PlotId;
   joinedTick: Tick;
+  /** Energy for the current tick. Refreshed from content at the start of each tick. */
+  energy: number;
   defaults: MissedTickDefaults;
 }
 

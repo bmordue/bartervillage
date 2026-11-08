@@ -3,15 +3,19 @@ import { EventLog } from "./events.js";
 import { resolveOrder } from "./orders.js";
 import type { Rng } from "./rng.js";
 import type {
+  AvatarPath,
+  AvatarPathPoint,
   ContentPack,
   GameEvent,
   Order,
   Player,
   PlayerId,
+  RegionId,
   TickHeader,
   WorldState,
 } from "./types.js";
 import { makeTickHeader } from "./versions.js";
+import { refreshEnergy, regionById } from "./world.js";
 
 export interface ResolveTickInput {
   state: WorldState;
@@ -67,9 +71,31 @@ function ordersForPlayer(state: WorldState, player: Player): Order[] {
     .sort((a, b) => a.sequence - b.sequence || compareIds(a.id, b.id));
 }
 
-function playerHomeRegion(state: WorldState, player: Player): string | null {
+function playerHomeRegion(state: WorldState, player: Player): RegionId | null {
   const plot = state.plots.find((candidate) => candidate.id === player.plotId);
   return plot ? plot.regionId : null;
+}
+
+function pathPoint(state: WorldState, regionId: RegionId): AvatarPathPoint {
+  const region = regionById(state, regionId);
+  return { regionId, x: region?.x ?? 0, y: region?.y ?? 0 };
+}
+
+function buildAvatarPath(
+  state: WorldState,
+  player: Player,
+  home: RegionId,
+  visited: readonly RegionId[],
+): AvatarPath {
+  const via = visited.slice(0, -1).map((regionId) => pathPoint(state, regionId));
+  return {
+    playerId: player.id,
+    tick: state.world.currentTick,
+    from: pathPoint(state, home),
+    via,
+    to: pathPoint(state, home),
+    returnedHome: true,
+  };
 }
 
 export function resolvePlayerOrders(
@@ -84,14 +110,17 @@ export function resolvePlayerOrders(
       continue;
     }
     const location = { regionId: home };
-    const reachable = new Set<string>([home]);
+    const reachable = new Set<RegionId>([home]);
+    const path: RegionId[] = [];
     for (const order of ordersForPlayer(state, player)) {
       const outcome = resolveOrder({
         state,
         content,
         order,
+        player,
         location,
         reachable,
+        path,
       });
       if (outcome.ok) {
         order.status = "resolved";
@@ -111,6 +140,12 @@ export function resolvePlayerOrders(
           reason: outcome.reason ?? "unknown",
         });
       }
+    }
+    if (path.length > 0) {
+      const trail = [...path, home];
+      events.emit("avatar_path", {
+        path: buildAvatarPath(state, player, home, trail),
+      });
     }
   }
 }
@@ -139,6 +174,7 @@ export function resolveTick(input: ResolveTickInput): ResolveTickResult {
       rulesVersion: state.world.config.rulesVersion,
     });
   const events = new EventLog(header.tick);
+  refreshEnergy(state, input.content);
   const players = orderPlayers(state);
   resolvePlayerOrders(state, players, input.content, events);
   state.world.currentTick += 1;

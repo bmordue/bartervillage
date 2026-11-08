@@ -6,7 +6,16 @@
  * Later milestones register additional handlers in `ORDER_HANDLERS`.
  */
 
-import type { ContentPack, Order, OrderPayloadMap, OrderType, WorldState } from "./types.js";
+import type {
+  ContentPack,
+  Order,
+  OrderPayloadMap,
+  OrderType,
+  Player,
+  RegionId,
+  WorldState,
+} from "./types.js";
+import { spendEnergy, travelCostBetween } from "./world.js";
 
 export interface OrderOutcome {
   ok: boolean;
@@ -17,10 +26,13 @@ export interface OrderExecutionContext {
   state: WorldState;
   content: ContentPack;
   order: Order;
+  player: Player;
   /** The region the player is in at this point in their queue. */
-  location: { regionId: string };
+  location: { regionId: RegionId };
   /** Regions reached by travel orders earlier in this queue. */
-  reachable: Set<string>;
+  reachable: Set<RegionId>;
+  /** Regions visited by travel orders, in order, for the replay path. */
+  path: RegionId[];
 }
 
 export type OrderHandler<K extends OrderType = OrderType> = (
@@ -62,6 +74,24 @@ export function resolveOrder(context: OrderExecutionContext): OrderOutcome {
 
 registerOrderHandler("travel", (context) => {
   const payload = context.order.payload as OrderPayloadMap["travel"];
+  if (!context.state.regions.some((region) => region.id === payload.regionId)) {
+    return orderFailed(`Unknown region ${payload.regionId}`);
+  }
+  const cost = travelCostBetween(
+    context.state,
+    context.content,
+    context.location.regionId,
+    payload.regionId,
+  );
+  if (!Number.isFinite(cost)) {
+    return orderFailed("Travel cost could not be calculated");
+  }
+  if (!spendEnergy(context.player, cost)) {
+    return orderFailed(`Not enough energy to travel (needs ${cost})`);
+  }
+  if (payload.regionId !== context.location.regionId) {
+    context.path.push(payload.regionId);
+  }
   context.reachable.add(payload.regionId);
   context.location.regionId = payload.regionId;
   return orderSucceeded;

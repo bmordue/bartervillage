@@ -55,7 +55,7 @@ describe("determinism", () => {
   it("keeps archived event sequence stable", () => {
     const state = testWorldState({ orders: [testOrder()] });
     const result = resolveTick({ state, content: testContent() });
-    expect(result.events.map((event) => event.sequence)).toEqual([0]);
-    expect(result.events.map((event) => event.tick)).toEqual([5]);
+    expect(result.events.map((event) => event.sequence)).toEqual([0, 1]);
+    expect(result.events.map((event) => event.tick)).toEqual([5, 5]);
   });
 });

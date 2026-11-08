@@ -19,7 +19,37 @@
         "playerId": "p1",
         "orderType": "travel"
       }
+    },
+    {
+      "tick": 5,
+      "sequence": 1,
+      "version": 1,
+      "type": "avatar_path",
+      "payload": {
+        "path": {
+          "playerId": "p1",
+          "tick": 5,
+          "from": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "via": [
+            {
+              "regionId": "r2",
+              "x": 1,
+              "y": 0
+            }
+          ],
+          "to": {
+            "regionId": "r1",
+            "x": 0,
+            "y": 0
+          },
+          "returnedHome": true
+        }
+      }
     }
   ],
-  "stateHash": "81ee62ed49987a6b6c638ec57700e2c4f17dd8e64c7911d6a47fdb552f0c4705"
+  "stateHash": "f25776a8e357e9f4b3bd34d97a27927240cb71a4fad4e8d64d3a2296b04de511"
 }
