@@ -13,6 +13,16 @@
       "tick": 5,
       "sequence": 0,
       "version": 1,
+      "type": "weather",
+      "payload": {
+        "weather": "clear",
+        "season": "spring"
+      }
+    },
+    {
+      "tick": 5,
+      "sequence": 1,
+      "version": 1,
       "type": "order_resolved",
       "payload": {
         "orderId": "b",
@@ -22,7 +32,7 @@
     },
     {
       "tick": 5,
-      "sequence": 1,
+      "sequence": 2,
       "version": 1,
       "type": "avatar_path",
       "payload": {
@@ -52,7 +62,7 @@
     },
     {
       "tick": 5,
-      "sequence": 2,
+      "sequence": 3,
       "version": 1,
       "type": "order_resolved",
       "payload": {
@@ -63,7 +73,7 @@
     },
     {
       "tick": 5,
-      "sequence": 3,
+      "sequence": 4,
       "version": 1,
       "type": "avatar_path",
       "payload": {

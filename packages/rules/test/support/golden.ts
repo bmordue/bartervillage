@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import { expect } from "vitest";
 
-import { FixedClock } from "../../src/clock.js";
+import { type FixedClock } from "../../src/clock.js";
 import { resolveTick } from "../../src/engine.js";
 import type { ContentPack, GameEvent, TickHeader, WorldState } from "../../src/types.js";
 import { TEST_CLOCK } from "./harness.js";

@@ -72,47 +72,47 @@
 ### Orders, ready state and energy
 
 - [x] **M2.A01** Order queue model with player, tick, sequence, type, payload, status and failure reason (spec §13). _Depends on: M1.09._
-- [ ] **M2.A02** Implement execution for plant, harvest, tend, feed, build, upgrade, craft, travel, forage, fish and the barter order types (post offer, post wanted request, cancel offer, accept offer and counter-offer), plus place decoration; add help and gift in Milestone 6 and goal contributions in Milestone 7 (spec §13). _Depends on: M1.08, M1.10, M2.A01._
-- [ ] **M2.A03** Emit the event types for order resolution, avatar paths, crops, animals, construction, crafting, wild nodes and barter; add weather, goals, seasons, gifts, help and player-joined events in their milestones (spec §13). _Depends on: M1.09, M2.A02._
-- [ ] **M2.A04** Atomic order execution: validate all preconditions, then execute; a failed order logs a reason, spends no energy or goods, releases any locks and does not stop the next order (spec §4.2). _Depends on: M2.A02._
-- [ ] **M2.A05** Batch orders expanded into per-unit orders at queue time, with each unit atomic and independently failable (spec §4.2). _Depends on: M2.A01, M2.A04._
+- [x] **M2.A02** Implement execution for plant, harvest, tend, feed, build, upgrade, craft, travel, forage, fish and the barter order types (post offer, post wanted request, cancel offer, accept offer and counter-offer), plus place decoration; add help and gift in Milestone 6 and goal contributions in Milestone 7 (spec §13). _Depends on: M1.08, M1.10, M2.A01._
+- [x] **M2.A03** Emit the event types for order resolution, avatar paths, crops, animals, construction, crafting, wild nodes and barter; add weather, goals, seasons, gifts, help and player-joined events in their milestones (spec §13). _Depends on: M1.09, M2.A02._
+- [x] **M2.A04** Atomic order execution: validate all preconditions, then execute; a failed order logs a reason, spends no energy or goods, releases any locks and does not stop the next order (spec §4.2). _Depends on: M2.A02._
+- [x] **M2.A05** Batch orders expanded into per-unit orders at queue time, with each unit atomic and independently failable (spec §4.2). _Depends on: M2.A01, M2.A04._
 - [ ] **M2.A06** Queue editing before the tick, including removal of orders and release of their locks (spec §4.2). _Depends on: M2.A01, M2.A04, M2.D05, M2.E02._
-- [ ] **M2.A07** Ready state with monotonic, per-tick unique positions; un-readying allows edits and re-readying goes to the back of the queue (spec §4.2). _Depends on: M1.09, M2.A01._
-- [ ] **M2.A08** A player may ready with an empty queue (spec §4.2). _Depends on: M2.A07._
-- [ ] **M2.A09** Resolution order: ready players by ready position ascending, then unready players by player ID ascending; the same order applies to player-vs-player contention (spec §4.2). _Depends on: M2.A07._
-- [ ] **M2.A10** Within a player's turn, orders run in queue order (spec §4.2). _Depends on: M2.A01, M2.A09._
+- [x] **M2.A07** Ready state with monotonic, per-tick unique positions; un-readying allows edits and re-readying goes to the back of the queue (spec §4.2). _Depends on: M1.09, M2.A01._
+- [x] **M2.A08** A player may ready with an empty queue (spec §4.2). _Depends on: M2.A07._
+- [x] **M2.A09** Resolution order: ready players by ready position ascending, then unready players by player ID ascending; the same order applies to player-vs-player contention (spec §4.2). _Depends on: M2.A07._
+- [x] **M2.A10** Within a player's turn, orders run in queue order (spec §4.2). _Depends on: M2.A01, M2.A09._
 - [x] **M2.A11** Daily energy budget from content JSON, refreshed each tick with no carry-over (spec §4.3). _Depends on: M1.09, M3.16._
-- [ ] **M2.A12** Per-action energy costs from content JSON, with actions failing when energy is insufficient (spec §4.3). _Depends on: M2.A02, M2.A11._
+- [x] **M2.A12** Per-action energy costs from content JSON, with actions failing when energy is insufficient (spec §4.3). _Depends on: M2.A02, M2.A11._
 - [x] **M2.A13** Travel costs: free within the player's own region, 5 energy per region boundary crossed, diagonal neighbours count as two steps (spec §4.3, §5). _Depends on: M2.A11, M2.A12, M3.11; blocked by D.07._
 - [x] **M2.A14** Avatars start each tick at their own plot; one-way travel orders move them, and they return home at the end of the tick at no extra cost (spec §4.3, §5). _Depends on: M2.A02, M2.A13._
-- [ ] **M2.A15** Orders acting on a remote site validate that an earlier travel order in the same queue reached that region (spec §4.2, §4.3). _Depends on: M2.A10, M2.A13, M2.A14._
+- [x] **M2.A15** Orders acting on a remote site validate that an earlier travel order in the same queue reached that region (spec §4.2, §4.3). _Depends on: M2.A10, M2.A13, M2.A14._
 - [ ] **M2.A16** Help energy is paid by the helper; travel is paid by the travel order; the host pays nothing (spec §4.3). _Depends on: M2.A02, M2.A11; help order: M6.09._
-- [ ] **M2.A17** Missed-tick defaults appended after explicit orders for unready players: auto-harvest, then auto-water, then auto-feed (spec §4.4). _Depends on: M2.A09, M2.A10, M2.B01, M2.B09; blocked by D.05._
-- [ ] **M2.A18** Missed-tick defaults are enabled per player by default, respect energy and capacity, stop when exhausted and log what they did (spec §4.4). _Depends on: M2.A11, M2.A17, M2.D06._
-- [ ] **M2.A19** Missed-tick defaults never queue building, crafting, trading, gifting or goal contributions (spec §4.4). _Depends on: M2.A17._
-- [ ] **M2.A20** Default orders are ordinary orders and appear in the replay (spec §4.4). _Depends on: M2.A03, M2.A17._
+- [x] **M2.A17** Missed-tick defaults appended after explicit orders for unready players: auto-harvest, then auto-water, then auto-feed (spec §4.4). _Depends on: M2.A09, M2.A10, M2.B01, M2.B09; blocked by D.05._
+- [x] **M2.A18** Missed-tick defaults are enabled per player by default, respect energy and capacity, stop when exhausted and log what they did (spec §4.4). _Depends on: M2.A11, M2.A17, M2.D06._
+- [x] **M2.A19** Missed-tick defaults never queue building, crafting, trading, gifting or goal contributions (spec §4.4). _Depends on: M2.A17._
+- [x] **M2.A20** Default orders are ordinary orders and appear in the replay (spec §4.4). _Depends on: M2.A03, M2.A17._
 
 ### Crops and animals
 
-- [ ] **M2.B01** Crop lifecycle with planted tick, growth of 1 to 7 ticks, season gating and ripening at the start of tick T+N (spec §6.2). _Depends on: M1.09, M2.A02, M2.A03, M3.16, M7.01._
-- [ ] **M2.B02** A crop ripens only if it received the required watering and tending during each growth tick and did not fail (spec §6.2). _Depends on: M2.B01, M2.B03._
-- [ ] **M2.B03** Watering and tending orders at tick T set flags used by the T+1 world update, then reset (spec §6.2). _Depends on: M2.A02, M2.B01._
-- [ ] **M2.B04** A newly planted crop starts unwatered and untended; later orders in the same queue can water or tend it (spec §6.2). _Depends on: M2.B01, M2.B03._
-- [ ] **M2.B05** Crop failure per tile from weather, neglect, pests or blight; failure destroys only that tile's crop, leaves stored goods untouched and allows replanting (spec §6.2). _Depends on: M2.B01, M2.B03, M2.B07._
+- [x] **M2.B01** Crop lifecycle with planted tick, growth of 1 to 7 ticks, season gating and ripening at the start of tick T+N (spec §6.2). _Depends on: M1.09, M2.A02, M2.A03, M3.16, M7.01._
+- [x] **M2.B02** A crop ripens only if it received the required watering and tending during each growth tick and did not fail (spec §6.2). _Depends on: M2.B01, M2.B03._
+- [x] **M2.B03** Watering and tending orders at tick T set flags used by the T+1 world update, then reset (spec §6.2). _Depends on: M2.A02, M2.B01._
+- [x] **M2.B04** A newly planted crop starts unwatered and untended; later orders in the same queue can water or tend it (spec §6.2). _Depends on: M2.B01, M2.B03._
+- [x] **M2.B05** Crop failure per tile from weather, neglect, pests or blight; failure destroys only that tile's crop, leaves stored goods untouched and allows replanting (spec §6.2). _Depends on: M2.B01, M2.B03, M2.B07._
 - [ ] **M2.B06** Crops that cannot grow in the new season wither at season rollover (spec §6.2, §9). _Depends on: M2.B01, M7.01; blocked by D.11._
-- [ ] **M2.B07** Weather effects on crops: rain counts as watering, drought requires watering and raises failure chance, frost damages or fails frost-sensitive crops, clear has no modifier (spec §9). _Depends on: M2.B01, M2.B03, M3.16, M7.03._
-- [ ] **M2.B08** One crop per plot tile; planting and harvesting respect capacity and inventory rules (spec §13). _Depends on: M2.B01, M2.D06, M2.D07._
-- [ ] **M2.B09** Animals require daily feeding orders that cost energy; a feed at tick T satisfies the T+1 production check (spec §6.2). _Depends on: M2.A02, M2.A11, M2.A12, M3.16._
-- [ ] **M2.B10** An unfed animal skips its production check, is not lost and causes no other effect (spec §6.2). _Depends on: M2.B09._
+- [x] **M2.B07** Weather effects on crops: rain counts as watering, drought requires watering and raises failure chance, frost damages or fails frost-sensitive crops, clear has no modifier (spec §9). _Depends on: M2.B01, M2.B03, M3.16, M7.03._
+- [x] **M2.B08** One crop per plot tile; planting and harvesting respect capacity and inventory rules (spec §13). _Depends on: M2.B01, M2.D06, M2.D07._
+- [x] **M2.B09** Animals require daily feeding orders that cost energy; a feed at tick T satisfies the T+1 production check (spec §6.2). _Depends on: M2.A02, M2.A11, M2.A12, M3.16._
+- [x] **M2.B10** An unfed animal skips its production check, is not lost and causes no other effect (spec §6.2). _Depends on: M2.B09._
 
 ### Foraging and fishing
 
-- [ ] **M2.C01** Wild nodes with resource, amount, capacity and regrowth rate, regrowing each tick up to capacity (spec §5, §14.4). _Depends on: M1.09, M3.16._
+- [x] **M2.C01** Wild nodes with resource, amount, capacity and regrowth rate, regrowing each tick up to capacity (spec §5, §14.4). _Depends on: M1.09, M3.16._
 - [ ] **M2.C02** Wild zones can be depleted by over-harvesting; shared water zones support fishing (spec §5). _Depends on: M2.C01, M3.14._
-- [ ] **M2.C03** Claim validation: node has at least one unit, player is in the node's region, player has energy and some free storage (spec §6.2). _Depends on: M2.A11, M2.A15, M2.C01, M2.D06._
-- [ ] **M2.C04** A valid claim reserves energy and records the claim during the player's turn without applying yield yet (spec §6.2, §4.3). _Depends on: M2.A02, M2.C03._
-- [ ] **M2.C05** At most one claim per player per node per tick (spec §6.2, §13). _Depends on: M2.C03._
-- [ ] **M2.C06** Claimant sets are fixed after all player turns; invalid claims are excluded (spec §6.2). _Depends on: M2.A09, M2.C03._
+- [x] **M2.C03** Claim validation: node has at least one unit, player is in the node's region, player has energy and some free storage (spec §6.2). _Depends on: M2.A11, M2.A15, M2.C01, M2.D06._
+- [x] **M2.C04** A valid claim reserves energy and records the claim during the player's turn without applying yield yet (spec §6.2, §4.3). _Depends on: M2.A02, M2.C03._
+- [x] **M2.C05** At most one claim per player per node per tick (spec §6.2, §13). _Depends on: M2.C03._
+- [x] **M2.C06** Claimant sets are fixed after all player turns; invalid claims are excluded (spec §6.2). _Depends on: M2.A09, M2.C03._
 - [ ] **M2.C07** Each claimant receives `floor(nodeYield / claimantCount)` units; the remainder stays on the node, and a zero share still spends the reserved energy (spec §6.2). _Depends on: M2.C06; blocked by D.06._
 - [ ] **M2.C08** Shares apply in queue order, capped by free storage; overflow stays on the node and is logged as a partial fill (spec §6.2). _Depends on: M2.A10, M2.C07, M2.D06._
 - [ ] **M2.C09** Dock fishing is private with no split; shared-water fishing uses the same claim-and-split rule as foraging (spec §6.2). _Depends on: M2.C07, M2.D01._
@@ -136,9 +136,9 @@
 
 ### Barter
 
-- [ ] **M2.E01** Post types: offer, wanted request and counter-offer, with gives, wants, quantity, expiry, status and parent offer ID (spec §7, §13). _Depends on: M1.09._
+- [x] **M2.E01** Post types: offer, wanted request and counter-offer, with gives, wants, quantity, expiry, status and parent offer ID (spec §7, §13). _Depends on: M1.09._
 - [ ] **M2.E02** Offers lock the offered goods at queue time; removing or failing the order releases the lock (spec §7). _Depends on: M2.A04, M2.D06, M2.D07, M2.E01._
-- [ ] **M2.E03** Wanted requests lock nothing, request proposals and cannot be accepted directly; they settle by accepting a counter-offer (spec §7). _Depends on: M2.E01._
+- [x] **M2.E03** Wanted requests lock nothing, request proposals and cannot be accepted directly; they settle by accepting a counter-offer (spec §7). _Depends on: M2.E01._
 - [ ] **M2.E04** Counter-offers lock only the counterer's side; the wanter's side locks when the wanter accepts (spec §7). _Depends on: M2.E01, M2.E02._
 - [ ] **M2.E05** Posting a counter-offer leaves the original post open; the original and the counter lock their own goods independently (spec §7). _Depends on: M2.E04._
 - [ ] **M2.E06** Counters are one level deep and cannot themselves be countered (spec §7). _Depends on: M2.E01; blocked by D.17._
@@ -306,10 +306,10 @@
 
 ## Milestone 7: Seasons, weather, shared goals and web push (spec §16.7)
 
-- [ ] **M7.01** Season length of 7 ticks, four seasons and a 28-tick year (spec §9). _Depends on: M1.09, M3.01._
+- [x] **M7.01** Season length of 7 ticks, four seasons and a 28-tick year (spec §9). _Depends on: M1.09, M3.01._
 - [ ] **M7.02** Season rollover as the first world-update step, including withering invalid crops and leaving stored goods unaffected (spec §9). _Depends on: M2.B06, M7.01._
-- [ ] **M7.03** Seeded weather roll each tick for clear, rain, drought and frost (spec §9). _Depends on: M1.10, M7.01._
-- [ ] **M7.04** Apply weather modifiers from content JSON and log the weather result in the replay (spec §9). _Depends on: M2.B07, M3.16, M7.03._
+- [x] **M7.03** Seeded weather roll each tick for clear, rain, drought and frost (spec §9). _Depends on: M1.10, M7.01._
+- [x] **M7.04** Apply weather modifiers from content JSON and log the weather result in the replay (spec §9). _Depends on: M2.B07, M3.16, M7.03._
 - [ ] **M7.05** Shared goals: collective builds funded by contributed goods and seasonal festivals with group quotas (spec §9). _Depends on: M3.01, M3.16._
 - [ ] **M7.06** Host-configurable goal schedule; schedule changes take effect at the next goal (spec §9). _Depends on: M3.01, M7.05._
 - [ ] **M7.07** Goal contributions lock at queue time and are consumed only if the goal succeeds (spec §9). _Depends on: M2.A02, M2.A06, M2.D06, M7.05._

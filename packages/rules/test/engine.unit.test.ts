@@ -13,7 +13,7 @@ describe("resolveTick entry point", () => {
     expect(result.state.world.currentTick).toBe(6);
     expect(result.state.ready).toEqual([]);
     expect(result.state.claims).toEqual([]);
-    expect(result.events).toEqual([]);
+    expect(result.events.map((event) => event.type)).toEqual(["weather"]);
     expect(result.stateHash).toMatch(/^[0-9a-f]{64}$/);
     expect(result.header).toMatchObject({ v: 1, tick: 5, worldSeed: "seed-1" });
     expect(state.world.currentTick).toBe(5);
@@ -31,12 +31,16 @@ describe("resolveTick entry point", () => {
     const state = testWorldState({ orders: [testOrder()] });
     const result = resolveTick({ state, content: testContent() });
     expect(result.state.orders[0]?.status).toBe("resolved");
-    expect(result.events.map((event) => event.type)).toEqual(["order_resolved", "avatar_path"]);
-    expect(result.events[0]).toMatchObject({
+    expect(result.events.map((event) => event.type)).toEqual([
+      "weather",
+      "order_resolved",
+      "avatar_path",
+    ]);
+    expect(result.events[1]).toMatchObject({
       type: "order_resolved",
       payload: { orderId: "o1", playerId: "p1", orderType: "travel" },
     });
-    expect(result.events[1]).toMatchObject({
+    expect(result.events[2]).toMatchObject({
       type: "avatar_path",
       payload: { path: { playerId: "p1", returnedHome: true } },
     });
@@ -44,14 +48,12 @@ describe("resolveTick entry point", () => {
 
   it("fails an order with no registered handler without changing other state", () => {
     const state = testWorldState({
-      orders: [
-        testOrder({ id: "o2", type: "plant", payload: { tile: { x: 1, y: 1 }, crop: "wheat" } }),
-      ],
+      orders: [testOrder({ id: "o2", type: "gift", payload: { toPlayerId: "p2", items: [] } })],
     });
     const result = resolveTick({ state, content: testContent() });
     expect(result.state.orders[0]?.status).toBe("failed");
     expect(result.state.orders[0]?.failureReason).toContain("No handler");
-    expect(result.events[0]).toMatchObject({ type: "order_failed" });
+    expect(result.events.some((event) => event.type === "order_failed")).toBe(true);
   });
 
   it("excludes deadline and lease data from the state hash", () => {

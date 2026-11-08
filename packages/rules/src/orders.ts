@@ -15,6 +15,7 @@ import type {
   RegionId,
   WorldState,
 } from "./types.js";
+import type { EventLog } from "./events.js";
 import { spendEnergy, travelCostBetween } from "./world.js";
 
 export interface OrderOutcome {
@@ -33,6 +34,8 @@ export interface OrderExecutionContext {
   reachable: Set<RegionId>;
   /** Regions visited by travel orders, in order, for the replay path. */
   path: RegionId[];
+  /** The tick event log, supplied by the engine so handlers can emit events. */
+  events?: EventLog;
 }
 
 export type OrderHandler<K extends OrderType = OrderType> = (

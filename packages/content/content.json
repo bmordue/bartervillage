@@ -216,10 +216,7 @@
       "id": "wheat",
       "name": "Wheat",
       "growthTicks": 4,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "wheat",
@@ -239,10 +236,7 @@
       "id": "carrot",
       "name": "Carrot",
       "growthTicks": 3,
-      "seasons": [
-        "spring",
-        "autumn"
-      ],
+      "seasons": ["spring", "autumn"],
       "yield": [
         {
           "item": "carrot",
@@ -258,10 +252,7 @@
       "id": "potato",
       "name": "Potato",
       "growthTicks": 5,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "potato",
@@ -277,10 +268,7 @@
       "id": "onion",
       "name": "Onion",
       "growthTicks": 3,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "onion",
@@ -296,9 +284,7 @@
       "id": "cabbage",
       "name": "Cabbage",
       "growthTicks": 6,
-      "seasons": [
-        "autumn"
-      ],
+      "seasons": ["autumn"],
       "yield": [
         {
           "item": "cabbage",
@@ -314,9 +300,7 @@
       "id": "tomato",
       "name": "Tomato",
       "growthTicks": 4,
-      "seasons": [
-        "summer"
-      ],
+      "seasons": ["summer"],
       "yield": [
         {
           "item": "tomato",
@@ -332,9 +316,7 @@
       "id": "corn",
       "name": "Corn",
       "growthTicks": 5,
-      "seasons": [
-        "summer"
-      ],
+      "seasons": ["summer"],
       "yield": [
         {
           "item": "corn",
@@ -350,9 +332,7 @@
       "id": "pumpkin",
       "name": "Pumpkin",
       "growthTicks": 7,
-      "seasons": [
-        "autumn"
-      ],
+      "seasons": ["autumn"],
       "yield": [
         {
           "item": "pumpkin",
@@ -368,10 +348,7 @@
       "id": "grape",
       "name": "Grape",
       "growthTicks": 6,
-      "seasons": [
-        "summer",
-        "autumn"
-      ],
+      "seasons": ["summer", "autumn"],
       "yield": [
         {
           "item": "grape",
@@ -387,10 +364,7 @@
       "id": "herb",
       "name": "Herb",
       "growthTicks": 2,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "herb",
@@ -406,10 +380,7 @@
       "id": "flax",
       "name": "Flax",
       "growthTicks": 5,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "flax",
@@ -425,9 +396,7 @@
       "id": "cotton",
       "name": "Cotton",
       "growthTicks": 6,
-      "seasons": [
-        "summer"
-      ],
+      "seasons": ["summer"],
       "yield": [
         {
           "item": "cotton",
@@ -443,9 +412,7 @@
       "id": "mushroom",
       "name": "Mushroom",
       "growthTicks": 3,
-      "seasons": [
-        "autumn"
-      ],
+      "seasons": ["autumn"],
       "yield": [
         {
           "item": "mushroom",
@@ -461,9 +428,7 @@
       "id": "turnip",
       "name": "Turnip",
       "growthTicks": 3,
-      "seasons": [
-        "autumn"
-      ],
+      "seasons": ["autumn"],
       "yield": [
         {
           "item": "turnip",
@@ -479,10 +444,7 @@
       "id": "strawberry",
       "name": "Strawberry",
       "growthTicks": 4,
-      "seasons": [
-        "spring",
-        "summer"
-      ],
+      "seasons": ["spring", "summer"],
       "yield": [
         {
           "item": "strawberry",
@@ -1624,10 +1586,7 @@
           "energyCost": 10,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "bread",
-            "cornbread"
-          ]
+          "unlocksRecipes": ["bread", "cornbread"]
         },
         {
           "level": 2,
@@ -1640,12 +1599,7 @@
           "energyCost": 15,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "apple_pie",
-            "cake",
-            "pumpkin_pie",
-            "strawberry_tart"
-          ]
+          "unlocksRecipes": ["apple_pie", "cake", "pumpkin_pie", "strawberry_tart"]
         }
       ]
     },
@@ -1670,14 +1624,7 @@
           "energyCost": 10,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "plank",
-            "rope",
-            "brick",
-            "charcoal",
-            "fence",
-            "bucket"
-          ]
+          "unlocksRecipes": ["plank", "rope", "brick", "charcoal", "fence", "bucket"]
         },
         {
           "level": 2,
@@ -1722,11 +1669,7 @@
           "energyCost": 10,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "thread",
-            "cloth",
-            "wool_cloth"
-          ]
+          "unlocksRecipes": ["thread", "cloth", "wool_cloth"]
         },
         {
           "level": 2,
@@ -1739,21 +1682,14 @@
           "energyCost": 15,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "blanket",
-            "clothes",
-            "tapestry"
-          ]
+          "unlocksRecipes": ["blanket", "clothes", "tapestry"]
         }
       ]
     },
     {
       "id": "dock",
       "name": "Dock",
-      "biomeLocks": [
-        "riverside",
-        "coast"
-      ],
+      "biomeLocks": ["riverside", "coast"],
       "maxLevel": 2,
       "levels": [
         {
@@ -1771,10 +1707,7 @@
           "energyCost": 10,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "dried_fish",
-            "bait"
-          ]
+          "unlocksRecipes": ["dried_fish", "bait"]
         },
         {
           "level": 2,
@@ -1787,10 +1720,7 @@
           "energyCost": 15,
           "durationTicks": 0,
           "storageCapacity": 0,
-          "unlocksRecipes": [
-            "fish_oil",
-            "smoked_fish"
-          ]
+          "unlocksRecipes": ["fish_oil", "smoked_fish"]
         }
       ]
     }

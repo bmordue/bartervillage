@@ -1,7 +1,15 @@
 import { computeStateHash } from "./canonical.js";
+import { advanceConstruction } from "./buildings.js";
+import { advanceCrafting } from "./crafting.js";
+import { advanceCrops, witherOutOfSeason } from "./crops.js";
+import { appendMissedTickDefaults } from "./defaults.js";
 import { EventLog } from "./events.js";
+import { regrowWildNodes, resolveWildClaims } from "./forage.js";
+import "./handlers.js";
 import { resolveOrder } from "./orders.js";
-import type { Rng } from "./rng.js";
+import { runAnimalProduction } from "./animals.js";
+import { expirePosts } from "./barter.js";
+import { createRng, type Rng } from "./rng.js";
 import type {
   AvatarPath,
   AvatarPathPoint,
@@ -14,7 +22,8 @@ import type {
   TickHeader,
   WorldState,
 } from "./types.js";
-import { makeTickHeader } from "./versions.js";
+import { isSeasonRollover, rollWeather, seasonForTick, yearForTick } from "./seasons.js";
+import { makeTickHeader, tickSeedParts } from "./versions.js";
 import { refreshEnergy, regionById } from "./world.js";
 
 export interface ResolveTickInput {
@@ -121,6 +130,7 @@ export function resolvePlayerOrders(
         location,
         reachable,
         path,
+        events,
       });
       if (outcome.ok) {
         order.status = "resolved";
@@ -174,9 +184,40 @@ export function resolveTick(input: ResolveTickInput): ResolveTickResult {
       rulesVersion: state.world.config.rulesVersion,
     });
   const events = new EventLog(header.tick);
+  const rng = input.rng ?? createRng(tickSeedParts(header));
   refreshEnergy(state, input.content);
+
+  const resolvedSeason = seasonForTick(state.world.currentTick);
+  if (state.world.season !== resolvedSeason) {
+    state.world.season = resolvedSeason;
+    if (isSeasonRollover(state.world.currentTick)) {
+      events.emit("season_change", {
+        season: resolvedSeason,
+        year: yearForTick(state.world.currentTick),
+      });
+    }
+    witherOutOfSeason(state, input.content, resolvedSeason, events);
+  }
+
+  state.world.weather = rollWeather(rng.fork("weather"), state.world.season);
+  events.emit("weather", { weather: state.world.weather, season: state.world.season });
+
+  advanceCrops(state, input.content, rng.fork("crops"), events);
+  runAnimalProduction(state, input.content, events);
+  advanceConstruction(state, input.content, events);
+  advanceCrafting(state, input.content, events);
+  regrowWildNodes(state, events);
+  expirePosts(state, events);
+
   const players = orderPlayers(state);
+  const ready = currentReadyPositions(state);
+  for (const player of players) {
+    if (!ready.has(player.id)) {
+      appendMissedTickDefaults(state, player, input.content);
+    }
+  }
   resolvePlayerOrders(state, players, input.content, events);
+  resolveWildClaims(state, input.content, events);
   state.world.currentTick += 1;
   state.world.resolving = null;
   state.ready = [];

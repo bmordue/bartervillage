@@ -8,6 +8,17 @@
     "contentVersion": "test-content-1",
     "rulesVersion": "1.0.0"
   },
-  "events": [],
+  "events": [
+    {
+      "tick": 5,
+      "sequence": 0,
+      "version": 1,
+      "type": "weather",
+      "payload": {
+        "weather": "clear",
+        "season": "spring"
+      }
+    }
+  ],
   "stateHash": "3ecbb694a1ac3cd50e761702173bd2b0ba91b84198d3a8a75889ba51ff8d0d7e"
 }
