@@ -62,9 +62,38 @@ describe("map generation", () => {
     const snapshot = structuredClone(first);
     const second = appendRegion(state, content);
     expect(second.region.id).not.toBe(first.region.id);
+    expect(first.region).toEqual(snapshot.region);
     expect(first.tiles).toEqual(snapshot.tiles);
     expect(first.plots).toEqual(snapshot.plots);
+    expect(first.wildNodes).toEqual(snapshot.wildNodes);
+    expect(state.regions).toEqual([snapshot.region, second.region]);
+    expect(state.tiles.filter((tile) => tile.regionId === snapshot.region.id)).toEqual(
+      snapshot.tiles,
+    );
+    expect(state.plots.filter((plot) => plot.regionId === snapshot.region.id)).toEqual(
+      snapshot.plots,
+    );
+    expect(state.wildNodes.filter((node) => node.regionId === snapshot.region.id)).toEqual(
+      snapshot.wildNodes,
+    );
     expect(state.regions).toHaveLength(2);
+  });
+
+  it("produces the same multi-region map for the same seed and version", () => {
+    const build = () => {
+      const state = testWorldState({ regions: [], tiles: [], plots: [], wildNodes: [] });
+      for (let index = 0; index < 4; index += 1) {
+        appendRegion(state, content);
+      }
+      return state;
+    };
+
+    const a = build();
+    const b = build();
+    expect(b.regions).toEqual(a.regions);
+    expect(b.tiles).toEqual(a.tiles);
+    expect(b.plots).toEqual(a.plots);
+    expect(b.wildNodes).toEqual(a.wildNodes);
   });
 });
 

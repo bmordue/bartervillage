@@ -191,7 +191,7 @@
 - [x] **M3.16** Versioned content JSON with a validator for energy costs, recipes, crops, buildings, biomes, weather modifiers, goals and the phrase book (spec §12). _Depends on: M1.07, M1.09._
 - [ ] **M3.17** Pin a content version per world; content changes apply at the next tick (spec §12). _Depends on: M3.01, M3.16._
 - [ ] **M3.18** Current-state tables plus an append-only archived event log and a per-tick state hash (spec §12). _Depends on: M1.11, M2.A03, M3.01._
-- [ ] **M3.19** Generator tests: the same seed and version produce the same map; appending regions never changes existing regions or plots. _Depends on: CT.01, M3.06, M3.07, M3.08._
+- [x] **M3.19** Generator tests: the same seed and version produce the same map; appending regions never changes existing regions or plots. _Depends on: CT.01, M3.06, M3.07, M3.08._
 - [ ] **M3.20** Migration tests from an empty database and indexes for tick, player and board queries. _Depends on: CT.05, M3.01, M3.04._
 
 ## Milestone 4: Tick worker, REST API and invite-only auth (spec §16.4)
