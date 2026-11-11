@@ -102,3 +102,66 @@ describe("content validation", () => {
     }
   });
 });
+
+describe("final content pack requirements", () => {
+  const result = validateContent(rawContent);
+  if (!result.ok) {
+    throw new Error(result.errors.join("\n"));
+  }
+  const content = result.content;
+
+  it("defines the final biome and trait lists (M8.01)", () => {
+    expect(content.biomes).toHaveLength(5);
+    for (const biome of content.biomes) {
+      expect(biome.traits.soil).toBeGreaterThanOrEqual(0);
+      expect(biome.traits.water).toBeGreaterThanOrEqual(0);
+      expect(biome.traits.light).toBeGreaterThanOrEqual(0);
+    }
+  });
+
+  it("defines roughly 15 crops with 1-7 tick growth and season rules (M8.02)", () => {
+    expect(content.crops).toHaveLength(15);
+    for (const crop of content.crops) {
+      expect(Number.isInteger(crop.growthTicks)).toBe(true);
+      expect(crop.growthTicks).toBeGreaterThanOrEqual(1);
+      expect(crop.growthTicks).toBeLessThanOrEqual(7);
+      expect(crop.seasons.length).toBeGreaterThan(0);
+    }
+  });
+
+  it("defines eight building types including the biome-locked dock (M8.03)", () => {
+    expect(content.buildings).toHaveLength(8);
+    const dock = content.buildings.find((building) => building.id === "dock");
+    expect(dock).toBeDefined();
+    expect(dock?.biomeLocks).toEqual(expect.arrayContaining(["riverside", "coast"]));
+    for (const building of content.buildings) {
+      expect(building.levels).toHaveLength(building.maxLevel);
+      for (const level of building.levels) {
+        expect(Array.isArray(level.cost)).toBe(true);
+        expect(level.storageCapacity).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("defines forty recipes with inputs, outputs and instant or timed behaviour (M8.04)", () => {
+    expect(content.recipes).toHaveLength(40);
+    for (const recipe of content.recipes) {
+      expect(recipe.inputs.length).toBeGreaterThan(0);
+      expect(recipe.outputs.length).toBeGreaterThan(0);
+      expect(recipe.durationTicks).toBeGreaterThanOrEqual(0);
+    }
+    expect(content.recipes.some((recipe) => recipe.durationTicks === 0)).toBe(true);
+    expect(content.recipes.some((recipe) => recipe.durationTicks > 0)).toBe(true);
+    const buildings = new Set(content.recipes.map((recipe) => recipe.building));
+    expect(buildings).toEqual(new Set(["kitchen", "bakery", "workshop", "loom", "dock"]));
+  });
+
+  it("defines a fixed, unique phrase book (M8.07)", () => {
+    expect(content.phrases).toHaveLength(16);
+    expect(new Set(content.phrases.map((phrase) => phrase.id)).size).toBe(content.phrases.length);
+    expect(new Set(content.phrases.map((phrase) => phrase.text)).size).toBe(content.phrases.length);
+    for (const phrase of content.phrases) {
+      expect(phrase.text.length).toBeGreaterThan(0);
+    }
+  });
+});
