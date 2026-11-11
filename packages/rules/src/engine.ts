@@ -223,7 +223,12 @@ export function resolveTick(input: ResolveTickInput): ResolveTickResult {
     }
   }
   resolvePlayerOrders(state, players, input.content, events);
-  resolveWildClaims(state, input.content, events);
+  resolveWildClaims(
+    state,
+    input.content,
+    events,
+    players.map((player) => player.id),
+  );
   state.world.currentTick += 1;
   state.world.resolving = null;
   state.ready = [];

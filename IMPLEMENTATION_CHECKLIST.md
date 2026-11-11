@@ -114,7 +114,7 @@
 - [x] **M2.C05** At most one claim per player per node per tick (spec §6.2, §13). _Depends on: M2.C03._
 - [x] **M2.C06** Claimant sets are fixed after all player turns; invalid claims are excluded (spec §6.2). _Depends on: M2.A09, M2.C03._
 - [x] **M2.C07** Each claimant receives `floor(nodeYield / claimantCount)` units; the remainder stays on the node, and a zero share still spends the reserved energy (spec §6.2). _Depends on: M2.C06; blocked by D.06._
-- [ ] **M2.C08** Shares apply in queue order, capped by free storage; overflow stays on the node and is logged as a partial fill (spec §6.2). _Depends on: M2.A10, M2.C07, M2.D06._
+- [x] **M2.C08** Shares apply in queue order, capped by free storage; overflow stays on the node and is logged as a partial fill (spec §6.2). _Depends on: M2.A10, M2.C07, M2.D06._
 - [x] **M2.C09** Dock fishing is private with no split; shared-water fishing uses the same claim-and-split rule as foraging (spec §6.2). _Depends on: M2.C07, M2.D01._
 - [x] **M2.C10** Docks are biome-locked to riverside or coast sites (spec §6.1). _Depends on: M2.D01, M3.13._
 

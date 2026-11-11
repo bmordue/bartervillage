@@ -220,10 +220,17 @@ export function registerForageHandlers(): void {
   registerOrderHandler("fish", makeClaimHandler(true));
 }
 
-function sortClaims(claims: readonly WildClaim[]): WildClaim[] {
+function sortClaims(
+  claims: readonly WildClaim[],
+  playerOrder?: ReadonlyMap<PlayerId, number>,
+): WildClaim[] {
+  const rank = (playerId: PlayerId): number =>
+    playerOrder?.get(playerId) ?? Number.MAX_SAFE_INTEGER;
   return [...claims].sort(
     (a, b) =>
-      a.tick - b.tick || a.sequence - b.sequence || compareCodeUnits(a.playerId, b.playerId),
+      rank(a.playerId) - rank(b.playerId) ||
+      a.sequence - b.sequence ||
+      compareCodeUnits(a.playerId, b.playerId),
   );
 }
 
@@ -241,14 +248,22 @@ function uniqueClaimants(claims: readonly WildClaim[]): WildClaim[] {
 }
 
 /**
- * Apply this tick's claim shares. Each claimant gets
- * `floor(nodeYield / claimantCount)` units in claim order, capped by free
- * storage; overflow stays on the node. Zero shares still consume the energy
- * already reserved by the handler.
+ * Apply this tick's claim shares in queue order. Each claimant gets
+ * `floor(nodeYield / claimantCount)` units, capped by free storage; overflow
+ * stays on the node and is logged as a partial fill. Zero shares still consume
+ * the energy already reserved by the handler.
  */
-export function resolveWildClaims(state: WorldState, content: ContentPack, events: EventLog): void {
+export function resolveWildClaims(
+  state: WorldState,
+  content: ContentPack,
+  events: EventLog,
+  playerOrder?: readonly PlayerId[],
+): void {
   const tick = state.world.currentTick;
   const pending = state.claims.filter((claim) => claim.tick === tick);
+  const rankByPlayer = playerOrder
+    ? new Map(playerOrder.map((playerId, index) => [playerId, index]))
+    : undefined;
 
   if (pending.length > 0) {
     const claimsByNode = new Map<NodeId, WildClaim[]>();
@@ -269,7 +284,7 @@ export function resolveWildClaims(state: WorldState, content: ContentPack, event
       if (!node) {
         continue;
       }
-      const claimants = uniqueClaimants(sortClaims(claimsByNode.get(nodeId) ?? []));
+      const claimants = uniqueClaimants(sortClaims(claimsByNode.get(nodeId) ?? [], rankByPlayer));
       if (claimants.length === 0) {
         continue;
       }
@@ -287,11 +302,18 @@ export function resolveWildClaims(state: WorldState, content: ContentPack, event
         }
         const capacity = freeCapacity(state, content, plot.id);
         const applied = Math.min(share, capacity, node.amount);
-        if (applied <= 0) {
-          continue;
+        if (applied > 0) {
+          addItems(state, content, plot.id, [{ item: node.resource, quantity: applied }]);
+          node.amount -= applied;
         }
-        addItems(state, content, plot.id, [{ item: node.resource, quantity: applied }]);
-        node.amount -= applied;
+        events.emit("node_claimed", {
+          playerId: player.id,
+          nodeId: node.id,
+          resource: node.resource,
+          share,
+          applied,
+          overflow: share - applied,
+        });
       }
 
       if (before > 0 && node.amount === 0) {

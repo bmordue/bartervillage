@@ -416,10 +416,44 @@ describe("wild-claim resolution", () => {
     ]);
     expect(state.wildNodes[0]?.amount).toBe(1);
     expect(state.claims).toEqual([]);
-    expect(events.events).toEqual([]);
+    expect(events.events.map((event) => [event.type, event.payload])).toEqual([
+      [
+        "node_claimed",
+        {
+          playerId: "p1",
+          nodeId: "n1",
+          resource: "berries",
+          share: 3,
+          applied: 3,
+          overflow: 0,
+        },
+      ],
+      [
+        "node_claimed",
+        {
+          playerId: "p2",
+          nodeId: "n1",
+          resource: "berries",
+          share: 3,
+          applied: 3,
+          overflow: 0,
+        },
+      ],
+      [
+        "node_claimed",
+        {
+          playerId: "p3",
+          nodeId: "n1",
+          resource: "berries",
+          share: 3,
+          applied: 3,
+          overflow: 0,
+        },
+      ],
+    ]);
   });
 
-  it("caps shares by free storage and leaves overflow on the node", () => {
+  it("caps shares by free storage and logs the overflow as a partial fill", () => {
     const state = forageState({
       buildings: [storehouseBuilding("b1", "plot1")],
       wildNodes: [wildNode({ amount: 10 })],
@@ -431,10 +465,47 @@ describe("wild-claim resolution", () => {
 
     expect(state.inventory).toEqual([{ plotId: "plot1", item: "berries", quantity: 2, locked: 0 }]);
     expect(state.wildNodes[0]?.amount).toBe(8);
-    expect(events.events).toEqual([]);
+    expect(events.events).toEqual([
+      {
+        tick: 5,
+        sequence: 0,
+        version: 1,
+        type: "node_claimed",
+        payload: {
+          playerId: "p1",
+          nodeId: "n1",
+          resource: "berries",
+          share: 10,
+          applied: 2,
+          overflow: 8,
+        },
+      },
+    ]);
   });
 
-  it("emits node_depleted when claims bring the node to zero", () => {
+  it("applies shares in player queue order", () => {
+    const { players, plots, buildings } = multiPlayerState(2);
+    const state = forageState({
+      players,
+      plots,
+      buildings,
+      wildNodes: [wildNode({ amount: 2 })],
+      claims: [
+        { playerId: "p1", nodeId: "n1", tick: 5, sequence: 1 },
+        { playerId: "p2", nodeId: "n1", tick: 5, sequence: 1 },
+      ],
+    });
+    const events = new EventLog(5);
+
+    resolveWildClaims(state, forageContent(), events, ["p2", "p1"]);
+
+    expect(state.inventory.map((row) => row.plotId)).toEqual(["plot2", "plot1"]);
+    expect(
+      events.events.filter((event) => event.type === "node_claimed").map((event) => event.payload),
+    ).toMatchObject([{ playerId: "p2" }, { playerId: "p1" }]);
+  });
+
+  it("emits node_depleted after the claims that bring the node to zero", () => {
     const { players, plots, buildings } = multiPlayerState(2);
     const state = forageState({
       players,
@@ -452,15 +523,18 @@ describe("wild-claim resolution", () => {
 
     expect(state.wildNodes[0]?.amount).toBe(0);
     expect(state.inventory.map((row) => row.quantity)).toEqual([1, 1]);
-    expect(events.events).toEqual([
-      {
-        tick: 5,
-        sequence: 0,
-        version: 1,
-        type: "node_depleted",
-        payload: { nodeId: "n1", resource: "berries", amount: 0 },
-      },
+    expect(events.events.map((event) => event.type)).toEqual([
+      "node_claimed",
+      "node_claimed",
+      "node_depleted",
     ]);
+    expect(events.events[2]).toEqual({
+      tick: 5,
+      sequence: 2,
+      version: 1,
+      type: "node_depleted",
+      payload: { nodeId: "n1", resource: "berries", amount: 0 },
+    });
   });
 
   it("keeps one claimant per player per node even if duplicate claims are present", () => {

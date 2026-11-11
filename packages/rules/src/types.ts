@@ -108,6 +108,7 @@ export const EVENT_TYPES = [
   "season_change",
   "node_depleted",
   "node_regrown",
+  "node_claimed",
   "player_joined",
 ] as const;
 export type EventType = (typeof EVENT_TYPES)[number];
@@ -693,6 +694,14 @@ export interface NodePayload {
   resource: ItemId;
   amount: number;
 }
+export interface NodeClaimPayload {
+  playerId: PlayerId;
+  nodeId: NodeId;
+  resource: ItemId;
+  share: number;
+  applied: number;
+  overflow: number;
+}
 export interface PlayerJoinedPayload {
   playerId: PlayerId;
   plotId: PlotId;
@@ -724,6 +733,7 @@ export interface EventPayloadMap {
   season_change: SeasonChangePayload;
   node_depleted: NodePayload;
   node_regrown: NodePayload;
+  node_claimed: NodeClaimPayload;
   player_joined: PlayerJoinedPayload;
 }
 
