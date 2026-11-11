@@ -438,7 +438,8 @@ export interface ForagePayload {
   nodeId: NodeId;
 }
 export interface FishPayload {
-  nodeId: NodeId;
+  nodeId?: NodeId;
+  buildingId?: BuildingId;
 }
 export interface PostOfferPayload {
   gives: ItemStack[];

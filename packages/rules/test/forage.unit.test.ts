@@ -43,6 +43,38 @@ function storehouseBuilding(id: string, plotId: string) {
   };
 }
 
+function dockDefinition(): BuildingDefinition {
+  return {
+    id: "dock",
+    name: "Dock",
+    biomeLocks: ["riverside", "coast"],
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        cost: [],
+        energyCost: 0,
+        durationTicks: 0,
+        storageCapacity: 0,
+        unlocksRecipes: [],
+      },
+    ],
+  };
+}
+
+function dockBuilding(id: string, plotId: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    plotId,
+    type: "dock",
+    level: 1,
+    constructionKind: null,
+    constructionCompleteTick: null,
+    craftQueue: [],
+    ...overrides,
+  };
+}
+
 function forageContent(capacity = 100, forageCost = 5, fishCost = 4): ContentPack {
   const content = testContent({ buildings: [storehouseDefinition(capacity)] });
   content.energy.costs.forage = forageCost;
@@ -235,6 +267,123 @@ describe("forage and fish claims", () => {
     const fishNode = forageState({ tiles: [], wildNodes: [wildNode({ resource: "fish" })] });
     expect(runOrder(fishNode, content, order).ok).toBe(true);
     expect(fishNode.players[0]?.energy).toBe(96);
+  });
+});
+
+describe("dock fishing (M2.C09)", () => {
+  function dockContent(capacity = 100, fishCost = 4): ContentPack {
+    const content = testContent({
+      buildings: [storehouseDefinition(capacity), dockDefinition()],
+    });
+    content.energy.costs.fish = fishCost;
+    return content;
+  }
+
+  it("is private: applies the catch immediately, spends fish energy and records no claim", () => {
+    registerForageHandlers();
+    const content = dockContent();
+    const state = forageState({
+      buildings: [storehouseBuilding("b1", "plot1"), dockBuilding("d1", "plot1")],
+    });
+    const player = state.players[0]!;
+    const order = makeOrder("fish", { buildingId: "d1" }, { sequence: 1 });
+
+    expect(runOrder(state, content, order)).toEqual({ ok: true, reason: null });
+
+    expect(player.energy).toBe(96);
+    expect(state.inventory).toEqual([{ plotId: "plot1", item: "fish", quantity: 1, locked: 0 }]);
+    expect(state.claims).toEqual([]);
+  });
+
+  it("does not split the catch between dock fishers", () => {
+    registerForageHandlers();
+    const content = dockContent();
+    const state = forageState({
+      buildings: [
+        storehouseBuilding("b1", "plot1"),
+        dockBuilding("d1", "plot1"),
+        storehouseBuilding("b2", "plot2"),
+        dockBuilding("d2", "plot2"),
+        storehouseBuilding("b3", "plot3"),
+        dockBuilding("d3", "plot3"),
+      ],
+    });
+    state.players = [
+      ...state.players,
+      testPlayer({ id: "p2", plotId: "plot2" }),
+      testPlayer({ id: "p3", plotId: "plot3" }),
+    ];
+    state.plots = [
+      ...state.plots,
+      { ...state.plots[0]!, id: "plot2", playerId: "p2", siteX: 1 },
+      { ...state.plots[0]!, id: "plot3", playerId: "p3", siteX: 2 },
+    ];
+
+    for (const [playerId, dockId] of [
+      ["p1", "d1"],
+      ["p2", "d2"],
+      ["p3", "d3"],
+    ] as const) {
+      const order = makeOrder("fish", { buildingId: dockId }, { playerId });
+      expect(runOrder(state, content, order)).toEqual({ ok: true, reason: null });
+    }
+
+    expect(state.inventory.map((row) => [row.plotId, row.quantity])).toEqual([
+      ["plot1", 1],
+      ["plot2", 1],
+      ["plot3", 1],
+    ]);
+    expect(state.claims).toEqual([]);
+  });
+
+  it("rejects a dock that belongs to another plot", () => {
+    registerForageHandlers();
+    const content = dockContent();
+    const state = forageState({
+      buildings: [storehouseBuilding("b1", "plot1"), dockBuilding("d1", "plot2")],
+    });
+    const order = makeOrder("fish", { buildingId: "d1" });
+
+    const outcome = runOrder(state, content, order);
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toContain("inaccessible dock");
+    expect(state.players[0]?.energy).toBe(100);
+    expect(state.inventory).toEqual([]);
+  });
+
+  it("rejects an incomplete dock", () => {
+    registerForageHandlers();
+    const content = dockContent();
+    const state = forageState({
+      buildings: [
+        storehouseBuilding("b1", "plot1"),
+        dockBuilding("d1", "plot1", { constructionKind: "build" }),
+      ],
+    });
+    const order = makeOrder("fish", { buildingId: "d1" });
+
+    const outcome = runOrder(state, content, order);
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toContain("not yet complete");
+    expect(state.players[0]?.energy).toBe(100);
+  });
+
+  it("fails when there is no free storage for the catch", () => {
+    registerForageHandlers();
+    const content = dockContent(0);
+    const state = forageState({
+      buildings: [storehouseBuilding("b1", "plot1"), dockBuilding("d1", "plot1")],
+    });
+    const order = makeOrder("fish", { buildingId: "d1" });
+
+    const outcome = runOrder(state, content, order);
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toContain("storage");
+    expect(state.players[0]?.energy).toBe(100);
+    expect(state.inventory).toEqual([]);
   });
 });
 

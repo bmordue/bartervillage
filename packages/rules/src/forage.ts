@@ -6,9 +6,9 @@
  * player order phase. Yields are applied later, after every player has taken
  * their turn, so the claimant set is fixed before any share is computed.
  *
- * Dock fishing is private with no split (M2.C09). This module treats every fish
- * claim as a shared-water claim; private dock fishing is a later extension that
- * will bypass `resolveWildClaims` for the owning player.
+ * Fishing at a player's own dock is private (M2.C09): it spends energy and adds
+ * the catch during the player's turn, so it never enters the shared claim set.
+ * Fishing at a shared water node uses the same claim-and-split rule as foraging.
  */
 
 import type { EventLog } from "./events.js";
@@ -21,9 +21,9 @@ import {
   type OrderOutcome,
 } from "./orders.js";
 import type {
+  BuildingId,
   ContentPack,
   FishPayload,
-  ForagePayload,
   NodeId,
   Player,
   PlayerId,
@@ -148,10 +148,54 @@ function validateClaim(
   return { node, cost };
 }
 
+/** Private dock catch per fishing order (spec §6.2; v1 tuning constant). */
+export const DOCK_FISH_YIELD = 1;
+
+/**
+ * Dock fishing is private and has no split: the catch is added to the owner's
+ * storage during their turn instead of entering the shared claim set.
+ */
+function handleDockFishing(context: OrderExecutionContext, buildingId: BuildingId): OrderOutcome {
+  const { state, content, player } = context;
+  const plot = plotOfPlayer(state, player.id);
+  if (!plot) {
+    return orderFailed("Player has no plot");
+  }
+  const dock = state.buildings.find(
+    (building) =>
+      building.id === buildingId && building.type === "dock" && building.plotId === plot.id,
+  );
+  if (!dock) {
+    return orderFailed(`Unknown or inaccessible dock ${buildingId}`);
+  }
+  if (dock.constructionKind !== null) {
+    return orderFailed("Dock is not yet complete");
+  }
+  if (dock.level < 1) {
+    return orderFailed("Dock must be at least level 1");
+  }
+  const cost = orderEnergyCost(content, "fish");
+  if (player.energy < cost) {
+    return orderFailed(`Not enough energy for dock fishing (needs ${cost})`);
+  }
+  if (freeCapacity(state, content, plot.id) < DOCK_FISH_YIELD) {
+    return orderFailed("No free storage for fish");
+  }
+  spendEnergy(player, cost);
+  addItems(state, content, plot.id, [{ item: "fish", quantity: DOCK_FISH_YIELD }]);
+  return orderSucceeded;
+}
+
 function makeClaimHandler(fishing: boolean) {
   return (context: OrderExecutionContext): OrderOutcome => {
-    const payload = context.order.payload as ForagePayload | FishPayload;
+    const payload = context.order.payload as FishPayload;
+    if (fishing && payload.buildingId !== undefined) {
+      return handleDockFishing(context, payload.buildingId);
+    }
     const orderType = fishing ? "fish" : "forage";
+    if (payload.nodeId === undefined) {
+      return orderFailed(`Missing wild node for ${orderType}`);
+    }
     const cost = orderEnergyCost(context.content, orderType);
     const validation = validateClaim(context, payload.nodeId, cost, fishing);
     if (typeof validation === "string") {
