@@ -274,6 +274,42 @@ describe("barter board", () => {
     expect(lockedQuantity(state, "plot1", "grain")).toBe(3);
   });
 
+  it("rejects acceptance before the next tick and after expiry", () => {
+    const state = makeState();
+    const pack = content();
+    addItems(state, pack, "plot1", [{ item: "grain", quantity: 5 }]);
+    addItems(state, pack, "plot2", [{ item: "wood", quantity: 4 }]);
+
+    const post = makeOrder("post_offer", {
+      gives: [{ item: "grain", quantity: 3 }],
+      wants: [{ item: "wood", quantity: 2 }],
+      expiryTicks: 7,
+    });
+    expect(run(state, pack, post).outcome.ok).toBe(true);
+    const offerId = state.offers[0]!.id;
+    expect(state.offers[0]?.expiryTick).toBe(12);
+
+    const tooSoon = makeOrder(
+      "accept_offer",
+      { offerId },
+      { id: "o2", playerId: "p2", tick: 5, sequence: 2 },
+    );
+    expect(run(state, pack, tooSoon).outcome.reason).toContain("not acceptable");
+
+    state.world.currentTick = 13;
+    const tooLate = makeOrder(
+      "accept_offer",
+      { offerId },
+      { id: "o3", playerId: "p2", tick: 13, sequence: 3 },
+    );
+    expect(run(state, pack, tooLate).outcome.reason).toContain("not acceptable");
+
+    expect(state.offers[0]?.status).toBe("open");
+    expect(state.offers[0]?.kind).toBe("offer");
+    expect(lockedQuantity(state, "plot1", "grain")).toBe(3);
+    expect(state.offers).toHaveLength(1);
+  });
+
   it("swaps goods on a successful direct acceptance", () => {
     const state = makeState();
     const pack = content();

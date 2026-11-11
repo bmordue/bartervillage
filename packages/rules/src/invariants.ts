@@ -101,8 +101,15 @@ export function checkInvariants(state: WorldState): string[] {
         problems.push(`offer ${offer.id}: counter-offer has no parent`);
       } else {
         const parent = offerById.get(offer.parentOfferId);
-        if (parent?.kind === "counter_offer") {
-          problems.push(`offer ${offer.id}: counter depth exceeds one`);
+        if (!parent) {
+          problems.push(`offer ${offer.id}: counter-offer parent is missing`);
+        } else {
+          if (parent.kind === "counter_offer") {
+            problems.push(`offer ${offer.id}: counter depth exceeds one`);
+          }
+          if (offer.status === "open" && parent.status !== "open") {
+            problems.push(`offer ${offer.id}: open counter with closed parent ${parent.id}`);
+          }
         }
       }
     }

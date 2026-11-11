@@ -166,7 +166,7 @@
 - [x] **M2.F03** At most one ready entry per player per tick; ready positions are unique per tick (spec §13). _Depends on: CT.02, M2.A07._
 - [x] **M2.F04** At most one wild-node claim per player per node per tick (spec §13). _Depends on: CT.02, M2.C05._
 - [x] **M2.F05** Node amount stays between 0 and its capacity (spec §13). _Depends on: CT.02, M2.C01._
-- [ ] **M2.F06** Post quantities are positive; expiry is 1 to 28 ticks; a counter's parent must be open; counter depth is at most one; wanted requests have no locked side; expired posts cannot be accepted; one crop per plot tile (spec §13). _Depends on: CT.02, M2.B08, M2.E01-M2.E20._
+- [x] **M2.F06** Post quantities are positive; expiry is 1 to 28 ticks; a counter's parent must be open; counter depth is at most one; wanted requests have no locked side; expired posts cannot be accepted; one crop per plot tile (spec §13). _Depends on: CT.02, M2.B08, M2.E01-M2.E20._
 - [x] **M2.F07** A failed order cannot change state (spec §13). _Depends on: CT.02, M2.A04._
 - [ ] **M2.F08** Every inventory change is recorded in the event log; conservation tests cover production and consumption (spec §13). _Depends on: CT.08, M2.A03, M2.D07._
 - [ ] **M2.F09** Archived events are immutable with a unique `(tick, sequence)`; one state hash is stored per tick (spec §13). _Depends on: CT.03, M3.18, M4.A18._

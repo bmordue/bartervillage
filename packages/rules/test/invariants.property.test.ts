@@ -50,4 +50,70 @@ describe("invariant property harness", () => {
       }),
     );
   });
+
+  it("rejects an open counter-offer whose parent is not open", () => {
+    const state = testWorldState({
+      offers: [
+        {
+          id: "offer:parent",
+          posterId: "p1",
+          kind: "offer",
+          gives: [{ item: "wheat", quantity: 1 }],
+          wants: [{ item: "wood", quantity: 1 }],
+          quantity: 1,
+          createdAtTick: 5,
+          expiryTick: 12,
+          status: "cancelled",
+          parentOfferId: null,
+        },
+        {
+          id: "offer:counter",
+          posterId: "p2",
+          kind: "counter_offer",
+          gives: [{ item: "wood", quantity: 1 }],
+          wants: [{ item: "wheat", quantity: 1 }],
+          quantity: 1,
+          createdAtTick: 5,
+          expiryTick: 12,
+          status: "open",
+          parentOfferId: "offer:parent",
+        },
+      ],
+    });
+
+    expect(checkInvariants(state).join("\n")).toContain("open counter with closed parent");
+  });
+
+  it("allows a cancelled counter-offer whose parent has closed", () => {
+    const state = testWorldState({
+      offers: [
+        {
+          id: "offer:parent",
+          posterId: "p1",
+          kind: "offer",
+          gives: [{ item: "wheat", quantity: 1 }],
+          wants: [{ item: "wood", quantity: 1 }],
+          quantity: 1,
+          createdAtTick: 5,
+          expiryTick: 12,
+          status: "cancelled",
+          parentOfferId: null,
+        },
+        {
+          id: "offer:counter",
+          posterId: "p2",
+          kind: "counter_offer",
+          gives: [{ item: "wood", quantity: 1 }],
+          wants: [{ item: "wheat", quantity: 1 }],
+          quantity: 1,
+          createdAtTick: 5,
+          expiryTick: 12,
+          status: "cancelled",
+          parentOfferId: "offer:parent",
+        },
+      ],
+    });
+
+    expect(checkInvariants(state)).toEqual([]);
+  });
 });
