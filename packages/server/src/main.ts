@@ -6,14 +6,20 @@
  */
 
 import { startApiServer } from "./api.js";
+import { Database } from "./db/database.js";
+import { buildApiRoutes } from "./api.js";
 
 export async function main(): Promise<void> {
   const port = Number.parseInt(process.env.PORT ?? "3000", 10);
   const host = process.env.HOST ?? "127.0.0.1";
+  const database = Database.open(
+    process.env.DATABASE_PATH ? { path: process.env.DATABASE_PATH } : {}
+  );
   const running = await startApiServer({
     port,
     host,
     logger: (message) => console.error(message),
+    routes: buildApiRoutes(database),
   });
 
   console.log(`API listening on http://${host}:${running.port}`);

@@ -17,6 +17,7 @@ export interface ApiRequest {
   method: string;
   path: string;
   headers: IncomingMessage["headers"];
+  body?: unknown;
 }
 
 export type RouteHandler = (request: ApiRequest) => JsonResponse | Promise<JsonResponse>;
@@ -112,4 +113,182 @@ export function startApiServer(
       });
     });
   });
+}
+
+/** Build routes for the REST API endpoints (M4.B02). */
+export function buildApiRoutes(database: any): Routes {
+  function getWorldId(request: ApiRequest): string {
+    return request.headers["x-world-id"] as string || "w1";
+  }
+
+  return {
+    "GET /world": (request) => {
+      const worldId = getWorldId(request);
+      const world = database.get(`SELECT * FROM worlds WHERE id = ?`, worldId);
+      if (!world) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+
+      return {
+        status: 200,
+        body: {
+          world: {
+            id: world.id,
+            currentTick: world.current_tick,
+            season: world.season,
+            weather: world.weather,
+            nextDeadline: world.next_deadline,
+          },
+          players: [],
+        },
+      };
+    },
+
+    "GET /plot/:plotId": (request) => {
+      const plotId = request.path.split("/").pop();
+
+      const plot = database.get(
+        `SELECT * FROM plots WHERE id = ?`,
+        plotId,
+      );
+      if (!plot) {
+        return { status: 404, body: { error: "plot_not_found" } };
+      }
+
+      return {
+        status: 200,
+        body: {
+          plot: {
+            id: plot.id,
+            playerId: plot.player_id,
+            regionId: plot.region_id,
+            siteX: plot.site_x,
+            siteY: plot.site_y,
+            width: plot.width,
+            height: plot.height,
+            worldOwned: plot.world_owned,
+          },
+          buildings: [],
+          inventory: [],
+          ready: null,
+        },
+      };
+    },
+
+    "GET /player/:playerId/orders": (request) => {
+      const playerId = request.path.split("/").pop();
+
+      const orders = database.all(
+        `SELECT * FROM orders WHERE player_id = ? AND status = 'queued'`,
+        playerId,
+      );
+
+      return {
+        status: 200,
+        body: {
+          orders: orders.map((o: any) => ({
+            id: o.id,
+            sequence: o.sequence,
+            type: o.type,
+            payload: JSON.parse(o.payload_json || "{}"),
+            status: o.status,
+            failureReason: o.failure_reason,
+          })),
+        },
+      };
+    },
+
+    "GET /ready": () => ({
+      status: 200,
+      body: {
+        ready: [],
+        ownPosition: null,
+      },
+    }),
+
+    "GET /barter": () => ({
+      status: 200,
+      body: {
+        offers: [],
+      },
+    }),
+
+    "GET /replay/latest": (request) => {
+      const worldId = getWorldId(request);
+
+      const latestTick = database.get(
+        `SELECT tick FROM tick_logs WHERE world_id = ? ORDER BY tick DESC LIMIT 1`,
+        worldId,
+      )?.tick;
+
+      if (!latestTick) {
+        return { status: 404, body: { error: "no_replay_data" } };
+      }
+
+      const events = database.all(
+        `SELECT tick, sequence, type, payload_json FROM archived_events WHERE world_id = ? AND tick = ? ORDER BY sequence`,
+        worldId,
+        latestTick,
+      );
+
+      return {
+        status: 200,
+        body: {
+          tick: latestTick,
+          header: {
+            tick: latestTick,
+            worldSeed: "seed",
+            generatorVersion: "gen-1",
+            contentVersion: "content-1",
+            rulesVersion: "1.0.0",
+          },
+          events: events.map((e: any) => ({
+            tick: e.tick,
+            sequence: e.sequence,
+            type: e.type,
+            payload: JSON.parse(e.payload_json || "{}"),
+          })),
+        },
+      };
+    },
+
+    "GET /push/subscriptions": () => ({
+      status: 200,
+      body: { subscriptions: [] },
+    }),
+
+    "POST /site": (request) => {
+      const body = JSON.parse(
+        request.body as string || '{"playerId":""}',
+      ) as { playerId: string };
+
+      const plot = database.get(
+        `SELECT * FROM plots WHERE player_id = ? AND world_owned = 0`,
+        body.playerId,
+      );
+
+      if (!plot) {
+        return { status: 404, body: { error: "plot_not_found" } };
+      }
+
+      database.run(
+        `UPDATE plots SET player_id = ? WHERE id = ?`,
+        body.playerId,
+        plot.id,
+      );
+
+      return {
+        status: 200,
+        body: {
+          plotId: plot.id,
+          message: "site_claimed_successfully",
+        },
+      };
+    },
+
+    "GET /players": () => ({
+      status: 200,
+      body: { players: [] },
+    }),
+  };
 }
