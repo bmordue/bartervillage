@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { content } from "@bartervillage/content";
 import {
+  FixedClock,
   MAP_GENERATOR_VERSION,
   RULES_VERSION,
   generateRegion,
@@ -147,6 +148,29 @@ describe("transactional tick resolution", () => {
     expect(after?.world.currentTick).toBe(0);
     expect(after?.players[0]?.energy).toBe(0);
     expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(0);
+  });
+
+  it("schedules the next deadline from the pinned local time", () => {
+    const { database } = setup();
+
+    const result = resolveWorldTick(database, "w1", {
+      clock: new FixedClock("2026-11-07T10:00:00.000Z"),
+    });
+    const after = loadWorldState(database, "w1");
+
+    expect(result.state.world.nextDeadline).toBe("2026-11-07T20:00:00.000Z");
+    expect(after?.world.nextDeadline).toBe("2026-11-07T20:00:00.000Z");
+  });
+
+  it("applies a changed deadline time at the next tick", () => {
+    const { database } = setup();
+    const clock = new FixedClock("2026-11-07T10:00:00.000Z");
+    resolveWorldTick(database, "w1", { clock });
+    database.run("UPDATE worlds SET deadline_time = '21:00' WHERE id = 'w1'");
+
+    const result = resolveWorldTick(database, "w1", { clock });
+
+    expect(result.state.world.nextDeadline).toBe("2026-11-07T21:00:00.000Z");
   });
 
   it("runs queued contributions through the goal phase and persists rewards", () => {

@@ -215,20 +215,20 @@
 - [x] **M4.A15** Player order phase: order players, append missed-tick defaults, run orders in sequence, validate atomically and log failures (spec §14.5). _Depends on: M2.A09, M2.A10, M2.A17-M2.A20, M4.A05._
 - [x] **M4.A16** Wild claim phase: fix claimant sets, compute shares, apply them in queue order capped by free storage and log partial fills (spec §14.6). _Depends on: M2.C06-M2.C08, M4.A15._
 - [x] **M4.A17** Goal phase: evaluate quotas including this tick's contributions, consume goods on success, mark next-tick rewards, and release locks on failure or expiry (spec §14.7). _Depends on: M4.A15, M7.05, M7.09._
-- [ ] **M4.A18** Finalize: append events in deterministic order (world update, player orders, wild claims, goals), compute the state hash, advance the tick, compute the next deadline and clear per-tick ready and claim flags (spec §14.8). _Depends on: M1.11, M4.A05-M4.A17._
-- [ ] **M4.A19** Treat event ordering as part of the recorded contract; it must be deterministic (spec §14.9). _Depends on: M4.A18._
-- [ ] **M4.A20** Write the tick header with `v: 1`, world seed, tick number, `generator_version`, `content_version` and `rules_version` (spec §10). _Depends on: M1.07, M4.A18._
-- [ ] **M4.A21** Record complete avatar movement paths, including return home, in the event log (spec §5, §10). _Depends on: M2.A14, M4.A18._
-- [ ] **M4.A22** Commit the event log and state hash in the same transaction (spec §14.8, §14.9). _Depends on: M3.18, M4.A18._
+- [x] **M4.A18** Finalize: append events in deterministic order (world update, player orders, wild claims, goals), compute the state hash, advance the tick, compute the next deadline and clear per-tick ready and claim flags (spec §14.8). _Depends on: M1.11, M4.A05-M4.A17._
+- [x] **M4.A19** Treat event ordering as part of the recorded contract; it must be deterministic (spec §14.9). _Depends on: M4.A18._
+- [x] **M4.A20** Write the tick header with `v: 1`, world seed, tick number, `generator_version`, `content_version` and `rules_version` (spec §10). _Depends on: M1.07, M4.A18._
+- [x] **M4.A21** Record complete avatar movement paths, including return home, in the event log (spec §5, §10). _Depends on: M2.A14, M4.A18._
+- [x] **M4.A22** Commit the event log and state hash in the same transaction (spec §14.8, §14.9). _Depends on: M3.18, M4.A18._
 - [ ] **M4.A23** After commit, release the resolving lease and tick lock, then send push notifications; log push failures only (spec §14.9, §11). _Depends on: M4.A22, M7.13._
-- [ ] **M4.A24** Crash safety: any exception rolls back the whole transaction, the worker logs it and retries on the next poll (spec §14.9). _Depends on: M4.A05, M4.A22._
-- [ ] **M4.A25** Make resolution idempotent through the tick lock and tick number (spec §14.9). _Depends on: M4.A02, M4.A05._
-- [ ] **M4.A26** Deadline scheduling from a local time and IANA timezone; the next deadline is the next occurrence strictly after resolution and at least `min_tick_gap` later, default 60 minutes (spec §4.1). _Depends on: M1.12, M4.A18._
-- [ ] **M4.A27** Deadline changes take effect at the next tick (spec §4.1). _Depends on: M4.A26._
+- [x] **M4.A24** Crash safety: any exception rolls back the whole transaction, the worker logs it and retries on the next poll (spec §14.9). _Depends on: M4.A05, M4.A22._
+- [x] **M4.A25** Make resolution idempotent through the tick lock and tick number (spec §14.9). _Depends on: M4.A02, M4.A05._
+- [x] **M4.A26** Deadline scheduling from a local time and IANA timezone; the next deadline is the next occurrence strictly after resolution and at least `min_tick_gap` later, default 60 minutes (spec §4.1). _Depends on: M1.12, M4.A18._
+- [x] **M4.A27** Deadline changes take effect at the next tick (spec §4.1). _Depends on: M4.A26._
 - [ ] **M4.A28** Tick trigger when every player is ready or at the deadline; start within 60 seconds of the trigger (spec §4.1). _Depends on: M2.A07, M4.A02, M4.A26._
 - [ ] **M4.A29** Exclude mid-tick joins from the current tick (spec §4.1). _Depends on: M4.A06, M4.A28._
 - [ ] **M4.A30** Reject mutations with a "tick in progress" response while the resolving lease is held (spec §4.1, §14.9). _Depends on: M4.A03, M4.B05._
-- [ ] **M4.A31** Keep wall-clock time out of the rules; use it only for scheduling the next deadline, and exclude the deadline from the replay state hash (spec §14). _Depends on: M4.A07, M4.A26._
+- [x] **M4.A31** Keep wall-clock time out of the rules; use it only for scheduling the next deadline, and exclude the deadline from the replay state hash (spec §14). _Depends on: M4.A07, M4.A26._
 - [ ] **M4.A32** Add host alerting and a safe manual retry path for persistent resolution failures (spec §15). _Depends on: M4.A24; blocked by D.09._
 - [ ] **M4.A33** Benchmark 20 players with full order queues over a 28-tick soak; p95 under 60 seconds (spec §3). _Depends on: CT.07, M4.A05, M4.A15, M4.A18, M4.A28._
 

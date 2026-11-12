@@ -93,7 +93,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ["packages/rules/src/clock.ts"],
+    // These modules only convert the injected instant; neither reads ambient time.
+    files: ["packages/rules/src/clock.ts", "packages/rules/src/deadline.ts"],
     rules: {
       "no-restricted-properties": "off",
       "no-restricted-syntax": "off",

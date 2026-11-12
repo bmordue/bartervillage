@@ -11,7 +11,9 @@ import { content as bundledContent } from "@bartervillage/content";
 import {
   RULES_VERSION,
   VersionMismatchError,
+  nextDeadlineFor,
   resolveTick,
+  type Clock,
   type ContentPack,
   type ResolveTickInput,
   type ResolveTickResult,
@@ -31,6 +33,8 @@ export class WorldNotFoundError extends Error {
 
 export interface ResolveWorldTickOptions {
   content?: ContentPack;
+  /** Wall clock used only to schedule the next deadline. */
+  clock?: Clock;
   /** Test seam for injecting a failure or an alternate engine. */
   resolve?: (input: ResolveTickInput) => ResolveTickResult;
 }
@@ -65,6 +69,12 @@ export function resolveWorldTickInTransaction(
   assertPinnedVersions(state, content);
 
   const result = (options.resolve ?? resolveTick)({ state, content });
+  result.state.world.nextDeadline = nextDeadlineFor({
+    timezone: state.world.config.timezone,
+    deadlineTime: state.world.config.deadlineTime,
+    minTickGapMinutes: state.world.config.minTickGapMinutes,
+    now: options.clock?.now() ?? new Date(),
+  });
   saveWorldState(db, result.state);
   writeTickLog(db, {
     worldId,
