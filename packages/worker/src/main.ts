@@ -9,7 +9,7 @@
 import { hostname } from "node:os";
 import { dirname, join } from "node:path";
 
-import { Database } from "@bartervillage/server";
+import { Database, resolveWorldTickInTransaction } from "@bartervillage/server";
 
 import { DEFAULT_POLL_INTERVAL_MS, WorkerLoop } from "./loop.js";
 import { createTickPoller } from "./tickWorker.js";
@@ -34,7 +34,8 @@ export async function main(): Promise<void> {
       owner: `${hostname()}:${process.pid}`,
       logger,
       resolve: (context) => {
-        logger(`worker: tick lock acquired for world ${context.worldId} at tick ${context.tick}`);
+        const result = resolveWorldTickInTransaction(context.database, context.worldId);
+        logger(`worker: resolved world ${context.worldId} tick ${result.header.tick}`);
       },
     }),
     intervalMs,

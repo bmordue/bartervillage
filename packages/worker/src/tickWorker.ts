@@ -13,6 +13,7 @@ import {
   latestResolvedTick,
   loadWorld,
   releaseResolvingLease,
+  resolveWorldTickInTransaction,
 } from "@bartervillage/server";
 
 import { tryAcquireLock } from "./lock.js";
@@ -36,7 +37,11 @@ export interface TickPollerOptions {
 }
 
 export function createTickPoller(options: TickPollerOptions): () => Promise<void> {
-  const resolve = options.resolve ?? (() => undefined);
+  const resolve =
+    options.resolve ??
+    ((context: TickContext) => {
+      resolveWorldTickInTransaction(context.database, context.worldId);
+    });
 
   return async () => {
     const lockLease = tryAcquireLock({

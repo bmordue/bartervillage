@@ -47,43 +47,46 @@ type AvatarPathRow = {
   returned_home: number;
 };
 
+/** Write one tick log using the caller's open transaction. */
+export function writeTickLog(db: Database, record: TickLogRecord): void {
+  db.run(
+    "INSERT INTO tick_logs (world_id, tick, header_json, state_hash) VALUES (?, ?, ?, ?)",
+    record.worldId,
+    record.tick,
+    JSON.stringify(record.header),
+    record.stateHash,
+  );
+
+  for (const event of record.events) {
+    db.run(
+      "INSERT INTO archived_events (world_id, tick, sequence, version, type, payload_json) VALUES (?, ?, ?, ?, ?, ?)",
+      record.worldId,
+      event.tick,
+      event.sequence,
+      event.version,
+      event.type,
+      JSON.stringify(event.payload),
+    );
+  }
+
+  for (const path of record.avatarPaths ?? []) {
+    db.run(
+      "INSERT INTO avatar_paths (world_id, tick, player_id, path_json, returned_home) VALUES (?, ?, ?, ?, ?)",
+      record.worldId,
+      path.tick,
+      path.playerId,
+      JSON.stringify(path),
+      path.returnedHome ? 1 : 0,
+    );
+  }
+}
+
 /**
  * Append one resolved tick. Runs in a single transaction so a failure leaves no
  * partial replay behind. A duplicate tick throws and rolls back.
  */
 export function appendTickLog(db: Database, record: TickLogRecord): void {
-  db.transaction(() => {
-    db.run(
-      "INSERT INTO tick_logs (world_id, tick, header_json, state_hash) VALUES (?, ?, ?, ?)",
-      record.worldId,
-      record.tick,
-      JSON.stringify(record.header),
-      record.stateHash,
-    );
-
-    for (const event of record.events) {
-      db.run(
-        "INSERT INTO archived_events (world_id, tick, sequence, version, type, payload_json) VALUES (?, ?, ?, ?, ?, ?)",
-        record.worldId,
-        event.tick,
-        event.sequence,
-        event.version,
-        event.type,
-        JSON.stringify(event.payload),
-      );
-    }
-
-    for (const path of record.avatarPaths ?? []) {
-      db.run(
-        "INSERT INTO avatar_paths (world_id, tick, player_id, path_json, returned_home) VALUES (?, ?, ?, ?, ?)",
-        record.worldId,
-        path.tick,
-        path.playerId,
-        JSON.stringify(path),
-        path.returnedHome ? 1 : 0,
-      );
-    }
-  });
+  db.transaction(() => writeTickLog(db, record));
 }
 
 export function loadTickLog(

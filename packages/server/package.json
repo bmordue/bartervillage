@@ -14,6 +14,7 @@
     "start": "tsx src/main.ts"
   },
   "dependencies": {
+    "@bartervillage/content": "*",
     "@bartervillage/rules": "*"
   }
 }

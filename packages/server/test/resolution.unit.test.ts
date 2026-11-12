@@ -1,0 +1,148 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
+import { content } from "@bartervillage/content";
+import {
+  MAP_GENERATOR_VERSION,
+  RULES_VERSION,
+  generateRegion,
+  resolveTick,
+} from "@bartervillage/rules";
+import { afterEach, describe, expect, it } from "vitest";
+
+import {
+  Database,
+  loadLatestTickLog,
+  loadWorldState,
+  persistMap,
+  provisionStarterBuildings,
+  resolveWorldTick,
+  resolveWorldTickInTransaction,
+  saveWorldState,
+  type ResolveWorldTickOptions,
+} from "../src/index.js";
+
+let db: Database | undefined;
+let directory: string | undefined;
+
+afterEach(() => {
+  db?.close();
+  db = undefined;
+  if (directory) {
+    rmSync(directory, { recursive: true, force: true });
+    directory = undefined;
+  }
+});
+
+function setup(contentVersion = content.version): {
+  database: Database;
+  plotId: string;
+} {
+  directory = mkdtempSync(join(tmpdir(), "barter-resolution-"));
+  const database = Database.open({ path: join(directory, "world.sqlite") });
+  db = database;
+  database.run(
+    `INSERT INTO worlds
+       (id, seed, generator_version, content_version, rules_version, deadline_time, timezone,
+        min_tick_gap_minutes, player_cap, current_tick, season, weather)
+     VALUES ('w1', 'seed', ?, ?, ?, '20:00', 'UTC', 60, 20, 0, 'spring', 'clear')`,
+    MAP_GENERATOR_VERSION,
+    contentVersion,
+    RULES_VERSION,
+  );
+
+  const generated = generateRegion("seed", MAP_GENERATOR_VERSION, 0, 0, content);
+  persistMap(database, [generated]);
+  const plot = generated.plots.find((candidate) => !candidate.worldOwned);
+  if (!plot) {
+    throw new Error("generated region has no player plot");
+  }
+
+  database.run(
+    `INSERT INTO players (id, name, plot_id, joined_tick, energy)
+     VALUES ('p1', 'Ada', ?, 0, 0)`,
+    plot.id,
+  );
+  database.run("UPDATE plots SET player_id = 'p1' WHERE id = ?", plot.id);
+  provisionStarterBuildings(database, plot.id);
+  database.run(
+    "INSERT INTO inventory (plot_id, item, quantity, locked) VALUES (?, 'grain', 5, 0)",
+    plot.id,
+  );
+  return { database, plotId: plot.id };
+}
+
+describe("world state repository", () => {
+  it("round-trips a complete snapshot through the database", () => {
+    const { database } = setup();
+    const before = loadWorldState(database, "w1");
+    expect(before).toBeDefined();
+
+    saveWorldState(database, before!);
+
+    expect(loadWorldState(database, "w1")).toEqual(before);
+  });
+});
+
+describe("transactional tick resolution", () => {
+  it("resolves the tick and commits the state plus tick log together", () => {
+    const { database, plotId } = setup();
+
+    const result = resolveWorldTick(database, "w1");
+    const after = loadWorldState(database, "w1");
+    const log = loadLatestTickLog(database, "w1");
+
+    expect(result.header.tick).toBe(0);
+    expect(after?.world.currentTick).toBe(1);
+    expect(after?.players[0]?.energy).toBe(content.energy.dailyBudget);
+    expect(after?.inventory).toEqual([{ plotId, item: "grain", quantity: 5, locked: 0 }]);
+    expect(log?.tick).toBe(0);
+    expect(log?.header).toEqual(result.header);
+    expect(log?.stateHash).toBe(result.stateHash);
+    expect(log?.events).toEqual(result.events);
+    expect(log?.events.length).toBeGreaterThan(0);
+  });
+
+  it("leaves the previous tick intact when writing the tick log fails", () => {
+    const { database, plotId } = setup();
+    database.run(
+      "INSERT INTO tick_logs (world_id, tick, header_json, state_hash) VALUES ('w1', 0, '{}', 'manual')",
+    );
+
+    expect(() => resolveWorldTick(database, "w1")).toThrow();
+
+    const after = loadWorldState(database, "w1");
+    expect(after?.world.currentTick).toBe(0);
+    expect(after?.world.weather).toBe("clear");
+    expect(after?.players[0]?.energy).toBe(0);
+    expect(after?.inventory).toEqual([{ plotId, item: "grain", quantity: 5, locked: 0 }]);
+    expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(1);
+    expect(database.all("SELECT sequence FROM archived_events")).toHaveLength(0);
+  });
+
+  it("rolls back writes made before an injected resolution failure", () => {
+    const { database } = setup();
+    const options: ResolveWorldTickOptions = {
+      resolve: (input) => {
+        const result = resolveTick(input);
+        saveWorldState(database, result.state);
+        throw new Error("boom");
+      },
+    };
+
+    expect(() => resolveWorldTick(database, "w1", options)).toThrow("boom");
+
+    const after = loadWorldState(database, "w1");
+    expect(after?.world.currentTick).toBe(0);
+    expect(after?.players[0]?.energy).toBe(0);
+    expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(0);
+  });
+
+  it("refuses to resolve when the pinned content version does not match", () => {
+    const { database } = setup("0.0.0");
+
+    expect(() => resolveWorldTickInTransaction(database, "w1")).toThrow("Content version mismatch");
+    expect(loadWorldState(database, "w1")?.world.currentTick).toBe(0);
+  });
+});
