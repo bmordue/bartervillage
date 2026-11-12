@@ -10,7 +10,9 @@ import {
   registerGoalHandlers,
   succeedGoal,
 } from "../src/goals.js";
+import { preLockedItems, queueOrder } from "../src/locking.js";
 import { resolveOrder, type OrderExecutionContext } from "../src/orders.js";
+import { cancelOrder, removeOrder } from "../src/queue.js";
 import type {
   ContentPack,
   ContributeGoalPayload,
@@ -278,5 +280,67 @@ describe("goal outcomes", () => {
     });
     expect(state.contributions[0]?.status).toBe("released");
     expect(state.goals[0]?.status).toBe("expired");
+  });
+});
+
+describe("goal contribution locking", () => {
+  it("locks at queue time and releases on cancel or removal", () => {
+    const state = stateWithGoal();
+    const input = {
+      id: "queued-goal",
+      playerId: "p1",
+      tick: 5,
+      type: "contribute_goal" as const,
+      payload: { goalId: "barn_raising", items: [{ item: "grain", quantity: 3 }] },
+    };
+
+    expect(queueOrder(state, testContent(), input).ok).toBe(true);
+    expect(state.inventory.find((row) => row.item === "grain")?.locked).toBe(3);
+    expect(cancelOrder(state, "queued-goal")).toBe(true);
+    expect(state.inventory.find((row) => row.item === "grain")?.locked).toBe(0);
+
+    expect(queueOrder(state, testContent(), { ...input, id: "removed-goal" }).ok).toBe(true);
+    expect(removeOrder(state, "removed-goal")).not.toBeNull();
+    expect(state.inventory.find((row) => row.item === "grain")?.locked).toBe(0);
+  });
+
+  it("consumes queued goods only when the goal succeeds", () => {
+    const state = stateWithGoal();
+    const input = {
+      id: "queued-goal",
+      playerId: "p1",
+      tick: 5,
+      type: "contribute_goal" as const,
+      payload: { goalId: "barn_raising", items: [{ item: "grain", quantity: 5 }] },
+    };
+    expect(queueOrder(state, testContent(), input).ok).toBe(true);
+    const order = state.orders[0]!;
+    const events = new EventLog(5);
+    const locked = preLockedItems(state, order.id);
+    expect(locked).toEqual([{ item: "grain", quantity: 5 }]);
+
+    const outcome = resolveOrder({
+      state,
+      content: testContent(),
+      order,
+      player: state.players[0]!,
+      location: { regionId: "r1" },
+      reachable: new Set(["r1"]),
+      path: [],
+      events,
+      ...(locked ? { preLockedItems: locked } : {}),
+    });
+    expect(outcome.ok).toBe(true);
+    expect(state.inventory.find((row) => row.item === "grain")).toMatchObject({
+      quantity: 10,
+      locked: 5,
+    });
+
+    succeedGoal(state, state.goals[0]!, events);
+    expect(state.inventory.find((row) => row.item === "grain")).toMatchObject({
+      quantity: 5,
+      locked: 0,
+    });
+    expect(state.contributions[0]?.status).toBe("consumed");
   });
 });
