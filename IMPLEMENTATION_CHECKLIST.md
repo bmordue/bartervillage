@@ -310,7 +310,7 @@
 - [x] **M7.02** Season rollover as the first world-update step, including withering invalid crops and leaving stored goods unaffected (spec §9). _Depends on: M2.B06, M7.01._
 - [x] **M7.03** Seeded weather roll each tick for clear, rain, drought and frost (spec §9). _Depends on: M1.10, M7.01._
 - [x] **M7.04** Apply weather modifiers from content JSON and log the weather result in the replay (spec §9). _Depends on: M2.B07, M3.16, M7.03._
-- [ ] **M7.05** Shared goals: collective builds funded by contributed goods and seasonal festivals with group quotas (spec §9). _Depends on: M3.01, M3.16._
+- [x] **M7.05** Shared goals: collective builds funded by contributed goods and seasonal festivals with group quotas (spec §9). _Depends on: M3.01, M3.16._
 - [ ] **M7.06** Host-configurable goal schedule; schedule changes take effect at the next goal (spec §9). _Depends on: M3.01, M7.05._
 - [ ] **M7.07** Goal contributions lock at queue time and are consumed only if the goal succeeds (spec §9). _Depends on: M2.A02, M2.A06, M2.D06, M7.05._
 - [ ] **M7.08** Contribution locks release when an order is removed or the goal fails or expires, with goods staying with their owners (spec §9). _Depends on: M7.07._

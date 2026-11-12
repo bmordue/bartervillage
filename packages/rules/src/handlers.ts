@@ -8,6 +8,7 @@ import { registerCraftingHandlers } from "./crafting.js";
 import { registerDecorationHandlers } from "./decorations.js";
 import { registerDefaultHandlers } from "./defaults.js";
 import { registerForageHandlers } from "./forage.js";
+import { registerGoalHandlers } from "./goals.js";
 
 registerDefaultHandlers();
 registerBuildingHandlers();
@@ -15,3 +16,4 @@ registerCraftingHandlers();
 registerForageHandlers();
 registerBarterHandlers();
 registerDecorationHandlers();
+registerGoalHandlers();
