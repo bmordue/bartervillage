@@ -206,7 +206,7 @@
 - [x] **M4.A06** Freeze the world, config and content version, plus the player roster and ready set; players joining after this point wait for the next tick (spec §14.2, §4.1). _Depends on: M2.A07, M3.17, M4.A05._
 - [x] **M4.A07** Seed the RNG from `(world_seed, tick, generator_version, content_version, rules_version)` with no wall-clock time or unordered iteration (spec §14.3). _Depends on: M1.07, M1.10, M4.A05._
 - [x] **M4.A08** World update step 1: run season rollover when due and wither crops that cannot grow in the new season (spec §14.4a, §9). _Depends on: M2.B06, M4.A05, M7.01, M7.02._
-- [ ] **M4.A09** World update step 2: roll weather for the tick (spec §14.4b, §9). _Depends on: M4.A05, M7.03, M7.04._
+- [x] **M4.A09** World update step 2: roll weather for the tick (spec §14.4b, §9). _Depends on: M4.A05, M7.03, M7.04._
 - [ ] **M4.A10** World update step 3: advance crops using previous-tick watering and tending flags plus weather, roll pests and blight, and log growth and failure (spec §14.4c). _Depends on: M2.B01-M2.B07, M4.A05._
 - [ ] **M4.A11** World update step 4: run animal production from the previous tick's feeding flags, then clear those flags (spec §14.4d). _Depends on: M2.B09, M2.B10, M4.A05._
 - [ ] **M4.A12** World update step 5: advance in-progress construction and crafting jobs and complete jobs that finish this tick (spec §14.4e). _Depends on: M2.D03, M2.D10, M4.A05._
