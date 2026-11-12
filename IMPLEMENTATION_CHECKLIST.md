@@ -240,7 +240,7 @@
 - [ ] **M4.B04** Keep client-side rules checks light and non-authoritative (spec §12). _Depends on: M5.B02._
 - [x] **M4.B05** Return 409 for mutations while the resolving lease is held; rely on SQLite's writer lock to block mutations during the transaction (spec §14.9). _Depends on: M4.A03, M4.B01._
 - [ ] **M4.B06** Enforce invite-only access and the 20-player cap through invites (spec §3, §12). _Depends on: M3.01, M4.B02, M4.C05._
-- [ ] **M4.B07** Protect mutations with CSRF protection; use HttpOnly and SameSite session cookies (spec §12). _Depends on: M4.B01, M4.C06._
+- [x] **M4.B07** Protect mutations with CSRF protection; use HttpOnly and SameSite session cookies (spec §12). _Depends on: M4.B01, M4.C06._
 - [ ] **M4.B08** Rate-limit auth endpoints (spec §12). _Depends on: M4.B02, M4.C01-M4.C06._
 - [ ] **M4.B09** Encrypt OAuth tokens at rest; never store passwords (spec §12). _Depends on: M3.01, M4.B02._
 - [ ] **M4.B10** Keep infrastructure secrets in deployment configuration, not the repository (spec §12). _Depends on: M4.B01._
