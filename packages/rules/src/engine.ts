@@ -6,6 +6,7 @@ import { appendMissedTickDefaults } from "./defaults.js";
 import { EventLog } from "./events.js";
 import { regrowWildNodes, resolveWildClaims } from "./forage.js";
 import "./handlers.js";
+import { resolveGoals } from "./goals.js";
 import { discardOrderLock, preLockedItems } from "./locking.js";
 import { resolveOrder } from "./orders.js";
 import { runAnimalProduction } from "./animals.js";
@@ -229,6 +230,7 @@ export function resolveTick(input: ResolveTickInput): ResolveTickResult {
     events,
     players.map((player) => player.id),
   );
+  resolveGoals(state, events);
   state.world.currentTick += 1;
   state.world.resolving = null;
   state.ready = [];

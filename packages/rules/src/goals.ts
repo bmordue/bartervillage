@@ -265,3 +265,34 @@ function handleContribute(context: OrderExecutionContext): OrderOutcome {
 export function registerGoalHandlers(): void {
   registerOrderHandler("contribute_goal", handleContribute);
 }
+
+/**
+ * Goal phase, run after player orders (spec §14.7; M7.09).
+ *
+ * Active goals are checked in id order so the event order is deterministic.
+ * Success is evaluated before expiry, then successful goods are consumed and
+ * expired contribution locks are released.
+ */
+export function resolveGoals(state: WorldState, events?: EventLog): void {
+  const goals = state.goals
+    .filter((goal) => goal.status === "active")
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  for (const goal of goals) {
+    const progress = goalProgress(state, goal);
+    const status = goalStatusAt(goal, progress, state.world.currentTick);
+    if (status === "active") {
+      continue;
+    }
+    const payload: GoalProgressPayload = {
+      goalId: goal.id,
+      progress: progressStacks(progress),
+      complete: status === "succeeded",
+    };
+    events?.emit("goal_progress", payload);
+    if (status === "succeeded") {
+      succeedGoal(state, goal, events);
+    } else {
+      expireGoal(state, goal);
+    }
+  }
+}

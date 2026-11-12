@@ -22,6 +22,7 @@ import type {
   WorldState,
 } from "../src/types.js";
 import { testContent, testOrder, testWorldState } from "./fixtures.js";
+import { runTick } from "./support/harness.js";
 
 registerGoalHandlers();
 
@@ -342,5 +343,89 @@ describe("goal contribution locking", () => {
       locked: 0,
     });
     expect(state.contributions[0]?.status).toBe("consumed");
+  });
+});
+
+describe("goal phase", () => {
+  it("resolves success before expiry at the deadline", () => {
+    const state = stateWithGoal({
+      goals: [activeGoal({ deadlineTick: 5 })],
+      inventory: [
+        { plotId: "plot1", item: "grain", quantity: 5, locked: 5 },
+        { plotId: "plot1", item: "wood", quantity: 2, locked: 2 },
+      ],
+      contributions: [
+        {
+          id: "c1",
+          goalId: "barn_raising",
+          playerId: "p1",
+          orderId: "o1",
+          items: [
+            { item: "grain", quantity: 5 },
+            { item: "wood", quantity: 2 },
+          ],
+          status: "locked",
+        },
+      ],
+    });
+
+    const result = runTick(state);
+
+    expect(result.state.goals[0]?.status).toBe("succeeded");
+    expect(result.state.contributions[0]?.status).toBe("consumed");
+    expect(result.state.inventory).toEqual([]);
+    const types = result.events.map((event) => event.type);
+    expect(types.at(-2)).toBe("goal_progress");
+    expect(types.at(-1)).toBe("goal_completed");
+  });
+
+  it("expires an incomplete goal and releases its locks", () => {
+    const state = stateWithGoal({
+      goals: [activeGoal({ deadlineTick: 5 })],
+      inventory: [{ plotId: "plot1", item: "grain", quantity: 3, locked: 3 }],
+      contributions: [
+        {
+          id: "c1",
+          goalId: "barn_raising",
+          playerId: "p1",
+          orderId: "o1",
+          items: [{ item: "grain", quantity: 3 }],
+          status: "locked",
+        },
+      ],
+    });
+
+    const result = runTick(state);
+
+    expect(result.state.goals[0]?.status).toBe("expired");
+    expect(result.state.contributions[0]?.status).toBe("released");
+    expect(result.state.inventory.find((row) => row.item === "grain")).toMatchObject({
+      quantity: 3,
+      locked: 0,
+    });
+    const types = result.events.map((event) => event.type);
+    expect(types).toContain("goal_progress");
+    expect(types).not.toContain("goal_completed");
+  });
+
+  it("checks goals after this tick's contributions", () => {
+    const state = stateWithGoal({
+      goals: [activeGoal({ deadlineTick: 6, requires: [{ item: "grain", quantity: 2 }] })],
+      inventory: [{ plotId: "plot1", item: "grain", quantity: 10, locked: 0 }],
+    });
+    const queued = queueOrder(state, testContent(), {
+      id: "last-minute",
+      playerId: "p1",
+      tick: 5,
+      type: "contribute_goal",
+      payload: { goalId: "barn_raising", items: [{ item: "grain", quantity: 2 }] },
+    });
+    expect(queued.ok).toBe(true);
+
+    const result = runTick(state);
+    const types = result.events.map((event) => event.type);
+
+    expect(result.state.goals[0]?.status).toBe("succeeded");
+    expect(types.indexOf("order_resolved")).toBeLessThan(types.indexOf("goal_completed"));
   });
 });

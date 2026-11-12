@@ -314,7 +314,7 @@
 - [ ] **M7.06** Host-configurable goal schedule; schedule changes take effect at the next goal (spec §9). _Depends on: M3.01, M7.05._
 - [x] **M7.07** Goal contributions lock at queue time and are consumed only if the goal succeeds (spec §9). _Depends on: M2.A02, M2.A06, M2.D06, M7.05._
 - [x] **M7.08** Contribution locks release when an order is removed or the goal fails or expires, with goods staying with their owners (spec §9). _Depends on: M7.07._
-- [ ] **M7.09** Goal checks run after the player order phase and check success before expiry (spec §9). _Depends on: M2.A10, M7.05._
+- [x] **M7.09** Goal checks run after the player order phase and check success before expiry (spec §9). _Depends on: M2.A10, M7.05._
 - [ ] **M7.10** Goal rewards unlock for everyone at the start of the next tick (spec §9). _Depends on: M7.09._
 - [ ] **M7.11** Rewards can unlock recipes, crop varieties, building types, map areas and wild zones (spec §9). _Depends on: M2.D12, M3.14, M3.15, M7.10._
 - [ ] **M7.12** Web push with VAPID keys, a service worker and stored subscriptions (spec §11, §12). _Depends on: M3.01, M4.B02, M5.A01._
