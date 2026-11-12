@@ -131,7 +131,7 @@
 - [x] **M2.D09** Timed recipes enter a per-building FIFO queue when the order resolves; an idle building starts immediately and queued jobs start when the previous job completes (spec §6.2). _Depends on: M2.D01, M2.D08._
 - [x] **M2.D10** A job starting at tick S with duration N completes at the start of tick S+N, with one job per building at a time (spec §6.2). _Depends on: M2.D09._
 - [x] **M2.D11** Craft inputs lock when the order is queued and are consumed when the job starts; removing the order before the tick releases the lock, and resolved jobs cannot be cancelled (spec §6.2). _Depends on: M2.A06, M2.D05, M2.D09._
-- [ ] **M2.D12** Recipe discovery is gated by building level and shared-goal unlocks; unlocks take effect at the start of the next tick after the goal succeeds (spec §6.2). _Depends on: M2.D02, M7.10._
+- [x] **M2.D12** Recipe discovery is gated by building level and shared-goal unlocks; unlocks take effect at the start of the next tick after the goal succeeds (spec §6.2). _Depends on: M2.D02, M7.10._
 - [ ] **M2.D13** Decorations are cosmetic, placed on a plot, crafted or earned via goodwill or shared goals, and do not affect production (spec §6.2). _Depends on: M2.A02, M3.16, M6.12, M7.11._
 
 ### Barter

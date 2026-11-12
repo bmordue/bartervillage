@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { isRecipeUnlocked } from "../src/crafting.js";
 import { EventLog } from "../src/events.js";
 import {
   createGoal,
@@ -19,6 +20,7 @@ import type {
   Goal,
   GoalDefinition,
   Order,
+  RecipeDefinition,
   WorldState,
 } from "../src/types.js";
 import { testContent, testOrder, testWorldState } from "./fixtures.js";
@@ -463,5 +465,49 @@ describe("goal rewards", () => {
 
     expect(result.state.goals[0]?.status).toBe("succeeded");
     expect(result.state.unlockedBuildings).toContain("barn");
+  });
+});
+
+describe("recipe discovery", () => {
+  it("unlocks a gated recipe from the next tick after a goal succeeds", () => {
+    const secret: RecipeDefinition = {
+      id: "secret",
+      name: "Secret",
+      building: "kitchen",
+      buildingLevel: 1,
+      inputs: [{ item: "grain", quantity: 1 }],
+      outputs: [{ item: "berries", quantity: 1 }],
+      durationTicks: 0,
+      unlockedByDefault: false,
+    };
+    const state = stateWithGoal({
+      goals: [
+        activeGoal({
+          requires: [],
+          rewards: [{ kind: "recipe", id: "secret" }],
+        }),
+      ],
+      buildings: [
+        {
+          id: "kitchen-1",
+          plotId: "plot1",
+          type: "kitchen",
+          level: 1,
+          constructionKind: null,
+          constructionCompleteTick: null,
+          craftQueue: [],
+        },
+      ],
+    });
+    const content = testContent({ recipes: [secret] });
+
+    expect(isRecipeUnlocked(state, content, "secret", state.buildings[0]!)).toBe(false);
+
+    const result = runTick(state, content);
+
+    expect(result.state.unlockedRecipes).toContain("secret");
+    expect(isRecipeUnlocked(result.state, content, "secret", result.state.buildings[0]!)).toBe(
+      true,
+    );
   });
 });
