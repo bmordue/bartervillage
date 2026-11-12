@@ -374,6 +374,7 @@ describe("goal phase", () => {
     expect(result.state.goals[0]?.status).toBe("succeeded");
     expect(result.state.contributions[0]?.status).toBe("consumed");
     expect(result.state.inventory).toEqual([]);
+    expect(result.state.unlockedBuildings).toContain("barn");
     const types = result.events.map((event) => event.type);
     expect(types.at(-2)).toBe("goal_progress");
     expect(types.at(-1)).toBe("goal_completed");
@@ -427,5 +428,40 @@ describe("goal phase", () => {
 
     expect(result.state.goals[0]?.status).toBe("succeeded");
     expect(types.indexOf("order_resolved")).toBeLessThan(types.indexOf("goal_completed"));
+  });
+});
+
+describe("goal rewards", () => {
+  it("unlocks every reward kind for the whole world", () => {
+    const goal = activeGoal({
+      rewards: [
+        { kind: "recipe", id: "feast" },
+        { kind: "crop", id: "pumpkin" },
+        { kind: "building", id: "barn" },
+        { kind: "map_area", id: "r3" },
+        { kind: "wild_zone", id: "n9" },
+      ],
+    });
+    const state = stateWithGoal({ goals: [goal] });
+
+    succeedGoal(state, state.goals[0]!);
+    succeedGoal(state, state.goals[0]!);
+
+    expect(state.unlockedRecipes).toEqual(["feast"]);
+    expect(state.unlockedCrops).toEqual(["pumpkin"]);
+    expect(state.unlockedBuildings).toEqual(["barn"]);
+    expect(state.unlockedRegions).toEqual(["r3"]);
+    expect(state.unlockedNodes).toEqual(["n9"]);
+  });
+
+  it("makes rewards available from the next tick", () => {
+    const state = stateWithGoal({
+      goals: [activeGoal({ deadlineTick: 6, requires: [] })],
+    });
+
+    const result = runTick(state);
+
+    expect(result.state.goals[0]?.status).toBe("succeeded");
+    expect(result.state.unlockedBuildings).toContain("barn");
   });
 });

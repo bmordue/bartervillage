@@ -156,8 +156,41 @@ export function succeedGoal(state: WorldState, goal: Goal, events?: EventLog): v
     contribution.status = "consumed";
   }
   goal.status = "succeeded";
+  grantGoalRewards(state, goal);
   const payload: GoalCompletedPayload = { goalId: goal.id, rewards: goal.rewards };
   events?.emit("goal_completed", payload);
+}
+
+function addUnique<T>(values: T[], value: T): void {
+  if (!values.includes(value)) {
+    values.push(value);
+  }
+}
+
+/**
+ * Goal rewards are world-scoped and granted after player orders, so they first
+ * affect orders in the next tick for every player (spec §9; M7.10).
+ */
+export function grantGoalRewards(state: WorldState, goal: Goal): void {
+  for (const reward of goal.rewards) {
+    switch (reward.kind) {
+      case "recipe":
+        addUnique(state.unlockedRecipes, reward.id);
+        break;
+      case "crop":
+        addUnique(state.unlockedCrops, reward.id);
+        break;
+      case "building":
+        addUnique(state.unlockedBuildings, reward.id);
+        break;
+      case "map_area":
+        addUnique(state.unlockedRegions, reward.id);
+        break;
+      case "wild_zone":
+        addUnique(state.unlockedNodes, reward.id);
+        break;
+    }
+  }
 }
 
 /** Release locks when a goal fails or expires (spec §9). */
