@@ -200,7 +200,7 @@
 
 - [x] **M4.A01** Separate Node worker process managed by systemd (spec §12, §14). _Depends on: M3.05._
 - [x] **M4.A02** Poll every minute and acquire the global tick lock; exit without resolving when the lock is unavailable (spec §4.1, §14.1). _Depends on: M3.04, M3.05, M4.A01._
-- [ ] **M4.A03** Set a short-lived `world.resolving` lease in a separate transaction, and clear it after commit or rollback; a crashed worker's lease expires by timeout (spec §14.1, §14.9). _Depends on: M3.01, M4.A02._
+- [x] **M4.A03** Set a short-lived `world.resolving` lease in a separate transaction, and clear it after commit or rollback; a crashed worker's lease expires by timeout (spec §14.1, §14.9). _Depends on: M3.01, M4.A02._
 - [ ] **M4.A04** Open `BEGIN IMMEDIATE` for the resolution transaction (spec §14.1). _Depends on: M3.04, M4.A03._
 - [ ] **M4.A05** Run resolution steps 2 to 8 in one database transaction, so a crash leaves the previous tick intact (spec §14, §14.9). _Depends on: M1.08, M4.A04._
 - [ ] **M4.A06** Freeze the world, config and content version, plus the player roster and ready set; players joining after this point wait for the next tick (spec §14.2, §4.1). _Depends on: M2.A07, M3.17, M4.A05._

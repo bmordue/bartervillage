@@ -1,12 +1,19 @@
 /**
- * Tick poller (spec §14.1; M4.A02).
+ * Tick poller (spec §14.1; M4.A02/M4.A03).
  *
  * Each poll tries the global tick lock. If another worker holds it, the poll
- * returns without resolving. The lease is always released, including when
- * resolution throws, so the next poll can retry.
+ * returns without resolving. Once the lock is held, the short-lived resolving
+ * lease is taken in its own transaction; the lease and lock are released after
+ * resolution succeeds or throws, and a crashed worker's lease expires by TTL.
  */
 
-import { type Database, latestResolvedTick, loadWorld } from "@bartervillage/server";
+import {
+  acquireResolvingLease,
+  type Database,
+  latestResolvedTick,
+  loadWorld,
+  releaseResolvingLease,
+} from "@bartervillage/server";
 
 import { tryAcquireLock } from "./lock.js";
 
@@ -25,34 +32,49 @@ export interface TickPollerOptions {
   resolve?: (context: TickContext) => void | Promise<void>;
   now?: () => number;
   staleAfterMs?: number;
+  leaseTtlMs?: number;
 }
 
 export function createTickPoller(options: TickPollerOptions): () => Promise<void> {
   const resolve = options.resolve ?? (() => undefined);
 
   return async () => {
-    const lease = tryAcquireLock({
+    const lockLease = tryAcquireLock({
       path: options.lockPath,
       owner: options.owner,
       ...(options.now ? { now: options.now } : {}),
       ...(options.staleAfterMs === undefined ? {} : { staleAfterMs: options.staleAfterMs }),
     });
 
-    if (!lease) {
+    if (!lockLease) {
       options.logger(`worker: tick lock unavailable for world ${options.worldId}`);
       return;
     }
 
+    const world = loadWorld(options.database, options.worldId);
+    if (!world) {
+      options.logger(`worker: world ${options.worldId} not found`);
+      lockLease.release();
+      return;
+    }
+
+    const resolvingLease = acquireResolvingLease(options.database, options.worldId, {
+      owner: options.owner,
+      ...(options.now ? { now: new Date(options.now()) } : {}),
+      ...(options.leaseTtlMs === undefined ? {} : { ttlMs: options.leaseTtlMs }),
+    });
+    if (!resolvingLease) {
+      options.logger(`worker: resolving lease unavailable for world ${options.worldId}`);
+      lockLease.release();
+      return;
+    }
+
     try {
-      const world = loadWorld(options.database, options.worldId);
-      if (!world) {
-        options.logger(`worker: world ${options.worldId} not found`);
-        return;
-      }
       const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
       await resolve({ database: options.database, worldId: options.worldId, tick });
     } finally {
-      lease.release();
+      releaseResolvingLease(options.database, options.worldId, options.owner);
+      lockLease.release();
     }
   };
 }

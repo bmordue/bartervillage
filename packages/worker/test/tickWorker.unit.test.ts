@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { Database } from "@bartervillage/server";
+import { acquireResolvingLease, Database, loadWorld } from "@bartervillage/server";
 
 import { tryAcquireLock } from "../src/lock.js";
 import { createTickPoller } from "../src/tickWorker.js";
@@ -42,7 +42,9 @@ function setup(withWorld = true): {
 describe("tick poller", () => {
   it("runs resolution when it acquires the lock and releases it afterwards", async () => {
     const { database, path } = setup();
-    const resolve = vi.fn();
+    const resolve = vi.fn(() => {
+      expect(loadWorld(database, "w1")?.resolving?.owner).toBe("worker-a");
+    });
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -57,6 +59,7 @@ describe("tick poller", () => {
 
     expect(resolve).toHaveBeenCalledWith({ database, worldId: "w1", tick: -1 });
     expect(logger).not.toHaveBeenCalled();
+    expect(loadWorld(database, "w1")?.resolving).toBeNull();
     expect(tryAcquireLock({ path, owner: "worker-b" })).not.toBeNull();
   });
 
@@ -96,7 +99,30 @@ describe("tick poller", () => {
     });
 
     await expect(poll()).rejects.toThrow("boom");
+    expect(loadWorld(database, "w1")?.resolving).toBeNull();
     expect(tryAcquireLock({ path, owner: "worker-b" })).not.toBeNull();
+  });
+
+  it("skips resolution when a resolving lease is still held", async () => {
+    const { database, path } = setup();
+    acquireResolvingLease(database, "w1", { owner: "worker-a" });
+    const resolve = vi.fn();
+    const logger = vi.fn();
+
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-b",
+      logger,
+      resolve,
+    });
+    await poll();
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(logger).toHaveBeenCalledWith("worker: resolving lease unavailable for world w1");
+    expect(loadWorld(database, "w1")?.resolving?.owner).toBe("worker-a");
+    expect(tryAcquireLock({ path, owner: "worker-c" })).not.toBeNull();
   });
 
   it("skips an unknown world and releases the lock", async () => {

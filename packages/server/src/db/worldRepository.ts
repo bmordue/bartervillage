@@ -52,6 +52,65 @@ function toLease(row: WorldRow): ResolvingLease | null {
   };
 }
 
+export const DEFAULT_RESOLVING_LEASE_MS = 5 * 60_000;
+
+export interface AcquireResolvingLeaseOptions {
+  owner: string;
+  now?: Date;
+  ttlMs?: number;
+}
+
+/**
+ * Take the short-lived resolving lease in its own statement/transaction. A
+ * lease left behind by a crashed worker is taken over once it has expired.
+ */
+export function acquireResolvingLease(
+  db: Database,
+  worldId: string,
+  options: AcquireResolvingLeaseOptions,
+): ResolvingLease | null {
+  const now = options.now ?? new Date();
+  const ttlMs = options.ttlMs ?? DEFAULT_RESOLVING_LEASE_MS;
+  const acquiredAt = now.toISOString();
+  const expiresAt = new Date(now.getTime() + ttlMs).toISOString();
+  const result = db.run(
+    `UPDATE worlds
+     SET resolving_owner = ?, resolving_acquired_at = ?, resolving_expires_at = ?
+     WHERE id = ?
+       AND (resolving_owner IS NULL OR resolving_expires_at < ?)`,
+    options.owner,
+    acquiredAt,
+    expiresAt,
+    worldId,
+    acquiredAt,
+  );
+  if (Number(result.changes) !== 1) {
+    return null;
+  }
+  return { owner: options.owner, acquiredAt, expiresAt };
+}
+
+/** Clear the lease only when this owner still holds it. */
+export function releaseResolvingLease(db: Database, worldId: string, owner: string): boolean {
+  const result = db.run(
+    `UPDATE worlds
+     SET resolving_owner = NULL, resolving_acquired_at = NULL, resolving_expires_at = NULL
+     WHERE id = ? AND resolving_owner = ?`,
+    worldId,
+    owner,
+  );
+  return Number(result.changes) === 1;
+}
+
+/** A lease is in progress until its expiry time, regardless of owner. */
+export function isResolutionInProgress(world: World, now: Date = new Date()): boolean {
+  if (world.resolving === null) {
+    return false;
+  }
+  const expiresAt = Date.parse(world.resolving.expiresAt);
+  return Number.isNaN(expiresAt) || expiresAt > now.getTime();
+}
+
 export function loadWorld(db: Database, worldId: string): World | undefined {
   const row = db.get<WorldRow>("SELECT * FROM worlds WHERE id = ?", worldId);
   if (!row) {

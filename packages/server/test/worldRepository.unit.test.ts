@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { Database } from "../src/db/database.js";
-import { loadWorld, setContentVersion } from "../src/db/worldRepository.js";
+import {
+  acquireResolvingLease,
+  isResolutionInProgress,
+  loadWorld,
+  releaseResolvingLease,
+  setContentVersion,
+} from "../src/db/worldRepository.js";
 
 let db: Database | undefined;
 
@@ -77,5 +83,78 @@ describe("world repository", () => {
   it("returns false when the world does not exist", () => {
     const database = open();
     expect(setContentVersion(database, "missing", "content-2")).toBe(false);
+  });
+});
+
+describe("resolving lease", () => {
+  const t0 = new Date("2026-11-07T20:00:00.000Z");
+
+  it("acquires a lease when the world is free", () => {
+    const database = open();
+
+    const lease = acquireResolvingLease(database, "w1", { owner: "worker-1", now: t0 });
+
+    expect(lease).toEqual({
+      owner: "worker-1",
+      acquiredAt: "2026-11-07T20:00:00.000Z",
+      expiresAt: "2026-11-07T20:05:00.000Z",
+    });
+    expect(loadWorld(database, "w1")?.resolving?.owner).toBe("worker-1");
+  });
+
+  it("refuses a second lease until the first expires", () => {
+    const database = open();
+    acquireResolvingLease(database, "w1", { owner: "worker-1", now: t0 });
+
+    expect(acquireResolvingLease(database, "w1", { owner: "worker-2", now: t0 })).toBeNull();
+    expect(
+      acquireResolvingLease(database, "w1", {
+        owner: "worker-1",
+        now: new Date(t0.getTime() + 5 * 60_000 + 1),
+      }),
+    ).not.toBeNull();
+  });
+
+  it("takes over an expired lease from a crashed worker", () => {
+    const database = open();
+    acquireResolvingLease(database, "w1", { owner: "worker-1", now: t0, ttlMs: 1000 });
+
+    const lease = acquireResolvingLease(database, "w1", {
+      owner: "worker-2",
+      now: new Date(t0.getTime() + 1001),
+    });
+
+    expect(lease?.owner).toBe("worker-2");
+  });
+
+  it("releases only the owner's lease", () => {
+    const database = open();
+    acquireResolvingLease(database, "w1", { owner: "worker-1", now: t0 });
+
+    expect(releaseResolvingLease(database, "w1", "worker-2")).toBe(false);
+    expect(loadWorld(database, "w1")?.resolving?.owner).toBe("worker-1");
+
+    expect(releaseResolvingLease(database, "w1", "worker-1")).toBe(true);
+    expect(loadWorld(database, "w1")?.resolving).toBeNull();
+  });
+
+  it("reports whether resolution is still in progress", () => {
+    const database = open();
+    const world = loadWorld(database, "w1");
+    expect(world).toBeDefined();
+    if (!world) {
+      return;
+    }
+
+    expect(isResolutionInProgress(world, t0)).toBe(false);
+    acquireResolvingLease(database, "w1", { owner: "worker-1", now: t0 });
+    const leased = loadWorld(database, "w1");
+    expect(leased).toBeDefined();
+    if (!leased) {
+      return;
+    }
+
+    expect(isResolutionInProgress(leased, new Date(t0.getTime() + 1000))).toBe(true);
+    expect(isResolutionInProgress(leased, new Date(t0.getTime() + 5 * 60_000))).toBe(false);
   });
 });
