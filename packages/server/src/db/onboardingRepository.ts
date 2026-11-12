@@ -1,0 +1,78 @@
+/**
+ * Transactional onboarding (spec §5; M4.C08).
+ *
+ * Creating the player, claiming the site, redeeming the invite, provisioning
+ * starter buildings and creating the session all happen in one transaction. A
+ * site claimed by someone else wins (first write wins) and rolls this attempt
+ * back completely.
+ */
+
+import type { Database } from "./database.js";
+import { redeemInvite } from "./inviteRepository.js";
+import { claimPlot } from "./mapRepository.js";
+import { provisionStarterBuildings } from "./playerRepository.js";
+import { createSession, type Session } from "./sessionRepository.js";
+
+export const STARTING_ENERGY = 100;
+
+export type OnboardFailureReason = "invite_invalid" | "site_unavailable";
+
+export type OnboardResult =
+  | { ok: true; playerId: string; plotId: string; session: Session }
+  | { ok: false; reason: OnboardFailureReason };
+
+export interface OnboardPlayerOptions {
+  playerId: string;
+  name: string;
+  plotId: string;
+  inviteCodeHash: string;
+  sessionId: string;
+  now?: Date;
+  sessionTtlMs?: number;
+}
+
+class OnboardFailure extends Error {
+  constructor(readonly reason: OnboardFailureReason) {
+    super(reason);
+    this.name = "OnboardFailure";
+  }
+}
+
+export function onboardPlayer(db: Database, options: OnboardPlayerOptions): OnboardResult {
+  try {
+    return db.transaction(() => {
+      const now = options.now ?? new Date();
+      db.run(
+        `INSERT INTO players (id, name, plot_id, joined_tick, energy)
+         VALUES (?, ?, ?, 0, ?)`,
+        options.playerId,
+        options.name,
+        options.plotId,
+        STARTING_ENERGY,
+      );
+
+      if (!claimPlot(db, options.playerId, options.plotId)) {
+        throw new OnboardFailure("site_unavailable");
+      }
+
+      if (!redeemInvite(db, options.inviteCodeHash, options.playerId, now)) {
+        throw new OnboardFailure("invite_invalid");
+      }
+
+      provisionStarterBuildings(db, options.plotId);
+      const session = createSession(db, {
+        id: options.sessionId,
+        playerId: options.playerId,
+        now,
+        ...(options.sessionTtlMs === undefined ? {} : { ttlMs: options.sessionTtlMs }),
+      });
+
+      return { ok: true as const, playerId: options.playerId, plotId: options.plotId, session };
+    });
+  } catch (error) {
+    if (error instanceof OnboardFailure) {
+      return { ok: false, reason: error.reason };
+    }
+    throw error;
+  }
+}
