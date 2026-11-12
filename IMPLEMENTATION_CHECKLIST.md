@@ -243,7 +243,7 @@
 - [x] **M4.B07** Protect mutations with CSRF protection; use HttpOnly and SameSite session cookies (spec §12). _Depends on: M4.B01, M4.C06._
 - [ ] **M4.B08** Rate-limit auth endpoints (spec §12). _Depends on: M4.B02, M4.C01-M4.C06._
 - [ ] **M4.B09** Encrypt OAuth tokens at rest; never store passwords (spec §12). _Depends on: M3.01, M4.B02._
-- [ ] **M4.B10** Keep infrastructure secrets in deployment configuration, not the repository (spec §12). _Depends on: M4.B01._
+- [x] **M4.B10** Keep infrastructure secrets in deployment configuration, not the repository (spec §12). _Depends on: M4.B01._
 
 ### Auth and onboarding
 
