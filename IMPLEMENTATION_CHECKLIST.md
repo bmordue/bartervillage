@@ -225,8 +225,8 @@
 - [x] **M4.A25** Make resolution idempotent through the tick lock and tick number (spec §14.9). _Depends on: M4.A02, M4.A05._
 - [x] **M4.A26** Deadline scheduling from a local time and IANA timezone; the next deadline is the next occurrence strictly after resolution and at least `min_tick_gap` later, default 60 minutes (spec §4.1). _Depends on: M1.12, M4.A18._
 - [x] **M4.A27** Deadline changes take effect at the next tick (spec §4.1). _Depends on: M4.A26._
-- [ ] **M4.A28** Tick trigger when every player is ready or at the deadline; start within 60 seconds of the trigger (spec §4.1). _Depends on: M2.A07, M4.A02, M4.A26._
-- [ ] **M4.A29** Exclude mid-tick joins from the current tick (spec §4.1). _Depends on: M4.A06, M4.A28._
+- [x] **M4.A28** Tick trigger when every player is ready or at the deadline; start within 60 seconds of the trigger (spec §4.1). _Depends on: M2.A07, M4.A02, M4.A26._
+- [x] **M4.A29** Exclude mid-tick joins from the current tick (spec §4.1). _Depends on: M4.A06, M4.A28._
 - [ ] **M4.A30** Reject mutations with a "tick in progress" response while the resolving lease is held (spec §4.1, §14.9). _Depends on: M4.A03, M4.B05._
 - [x] **M4.A31** Keep wall-clock time out of the rules; use it only for scheduling the next deadline, and exclude the deadline from the replay state hash (spec §14). _Depends on: M4.A07, M4.A26._
 - [ ] **M4.A32** Add host alerting and a safe manual retry path for persistent resolution failures (spec §15). _Depends on: M4.A24; blocked by D.09._

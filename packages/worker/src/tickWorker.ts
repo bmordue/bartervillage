@@ -31,6 +31,7 @@ export interface TickPollerOptions {
   owner: string;
   logger: (message: string) => void;
   resolve?: (context: TickContext) => void;
+  shouldResolve?: (context: TickContext & { now: Date }) => boolean;
   now?: () => number;
   staleAfterMs?: number;
   leaseTtlMs?: number;
@@ -59,6 +60,20 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
     const world = loadWorld(options.database, options.worldId);
     if (!world) {
       options.logger(`worker: world ${options.worldId} not found`);
+      lockLease.release();
+      return;
+    }
+
+    const nowMs = options.now ? options.now() : Date.now();
+    const due =
+      options.shouldResolve?.({
+        database: options.database,
+        worldId: options.worldId,
+        tick: latestResolvedTick(options.database, options.worldId) ?? -1,
+        now: new Date(nowMs),
+      }) ?? true;
+    if (!due) {
+      options.logger(`worker: tick not due for world ${options.worldId}`);
       lockLease.release();
       return;
     }

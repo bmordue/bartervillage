@@ -125,6 +125,28 @@ describe("tick poller", () => {
     expect(tryAcquireLock({ path, owner: "worker-c" })).not.toBeNull();
   });
 
+  it("skips resolution when the tick is not due and releases the lock", async () => {
+    const { database, path } = setup();
+    const resolve = vi.fn();
+    const logger = vi.fn();
+
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger,
+      resolve,
+      shouldResolve: () => false,
+    });
+    await poll();
+
+    expect(resolve).not.toHaveBeenCalled();
+    expect(logger).toHaveBeenCalledWith("worker: tick not due for world w1");
+    expect(loadWorld(database, "w1")?.resolving).toBeNull();
+    expect(tryAcquireLock({ path, owner: "worker-b" })).not.toBeNull();
+  });
+
   it("skips an unknown world and releases the lock", async () => {
     const { database, path } = setup(false);
     const resolve = vi.fn();

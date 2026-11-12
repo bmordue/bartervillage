@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 import { Database, resolveWorldTickInTransaction } from "@bartervillage/server";
 
 import { DEFAULT_POLL_INTERVAL_MS, WorkerLoop } from "./loop.js";
+import { isTickDue } from "./schedule.js";
 import { createTickPoller } from "./tickWorker.js";
 
 export async function main(): Promise<void> {
@@ -33,6 +34,7 @@ export async function main(): Promise<void> {
       lockPath,
       owner: `${hostname()}:${process.pid}`,
       logger,
+      shouldResolve: (context) => isTickDue(context.database, context.worldId, context.now),
       resolve: (context) => {
         const result = resolveWorldTickInTransaction(context.database, context.worldId);
         logger(`worker: resolved world ${context.worldId} tick ${result.header.tick}`);
