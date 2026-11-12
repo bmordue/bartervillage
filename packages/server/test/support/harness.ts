@@ -21,14 +21,23 @@ export interface TestApi {
   close: () => Promise<void>;
 }
 
-export async function startTestApi(options: ApiServerOptions = {}): Promise<TestApi> {
+export interface TestApiOptions extends ApiServerOptions {
+  buildRoutes?: (database: Database) => ApiServerOptions["routes"];
+}
+
+export async function startTestApi(options: TestApiOptions = {}): Promise<TestApi> {
   const directory = mkdtempSync(join(tmpdir(), "barter-api-"));
   const databasePath = join(directory, "test.sqlite");
   const database = Database.open({ path: databasePath });
+  const { buildRoutes, ...serverOptions } = options;
 
   let api: RunningApiServer;
   try {
-    api = await startApiServer({ ...options, port: 0 });
+    api = await startApiServer({
+      ...serverOptions,
+      ...(buildRoutes ? { routes: buildRoutes(database) } : {}),
+      port: 0,
+    });
   } catch (error) {
     database.close();
     rmSync(directory, { recursive: true, force: true });
