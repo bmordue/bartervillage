@@ -149,6 +149,59 @@ describe("transactional tick resolution", () => {
     expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(0);
   });
 
+  it("runs queued contributions through the goal phase and persists rewards", () => {
+    const { database } = setup();
+    const reward = content.recipes[0]?.id;
+    if (!reward) {
+      throw new Error("content has no recipes");
+    }
+    database.run(
+      `INSERT INTO goals
+         (id, kind, title, requires_json, rewards_json, created_at_tick, deadline_tick, status)
+       VALUES ('g1', 'festival', 'Festival', ?, ?, 0, 10, 'active')`,
+      JSON.stringify([{ item: "grain", quantity: 5 }]),
+      JSON.stringify([{ kind: "recipe", id: reward }]),
+    );
+    database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('o-goal', 'p1', 0, 1, 'contribute_goal', ?, 'queued')`,
+      JSON.stringify({ goalId: "g1", items: [{ item: "grain", quantity: 5 }] }),
+    );
+
+    const result = resolveWorldTick(database, "w1");
+    const after = loadWorldState(database, "w1");
+
+    expect(after?.goals[0]?.status).toBe("succeeded");
+    expect(after?.inventory.find((row) => row.item === "grain")).toBeUndefined();
+    expect(after?.unlockedRecipes).toContain(reward);
+    expect(result.events.some((event) => event.type === "goal_completed")).toBe(true);
+  });
+
+  it("applies wild claims in the claim phase and stores the yield", () => {
+    const { database } = setup();
+    const node = database.get<{ id: string; resource: string; amount: number }>(
+      "SELECT id, resource, amount FROM wild_nodes WHERE amount > 0 ORDER BY id LIMIT 1",
+    );
+    if (!node) {
+      throw new Error("generated map has no wild node with yield");
+    }
+    database.run(
+      "INSERT INTO wild_claims (player_id, node_id, tick, sequence) VALUES ('p1', ?, 0, 1)",
+      node.id,
+    );
+
+    const result = resolveWorldTick(database, "w1");
+    const after = loadWorldState(database, "w1");
+
+    expect(after?.wildNodes.find((candidate) => candidate.id === node.id)?.amount).toBeLessThan(
+      node.amount,
+    );
+    expect(
+      after?.inventory.find((row) => row.item === node.resource)?.quantity ?? 0,
+    ).toBeGreaterThan(0);
+    expect(result.events.some((event) => event.type === "node_claimed")).toBe(true);
+  });
+
   it("freezes the roster for the tick and admits later players next tick", () => {
     const { database, databasePath, plotIds, regionId } = setup();
     const other = Database.open({ path: databasePath, busyTimeoutMs: 0 });

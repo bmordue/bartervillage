@@ -207,14 +207,14 @@
 - [x] **M4.A07** Seed the RNG from `(world_seed, tick, generator_version, content_version, rules_version)` with no wall-clock time or unordered iteration (spec §14.3). _Depends on: M1.07, M1.10, M4.A05._
 - [x] **M4.A08** World update step 1: run season rollover when due and wither crops that cannot grow in the new season (spec §14.4a, §9). _Depends on: M2.B06, M4.A05, M7.01, M7.02._
 - [x] **M4.A09** World update step 2: roll weather for the tick (spec §14.4b, §9). _Depends on: M4.A05, M7.03, M7.04._
-- [ ] **M4.A10** World update step 3: advance crops using previous-tick watering and tending flags plus weather, roll pests and blight, and log growth and failure (spec §14.4c). _Depends on: M2.B01-M2.B07, M4.A05._
-- [ ] **M4.A11** World update step 4: run animal production from the previous tick's feeding flags, then clear those flags (spec §14.4d). _Depends on: M2.B09, M2.B10, M4.A05._
-- [ ] **M4.A12** World update step 5: advance in-progress construction and crafting jobs and complete jobs that finish this tick (spec §14.4e). _Depends on: M2.D03, M2.D10, M4.A05._
-- [ ] **M4.A13** World update step 6: regrow wild nodes up to capacity (spec §14.4f). _Depends on: M2.C01, M4.A05._
-- [ ] **M4.A14** World update step 7: expire posts, cascade-cancel counter-offers and release locks (spec §14.4g). _Depends on: M2.E07, M2.E10, M4.A05._
-- [ ] **M4.A15** Player order phase: order players, append missed-tick defaults, run orders in sequence, validate atomically and log failures (spec §14.5). _Depends on: M2.A09, M2.A10, M2.A17-M2.A20, M4.A05._
-- [ ] **M4.A16** Wild claim phase: fix claimant sets, compute shares, apply them in queue order capped by free storage and log partial fills (spec §14.6). _Depends on: M2.C06-M2.C08, M4.A15._
-- [ ] **M4.A17** Goal phase: evaluate quotas including this tick's contributions, consume goods on success, mark next-tick rewards, and release locks on failure or expiry (spec §14.7). _Depends on: M4.A15, M7.05, M7.09._
+- [x] **M4.A10** World update step 3: advance crops using previous-tick watering and tending flags plus weather, roll pests and blight, and log growth and failure (spec §14.4c). _Depends on: M2.B01-M2.B07, M4.A05._
+- [x] **M4.A11** World update step 4: run animal production from the previous tick's feeding flags, then clear those flags (spec §14.4d). _Depends on: M2.B09, M2.B10, M4.A05._
+- [x] **M4.A12** World update step 5: advance in-progress construction and crafting jobs and complete jobs that finish this tick (spec §14.4e). _Depends on: M2.D03, M2.D10, M4.A05._
+- [x] **M4.A13** World update step 6: regrow wild nodes up to capacity (spec §14.4f). _Depends on: M2.C01, M4.A05._
+- [x] **M4.A14** World update step 7: expire posts, cascade-cancel counter-offers and release locks (spec §14.4g). _Depends on: M2.E07, M2.E10, M4.A05._
+- [x] **M4.A15** Player order phase: order players, append missed-tick defaults, run orders in sequence, validate atomically and log failures (spec §14.5). _Depends on: M2.A09, M2.A10, M2.A17-M2.A20, M4.A05._
+- [x] **M4.A16** Wild claim phase: fix claimant sets, compute shares, apply them in queue order capped by free storage and log partial fills (spec §14.6). _Depends on: M2.C06-M2.C08, M4.A15._
+- [x] **M4.A17** Goal phase: evaluate quotas including this tick's contributions, consume goods on success, mark next-tick rewards, and release locks on failure or expiry (spec §14.7). _Depends on: M4.A15, M7.05, M7.09._
 - [ ] **M4.A18** Finalize: append events in deterministic order (world update, player orders, wild claims, goals), compute the state hash, advance the tick, compute the next deadline and clear per-tick ready and claim flags (spec §14.8). _Depends on: M1.11, M4.A05-M4.A17._
 - [ ] **M4.A19** Treat event ordering as part of the recorded contract; it must be deterministic (spec §14.9). _Depends on: M4.A18._
 - [ ] **M4.A20** Write the tick header with `v: 1`, world seed, tick number, `generator_version`, `content_version` and `rules_version` (spec §10). _Depends on: M1.07, M4.A18._
