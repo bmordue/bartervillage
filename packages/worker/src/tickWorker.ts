@@ -29,7 +29,7 @@ export interface TickPollerOptions {
   lockPath: string;
   owner: string;
   logger: (message: string) => void;
-  resolve?: (context: TickContext) => void | Promise<void>;
+  resolve?: (context: TickContext) => void;
   now?: () => number;
   staleAfterMs?: number;
   leaseTtlMs?: number;
@@ -70,8 +70,19 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
     }
 
     try {
-      const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
-      await resolve({ database: options.database, worldId: options.worldId, tick });
+      options.database.raw.exec("BEGIN IMMEDIATE");
+      try {
+        const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
+        resolve({ database: options.database, worldId: options.worldId, tick });
+        options.database.raw.exec("COMMIT");
+      } catch (error) {
+        try {
+          options.database.raw.exec("ROLLBACK");
+        } catch {
+          // The original error is more useful than a failed rollback.
+        }
+        throw error;
+      }
     } finally {
       releaseResolvingLease(options.database, options.worldId, options.owner);
       lockLease.release();

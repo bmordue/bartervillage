@@ -145,3 +145,56 @@ describe("tick poller", () => {
     expect(tryAcquireLock({ path, owner: "worker-b" })).not.toBeNull();
   });
 });
+
+describe("resolution transaction", () => {
+  it("holds an immediate writer lock for the duration of resolution", async () => {
+    directory = mkdtempSync(join(tmpdir(), "barter-tx-"));
+    const databasePath = join(directory, "world.sqlite");
+    const database = Database.open({ path: databasePath });
+    db = database;
+    database.run(
+      `INSERT INTO worlds
+         (id, seed, generator_version, content_version, rules_version, deadline_time, timezone,
+          min_tick_gap_minutes, player_cap, season, weather)
+       VALUES ('w1', 'seed', 'gen-1', 'content-1', 'rules-1', '20:00', 'UTC', 60, 20, 'spring', 'clear')`,
+    );
+    const other = Database.open({ path: databasePath, busyTimeoutMs: 0 });
+    let blockedWhileResolving = false;
+
+    try {
+      const poll = createTickPoller({
+        database,
+        worldId: "w1",
+        lockPath: join(directory, "tick.lock"),
+        owner: "worker-a",
+        logger: vi.fn(),
+        resolve: () => {
+          try {
+            other.run(
+              `INSERT INTO worlds
+                 (id, seed, generator_version, content_version, rules_version, deadline_time,
+                  timezone, min_tick_gap_minutes, player_cap, season, weather)
+               VALUES ('w2', 'seed', 'gen-1', 'content-1', 'rules-1', '20:00', 'UTC', 60, 20,
+                       'spring', 'clear')`,
+            );
+          } catch {
+            blockedWhileResolving = true;
+          }
+        },
+      });
+      await poll();
+
+      expect(blockedWhileResolving).toBe(true);
+      other.run(
+        `INSERT INTO worlds
+           (id, seed, generator_version, content_version, rules_version, deadline_time, timezone,
+            min_tick_gap_minutes, player_cap, season, weather)
+         VALUES ('w3', 'seed', 'gen-1', 'content-1', 'rules-1', '20:00', 'UTC', 60, 20, 'spring',
+                 'clear')`,
+      );
+      expect(other.get("SELECT id FROM worlds WHERE id = 'w3'")).toBeDefined();
+    } finally {
+      other.close();
+    }
+  });
+});
