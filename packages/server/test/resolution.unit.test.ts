@@ -37,10 +37,14 @@ afterEach(() => {
 
 function setup(contentVersion = content.version): {
   database: Database;
+  databasePath: string;
   plotId: string;
+  plotIds: string[];
+  regionId: string;
 } {
   directory = mkdtempSync(join(tmpdir(), "barter-resolution-"));
-  const database = Database.open({ path: join(directory, "world.sqlite") });
+  const databasePath = join(directory, "world.sqlite");
+  const database = Database.open({ path: databasePath });
   db = database;
   database.run(
     `INSERT INTO worlds
@@ -70,7 +74,13 @@ function setup(contentVersion = content.version): {
     "INSERT INTO inventory (plot_id, item, quantity, locked) VALUES (?, 'grain', 5, 0)",
     plot.id,
   );
-  return { database, plotId: plot.id };
+  return {
+    database,
+    databasePath,
+    plotId: plot.id,
+    plotIds: generated.plots.filter((candidate) => !candidate.worldOwned).map((plot) => plot.id),
+    regionId: generated.region.id,
+  };
 }
 
 describe("world state repository", () => {
@@ -137,6 +147,54 @@ describe("transactional tick resolution", () => {
     expect(after?.world.currentTick).toBe(0);
     expect(after?.players[0]?.energy).toBe(0);
     expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(0);
+  });
+
+  it("freezes the roster for the tick and admits later players next tick", () => {
+    const { database, databasePath, plotIds, regionId } = setup();
+    const other = Database.open({ path: databasePath, busyTimeoutMs: 0 });
+    try {
+      const result = resolveWorldTick(database, "w1", {
+        resolve: (input) => {
+          expect(() =>
+            other.run(
+              `INSERT INTO players (id, name, plot_id, joined_tick, energy)
+               VALUES ('late', 'Late', 'late-plot', 0, 0)`,
+            ),
+          ).toThrow();
+          expect(() =>
+            other.run("UPDATE worlds SET content_version = '9.9.9' WHERE id = 'w1'"),
+          ).toThrow();
+          return resolveTick(input);
+        },
+      });
+      expect(result.state.players.map((player) => player.id)).toEqual(["p1"]);
+    } finally {
+      other.close();
+    }
+
+    const latePlot = plotIds[1];
+    if (!latePlot) {
+      throw new Error("expected a second free plot");
+    }
+    database.run(
+      `INSERT INTO players (id, name, plot_id, joined_tick, energy)
+       VALUES ('late', 'Late', ?, 1, 0)`,
+      latePlot,
+    );
+    database.run("UPDATE plots SET player_id = 'late' WHERE id = ?", latePlot);
+    database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('late-order', 'late', 1, 1, 'travel', ?, 'queued')`,
+      JSON.stringify({ regionId }),
+    );
+
+    const next = resolveWorldTick(database, "w1");
+    expect(next.state.players.map((player) => player.id)).toEqual(["late", "p1"]);
+    expect(
+      next.events.some(
+        (event) => event.type === "order_resolved" && event.payload.playerId === "late",
+      ),
+    ).toBe(true);
   });
 
   it("refuses to resolve when the pinned content version does not match", () => {
