@@ -330,7 +330,7 @@
 - [ ] **M8.05** Animal types, wild nodes, shared water zones and forage/fishing yields (spec §6.2). _Depends on: M2.B09, M2.C01, M3.15, M3.16; blocked by D.04._
 - [ ] **M8.06** Default energy budget (100), travel cost (5 per boundary), goodwill awards (+5 gift, +1 help), weather modifiers and goal schedules (spec §4.3, §8, §9). _Depends on: M3.16, M7.04, M7.05; blocked by D.01, D.02._
 - [x] **M8.07** Phrase book contents (spec §8). _Depends on: M3.16; blocked by D.03._
-- [ ] **M8.08** Content schema validation in CI and a pinned content version (spec §12). _Depends on: M1.04, M3.16, M3.17._
+- [x] **M8.08** Content schema validation in CI and a pinned content version (spec §12). _Depends on: M1.04, M3.16, M3.17._
 - [ ] **M8.09** Playtesting tuning pass for energy costs, goodwill and barter liquidity (spec §15). _Depends on: M8.01-M8.07, M9.12; blocked by D.01-D.04, D.13._
 - [ ] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
 - [ ] **M8.11** Guided first tick for new players (spec §11). _Depends on: M5.A01-M5.C04; final art: M8.10._
