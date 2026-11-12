@@ -1,35 +1,23 @@
 /**
- * Tick worker process entry point (spec §12, §14; M4.A01).
+ * Tick worker process entry point (spec §12, §14; M4.A01/M4.A02).
  *
  * Deployment runs this as its own Node process under systemd. Configuration is
- * read from the environment; resolution is added by the following M4.A tasks.
+ * read from the environment; the poller takes the global tick lock and the
+ * following M4.A tasks add the resolving lease and state persistence.
  */
 
-import { Database, latestResolvedTick, loadWorld } from "@bartervillage/server";
+import { hostname } from "node:os";
+import { dirname, join } from "node:path";
+
+import { Database } from "@bartervillage/server";
 
 import { DEFAULT_POLL_INTERVAL_MS, WorkerLoop } from "./loop.js";
-
-export interface HeartbeatPollerOptions {
-  database: Database;
-  worldId: string;
-  logger: (message: string) => void;
-}
-
-export function createHeartbeatPoller(options: HeartbeatPollerOptions): () => void {
-  return () => {
-    const world = loadWorld(options.database, options.worldId);
-    if (!world) {
-      options.logger(`worker: world ${options.worldId} not found`);
-      return;
-    }
-    const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
-    options.logger(`worker: world ${options.worldId} idle at tick ${tick}`);
-  };
-}
+import { createTickPoller } from "./tickWorker.js";
 
 export async function main(): Promise<void> {
   const databasePath = process.env.DATABASE_PATH ?? "barter-village.sqlite";
   const worldId = process.env.WORLD_ID ?? "village";
+  const lockPath = process.env.TICK_LOCK_PATH ?? join(dirname(databasePath), "tick.lock");
   const intervalMs = Number.parseInt(
     process.env.POLL_INTERVAL_MS ?? String(DEFAULT_POLL_INTERVAL_MS),
     10,
@@ -39,7 +27,16 @@ export async function main(): Promise<void> {
     console.log(message);
   };
   const loop = new WorkerLoop({
-    poll: createHeartbeatPoller({ database, worldId, logger }),
+    poll: createTickPoller({
+      database,
+      worldId,
+      lockPath,
+      owner: `${hostname()}:${process.pid}`,
+      logger,
+      resolve: (context) => {
+        logger(`worker: tick lock acquired for world ${context.worldId} at tick ${context.tick}`);
+      },
+    }),
     intervalMs,
     logger: (message) => console.error(message),
   });
