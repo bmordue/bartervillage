@@ -252,7 +252,7 @@
 - [ ] **M4.C03** GitHub OAuth login (spec §12). _Depends on: M3.01, M4.B01, M4.B09._
 - [ ] **M4.C04** Support multiple credentials per player, including account linking (spec §12). _Depends on: M4.C01-M4.C03._
 - [ ] **M4.C05** Invite issuance and redemption flow (spec §3, §12). _Depends on: M3.01, M4.B01._
-- [ ] **M4.C06** Session creation, expiry and logout. _Depends on: M3.01, M4.B01._
+- [x] **M4.C06** Session creation, expiry and logout. _Depends on: M3.01, M4.B01._
 - [ ] **M4.C07** Choose and implement an account-recovery path for lost credentials (spec §15). _Depends on: M4.C01-M4.C06; blocked by D.12._
 - [ ] **M4.C08** Transactional site claim during onboarding, with first-write-wins for simultaneous claims (spec §5). _Depends on: M3.09, M4.C05, M4.C06._
 
