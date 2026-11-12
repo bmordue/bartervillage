@@ -56,6 +56,63 @@ describe("resolveTick entry point", () => {
     expect(result.events.some((event) => event.type === "order_failed")).toBe(true);
   });
 
+  it("runs season rollover before weather and withers crops that cannot grow", () => {
+    const wheat = {
+      id: "wheat",
+      name: "Wheat",
+      growthTicks: 3,
+      seasons: ["spring" as const],
+      yield: [],
+      wateringRequired: false,
+      tendingRequired: false,
+      frostSensitive: false,
+      unlockedByDefault: true,
+    };
+    const state = testWorldState({
+      crops: [
+        {
+          id: "c1",
+          plotId: "plot1",
+          tileX: 1,
+          tileY: 1,
+          type: "wheat",
+          plantedTick: 5,
+          growthTicks: 3,
+          watered: false,
+          tended: false,
+          failed: false,
+        },
+      ],
+    });
+    state.world.currentTick = 7;
+    state.world.season = "spring";
+
+    const result = resolveTick({ state, content: testContent({ crops: [wheat] }) });
+
+    expect(result.state.world.season).toBe("summer");
+    expect(result.state.crops).toEqual([]);
+    expect(result.events[0]).toMatchObject({
+      type: "season_change",
+      payload: { season: "summer", year: 1 },
+    });
+    expect(result.events.some((event) => event.type === "crop_withered")).toBe(true);
+  });
+
+  it("rolls weather from the pinned season after the season step", () => {
+    const state = testWorldState();
+    const content = testContent();
+    const result = resolveTick({ state, content });
+    const weather = result.events.find((event) => event.type === "weather");
+
+    expect(weather?.payload).toMatchObject({ season: "spring" });
+    expect(["clear", "rain", "drought", "frost"]).toContain(
+      (weather?.payload as { weather: string }).weather,
+    );
+    expect(
+      resolveTick({ state, content }).events.find((event) => event.type === "weather"),
+    ).toEqual(weather);
+  });
+
   it("excludes deadline and lease data from the state hash", () => {
     const base = testWorldState();
     const changedDeadline = testWorldState();
