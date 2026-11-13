@@ -108,7 +108,7 @@
 ### Foraging and fishing
 
 - [x] **M2.C01** Wild nodes with resource, amount, capacity and regrowth rate, regrowing each tick up to capacity (spec §5, §14.4). _Depends on: M1.09, M3.16._
-- [ ] **M2.C02** Wild zones can be depleted by over-harvesting; shared water zones support fishing (spec §5). _Depends on: M2.C01, M3.14._
+- [x] **M2.C02** Wild zones can be depleted by over-harvesting; shared water zones support fishing (spec §5). _Depends on: M2.C01, M3.14._
 - [x] **M2.C03** Claim validation: node has at least one unit, player is in the node's region, player has energy and some free storage (spec §6.2). _Depends on: M2.A11, M2.A15, M2.C01, M2.D06._
 - [x] **M2.C04** A valid claim reserves energy and records the claim during the player's turn without applying yield yet (spec §6.2, §4.3). _Depends on: M2.A02, M2.C03._
 - [x] **M2.C05** At most one claim per player per node per tick (spec §6.2, §13). _Depends on: M2.C03._
