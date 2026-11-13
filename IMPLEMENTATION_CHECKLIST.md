@@ -47,7 +47,7 @@
 - [x] **CT.04** Determinism tests: the same seed, tick and versions produce identical events and state hash with no wall-clock time or unordered iteration. _Depends on: CT.03, M1.07, M1.10._
 - [x] **CT.05** API/database integration-test harness. _Depends on: M3.05, M4.B01._
 - [ ] **CT.06** End-to-end harness for onboarding, ordering, tick resolution and replay playback. _Depends on: M4.A15, M4.B02, M4.C05, M4.C08, M5.B02, M5.C01._
-- [ ] **CT.07** 28-tick, 20-player soak and performance harness. _Depends on: CT.05, M3.08, M4.A05, M4.A15, M4.A18._
+- [x] **CT.07** 28-tick, 20-player soak and performance harness. _Depends on: CT.05, M3.08, M4.A05, M4.A15, M4.A18._
 - [x] **CT.08** Inventory-conservation assertion helper used by tick tests. _Depends on: M1.09, M2.A03, M2.D07._
 - [ ] **CT.09** Automated backup and restore-drill test. _Depends on: CT.03, M9.05._
 
@@ -230,7 +230,7 @@
 - [x] **M4.A30** Reject mutations with a "tick in progress" response while the resolving lease is held (spec §4.1, §14.9). _Depends on: M4.A03, M4.B05._
 - [x] **M4.A31** Keep wall-clock time out of the rules; use it only for scheduling the next deadline, and exclude the deadline from the replay state hash (spec §14). _Depends on: M4.A07, M4.A26._
 - [x] **M4.A32** Add host alerting and a safe manual retry path for persistent resolution failures (spec §15). _Depends on: M4.A24; blocked by D.09._
-- [ ] **M4.A33** Benchmark 20 players with full order queues over a 28-tick soak; p95 under 60 seconds (spec §3). _Depends on: CT.07, M4.A05, M4.A15, M4.A18, M4.A28._
+- [x] **M4.A33** Benchmark 20 players with full order queues over a 28-tick soak; p95 under 60 seconds (spec §3). _Depends on: CT.07, M4.A05, M4.A15, M4.A18, M4.A28._
 
 ### REST API
 
