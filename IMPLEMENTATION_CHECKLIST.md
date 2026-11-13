@@ -186,7 +186,7 @@
 - [x] **M3.11** Region geometry with stable ID, grid coordinates, per-plot tile coordinates, and travel cost derived from Manhattan distance (spec §5). _Depends on: M1.09, M3.01, M3.06._
 - [x] **M3.12** World-generation constants for region size, plot count and the approximately 12x12 plot size (spec §5, §6.1). _Depends on: M3.06._
 - [x] **M3.13** Sites carry biome and traits (soil, water, light) (spec §5). _Depends on: M3.01, M3.06, M3.16; blocked by D.04._
-- [ ] **M3.14** Regions contain player plots, world-owned commons and wild zones; shared buildings are funded only by goals (spec §5). _Depends on: M3.06, M3.07, M7.05._
+- [x] **M3.14** Regions contain player plots, world-owned commons and wild zones; shared buildings are funded only by goals (spec §5). _Depends on: M3.06, M3.07, M7.05._
 - [ ] **M3.15** Wild nodes in commons and wild zones are public and shared; shared water zones exist for fishing (spec §5). _Depends on: M2.C01, M3.14._
 - [x] **M3.16** Versioned content JSON with a validator for energy costs, recipes, crops, buildings, biomes, weather modifiers, goals and the phrase book (spec §12). _Depends on: M1.07, M1.09._
 - [x] **M3.17** Pin a content version per world; content changes apply at the next tick (spec §12). _Depends on: M3.01, M3.16._
