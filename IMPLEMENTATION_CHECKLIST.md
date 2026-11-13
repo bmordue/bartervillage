@@ -174,7 +174,7 @@
 ## Milestone 3: Map generator, database schema and content schema (spec §16.3)
 
 - [x] **M3.01** SQLite schema and migrations for all entities in spec §13: world (including the resolving lease), players, credentials, sessions, invites, push subscriptions, regions, tiles, plots, buildings, crops, animals, inventory, orders, ready state, offers, wild nodes, goals, contributions, goodwill, decorations, tick logs and archived events with avatar paths. _Depends on: M1.01, M1.09._
-- [ ] **M3.02** Enforce the spec §13 constraints at the schema and rules layers. _Depends on: M2.F01-M2.F09, M3.01._
+- [x] **M3.02** Enforce the spec §13 constraints at the schema and rules layers. _Depends on: M2.F01-M2.F09, M3.01._
 - [ ] **M3.03** Ensure the schema, content and UI contain no currency or coin concept (spec §3, §7). _Depends on: M3.01, M3.16, M5.A01._
 - [x] **M3.04** Configure SQLite WAL mode, `busy_timeout` and a single-writer model using raw SQL. _Depends on: M3.01._
 - [x] **M3.05** Add the database access layer without an ORM. _Depends on: M3.01, M3.04._

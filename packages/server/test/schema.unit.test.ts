@@ -98,4 +98,96 @@ describe("schema migrations", () => {
       db!.exec("INSERT INTO ready (player_id, tick, position) VALUES ('p2', 5, 1)"),
     ).toThrow();
   });
+
+  it("enforces spec §13 offer, order and goal domain constraints", () => {
+    db = openDatabase();
+    const insertOffer = (values: string): void => {
+      db!.exec(`
+        INSERT INTO offers
+          (id, poster_id, kind, gives_json, wants_json, quantity, created_at_tick, expiry_tick,
+           status, parent_offer_id)
+        VALUES ${values}
+      `);
+    };
+    db.exec(`
+      INSERT INTO players (id, name, plot_id, joined_tick, energy)
+      VALUES ('p1', 'P1', 'plot1', 0, 100);
+    `);
+    insertOffer(
+      `('o1', 'p1', 'offer', '[{"item":"wheat","quantity":1}]',
+        '[{"item":"wood","quantity":1}]', 1, 5, 12, 'open', NULL)`,
+    );
+
+    expect(() => insertOffer(`('o2', 'p1', 'offer', '[]', '[]', 1, 5, 34, 'open', NULL)`)).toThrow(
+      /1\.\.28/,
+    );
+    expect(() => insertOffer(`('o3', 'p1', 'offer', '[]', '[]', 1, 5, 12, 'open', 'o1')`)).toThrow(
+      /only counter-offers/,
+    );
+    expect(() =>
+      insertOffer(`('o4', 'p1', 'counter_offer', '[]', '[]', 1, 5, 12, 'cancelled', NULL)`),
+    ).toThrow(/only counter-offers/);
+    expect(() =>
+      insertOffer(
+        `('o5', 'p1', 'wanted_request', '[{"item":"wheat","quantity":1}]', '[]', 1, 5, 12, 'open', NULL)`,
+      ),
+    ).toThrow(/must not lock goods/);
+    expect(() => insertOffer(`('o6', 'p1', 'offer', '{}', '[]', 1, 5, 12, 'open', NULL)`)).toThrow(
+      /JSON arrays/,
+    );
+    expect(() =>
+      insertOffer(`('o7', 'p1', 'offer', '[]', '[]', 1, 5, 12, 'unknown', NULL)`),
+    ).toThrow(/invalid offer status/);
+
+    insertOffer(`('c1', 'p1', 'counter_offer', '[]', '[]', 1, 5, 12, 'open', 'o1')`);
+    expect(() =>
+      insertOffer(`('c2', 'p1', 'counter_offer', '[]', '[]', 1, 5, 12, 'open', 'c1')`),
+    ).toThrow(/depth/);
+
+    insertOffer(`('o8', 'p1', 'offer', '[]', '[]', 1, 5, 12, 'cancelled', NULL)`);
+    expect(() =>
+      insertOffer(`('c3', 'p1', 'counter_offer', '[]', '[]', 1, 5, 12, 'open', 'o8')`),
+    ).toThrow(/open parent/);
+    expect(() =>
+      insertOffer(`('c4', 'p1', 'counter_offer', '[]', '[]', 1, 5, 12, 'cancelled', 'o8')`),
+    ).not.toThrow();
+    expect(() => db!.exec("UPDATE offers SET expiry_tick = 100 WHERE id = 'o1'")).toThrow(
+      /1\.\.28/,
+    );
+
+    expect(() =>
+      db!.exec(`
+        INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+        VALUES ('ord1', 'p1', 5, 1, 'explode', '{}', 'queued')
+      `),
+    ).toThrow(/invalid order type/);
+    expect(() =>
+      db!.exec(`
+        INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+        VALUES ('ord2', 'p1', 5, 2, 'travel', '{}', 'waiting')
+      `),
+    ).toThrow(/invalid order status/);
+
+    expect(() =>
+      db!.exec(`
+        INSERT INTO goals
+          (id, kind, title, requires_json, rewards_json, created_at_tick, deadline_tick, status)
+        VALUES ('g1', 'party', 'Party', '[]', '[]', 5, 10, 'active')
+      `),
+    ).toThrow(/invalid goal kind/);
+    expect(() =>
+      db!.exec(`
+        INSERT INTO goals
+          (id, kind, title, requires_json, rewards_json, created_at_tick, deadline_tick, status)
+        VALUES ('g2', 'festival', 'Festival', '[]', '[]', 5, 10, 'pending')
+      `),
+    ).toThrow(/invalid goal status/);
+    expect(() =>
+      db!.exec(`
+        INSERT INTO goals
+          (id, kind, title, requires_json, rewards_json, created_at_tick, deadline_tick, status)
+        VALUES ('g3', 'festival', 'Festival', '[]', '[]', 5, 5, 'active')
+      `),
+    ).toThrow(/after creation/);
+  });
 });

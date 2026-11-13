@@ -401,9 +401,172 @@ BEGIN
 END;
 `;
 
+/**
+ * Remaining spec §13 constraints that a single-row CHECK cannot express
+ * (M3.02). Triggers make the schema reject the same bad rows the rules layer
+ * reports through `checkInvariants`, so a persistence bug cannot smuggle one
+ * past the database.
+ */
+export const DOMAIN_CONSTRAINTS_MIGRATION = `
+CREATE TRIGGER offers_expiry_range_insert BEFORE INSERT ON offers
+WHEN NEW.expiry_tick <= NEW.created_at_tick OR NEW.expiry_tick > NEW.created_at_tick + 28
+BEGIN
+  SELECT RAISE(ABORT, 'offer expiry must be within 1..28 ticks');
+END;
+
+CREATE TRIGGER offers_expiry_range_update BEFORE UPDATE ON offers
+WHEN NEW.expiry_tick <= NEW.created_at_tick OR NEW.expiry_tick > NEW.created_at_tick + 28
+BEGIN
+  SELECT RAISE(ABORT, 'offer expiry must be within 1..28 ticks');
+END;
+
+CREATE TRIGGER offers_parent_shape_insert BEFORE INSERT ON offers
+WHEN (NEW.kind = 'counter_offer' AND NEW.parent_offer_id IS NULL)
+  OR (NEW.kind <> 'counter_offer' AND NEW.parent_offer_id IS NOT NULL)
+BEGIN
+  SELECT RAISE(ABORT, 'only counter-offers have a parent');
+END;
+
+CREATE TRIGGER offers_parent_shape_update BEFORE UPDATE ON offers
+WHEN (NEW.kind = 'counter_offer' AND NEW.parent_offer_id IS NULL)
+  OR (NEW.kind <> 'counter_offer' AND NEW.parent_offer_id IS NOT NULL)
+BEGIN
+  SELECT RAISE(ABORT, 'only counter-offers have a parent');
+END;
+
+CREATE TRIGGER offers_counter_depth_insert BEFORE INSERT ON offers
+WHEN NEW.kind = 'counter_offer'
+  AND (SELECT kind FROM offers WHERE id = NEW.parent_offer_id) = 'counter_offer'
+BEGIN
+  SELECT RAISE(ABORT, 'counter-offer depth must be at most one');
+END;
+
+CREATE TRIGGER offers_counter_depth_update BEFORE UPDATE ON offers
+WHEN NEW.kind = 'counter_offer'
+  AND (SELECT kind FROM offers WHERE id = NEW.parent_offer_id) = 'counter_offer'
+BEGIN
+  SELECT RAISE(ABORT, 'counter-offer depth must be at most one');
+END;
+
+CREATE TRIGGER offers_counter_parent_open_insert BEFORE INSERT ON offers
+WHEN NEW.kind = 'counter_offer' AND NEW.status = 'open'
+  AND COALESCE((SELECT status FROM offers WHERE id = NEW.parent_offer_id), 'missing') <> 'open'
+BEGIN
+  SELECT RAISE(ABORT, 'open counter-offer requires an open parent');
+END;
+
+CREATE TRIGGER offers_counter_parent_open_update BEFORE UPDATE ON offers
+WHEN NEW.kind = 'counter_offer' AND NEW.status = 'open'
+  AND COALESCE((SELECT status FROM offers WHERE id = NEW.parent_offer_id), 'missing') <> 'open'
+BEGIN
+  SELECT RAISE(ABORT, 'open counter-offer requires an open parent');
+END;
+
+CREATE TRIGGER offers_json_arrays_insert BEFORE INSERT ON offers
+WHEN json_type(NEW.gives_json) <> 'array' OR json_type(NEW.wants_json) <> 'array'
+BEGIN
+  SELECT RAISE(ABORT, 'offer goods must be JSON arrays');
+END;
+
+CREATE TRIGGER offers_json_arrays_update BEFORE UPDATE ON offers
+WHEN json_type(NEW.gives_json) <> 'array' OR json_type(NEW.wants_json) <> 'array'
+BEGIN
+  SELECT RAISE(ABORT, 'offer goods must be JSON arrays');
+END;
+
+CREATE TRIGGER offers_wanted_no_gives_insert BEFORE INSERT ON offers
+WHEN NEW.kind = 'wanted_request' AND json_array_length(NEW.gives_json) <> 0
+BEGIN
+  SELECT RAISE(ABORT, 'wanted requests must not lock goods');
+END;
+
+CREATE TRIGGER offers_wanted_no_gives_update BEFORE UPDATE ON offers
+WHEN NEW.kind = 'wanted_request' AND json_array_length(NEW.gives_json) <> 0
+BEGIN
+  SELECT RAISE(ABORT, 'wanted requests must not lock goods');
+END;
+
+CREATE TRIGGER offers_status_domain_insert BEFORE INSERT ON offers
+WHEN NEW.status NOT IN ('open', 'settled', 'cancelled', 'expired')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid offer status');
+END;
+
+CREATE TRIGGER offers_status_domain_update BEFORE UPDATE ON offers
+WHEN NEW.status NOT IN ('open', 'settled', 'cancelled', 'expired')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid offer status');
+END;
+
+CREATE TRIGGER orders_type_domain_insert BEFORE INSERT ON orders
+WHEN NEW.type NOT IN ('plant', 'harvest', 'tend', 'feed', 'build', 'upgrade', 'craft', 'travel',
+  'help', 'gift', 'forage', 'fish', 'post_offer', 'post_wanted_request', 'cancel_offer',
+  'accept_offer', 'counter_offer', 'contribute_goal', 'place_decoration')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid order type');
+END;
+
+CREATE TRIGGER orders_type_domain_update BEFORE UPDATE ON orders
+WHEN NEW.type NOT IN ('plant', 'harvest', 'tend', 'feed', 'build', 'upgrade', 'craft', 'travel',
+  'help', 'gift', 'forage', 'fish', 'post_offer', 'post_wanted_request', 'cancel_offer',
+  'accept_offer', 'counter_offer', 'contribute_goal', 'place_decoration')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid order type');
+END;
+
+CREATE TRIGGER orders_status_domain_insert BEFORE INSERT ON orders
+WHEN NEW.status NOT IN ('queued', 'resolved', 'failed', 'cancelled')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid order status');
+END;
+
+CREATE TRIGGER orders_status_domain_update BEFORE UPDATE ON orders
+WHEN NEW.status NOT IN ('queued', 'resolved', 'failed', 'cancelled')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid order status');
+END;
+
+CREATE TRIGGER goals_kind_domain_insert BEFORE INSERT ON goals
+WHEN NEW.kind NOT IN ('collective_build', 'festival')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid goal kind');
+END;
+
+CREATE TRIGGER goals_kind_domain_update BEFORE UPDATE ON goals
+WHEN NEW.kind NOT IN ('collective_build', 'festival')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid goal kind');
+END;
+
+CREATE TRIGGER goals_status_domain_insert BEFORE INSERT ON goals
+WHEN NEW.status NOT IN ('active', 'succeeded', 'failed', 'expired')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid goal status');
+END;
+
+CREATE TRIGGER goals_status_domain_update BEFORE UPDATE ON goals
+WHEN NEW.status NOT IN ('active', 'succeeded', 'failed', 'expired')
+BEGIN
+  SELECT RAISE(ABORT, 'invalid goal status');
+END;
+
+CREATE TRIGGER goals_deadline_insert BEFORE INSERT ON goals
+WHEN NEW.deadline_tick <= NEW.created_at_tick
+BEGIN
+  SELECT RAISE(ABORT, 'goal deadline must be after creation');
+END;
+
+CREATE TRIGGER goals_deadline_update BEFORE UPDATE ON goals
+WHEN NEW.deadline_tick <= NEW.created_at_tick
+BEGIN
+  SELECT RAISE(ABORT, 'goal deadline must be after creation');
+END;
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
   { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
   { version: 3, name: "tick_resolution_failures", sql: TICK_RESOLUTION_FAILURES },
   { version: 4, name: "immutable_replay", sql: IMMUTABLE_REPLAY_MIGRATION },
+  { version: 5, name: "domain_constraints", sql: DOMAIN_CONSTRAINTS_MIGRATION },
 ];

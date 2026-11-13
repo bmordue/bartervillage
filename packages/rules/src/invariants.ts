@@ -96,6 +96,9 @@ export function checkInvariants(state: WorldState): string[] {
     if (offer.kind === "wanted_request" && offer.gives.length > 0) {
       problems.push(`offer ${offer.id}: wanted request must not lock goods`);
     }
+    if (offer.kind !== "counter_offer" && offer.parentOfferId !== null) {
+      problems.push(`offer ${offer.id}: non-counter has parent ${offer.parentOfferId}`);
+    }
     if (offer.kind === "counter_offer") {
       if (!offer.parentOfferId) {
         problems.push(`offer ${offer.id}: counter-offer has no parent`);
