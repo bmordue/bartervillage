@@ -110,6 +110,24 @@ describe("goal scheduling", () => {
         ?.id,
     ).toBe("harvest_festival");
   });
+
+  it("applies a changed schedule only at the next goal", () => {
+    const first = { ...goalDefinition, id: "harvest_festival", kind: "festival" as const };
+    const replacement = {
+      ...goalDefinition,
+      id: "second_barn",
+      kind: "collective_build" as const,
+    };
+    const before = testContent({ goals: [goalDefinition, first] });
+    const after = testContent({ goals: [goalDefinition, replacement] });
+    const state = testWorldState({ goals: [activeGoal()] });
+
+    expect(nextGoalDefinition(state, after)).toBeUndefined();
+
+    state.goals[0]!.status = "succeeded";
+    expect(nextGoalDefinition(state, before)?.id).toBe("harvest_festival");
+    expect(nextGoalDefinition(state, after)?.id).toBe("second_barn");
+  });
 });
 
 describe("goal progress", () => {
