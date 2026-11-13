@@ -52,6 +52,17 @@ describe("schema migrations", () => {
     }
   });
 
+  it("never stores passwords and only has ciphertext for credential secrets", () => {
+    db = openDatabase();
+    const columns = db.prepare("PRAGMA table_info(credentials)").all() as { name: string }[];
+    const names = columns.map((column) => column.name);
+
+    expect(names).toContain("secret_ciphertext");
+    expect(names).not.toContain("password");
+    expect(names).not.toContain("secret");
+    expect(names).not.toContain("token");
+  });
+
   it("is idempotent", () => {
     db = openDatabase();
     expect(migrate(db)).toEqual([]);

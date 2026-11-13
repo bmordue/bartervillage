@@ -1,15 +1,27 @@
 import { describe, expect, it } from "vitest";
 
+import { runAnimalProduction } from "../src/animals.js";
+import { registerCraftingHandlers } from "../src/crafting.js";
 import { EventLog } from "../src/events.js";
 import { resolveWildClaims } from "../src/forage.js";
-import type { BuildingDefinition, ContentPack, WorldState } from "../src/types.js";
+import { resolveOrder, type OrderExecutionContext } from "../src/orders.js";
+import type {
+  AnimalProducedPayload,
+  BuildingDefinition,
+  ContentPack,
+  CraftPayloadEvent,
+  RecipeDefinition,
+  WorldState,
+} from "../src/types.js";
 import {
   assertInventoryChange,
   assertInventoryConserved,
   inventoryDelta,
   inventoryTotals,
 } from "./support/conservation.js";
-import { testContent, testWorldState } from "./fixtures.js";
+import { testContent, testOrder, testWorldState } from "./fixtures.js";
+
+registerCraftingHandlers();
 
 function stateWith(
   inventory: { plotId: string; item: string; quantity: number; locked: number }[],
@@ -30,6 +42,36 @@ function storehouse(capacity: number): BuildingDefinition {
         energyCost: 0,
         durationTicks: 0,
         storageCapacity: capacity,
+        unlocksRecipes: [],
+      },
+    ],
+  };
+}
+
+const INSTANT_RECIPE: RecipeDefinition = {
+  id: "berry_jam",
+  name: "Berry jam",
+  building: "kitchen",
+  buildingLevel: 1,
+  inputs: [{ item: "grain", quantity: 2 }],
+  outputs: [{ item: "berries", quantity: 1 }],
+  durationTicks: 0,
+  unlockedByDefault: true,
+};
+
+function kitchen(): BuildingDefinition {
+  return {
+    id: "kitchen",
+    name: "Kitchen",
+    biomeLocks: null,
+    maxLevel: 1,
+    levels: [
+      {
+        level: 1,
+        cost: [],
+        energyCost: 0,
+        durationTicks: 0,
+        storageCapacity: 100,
         unlocksRecipes: [],
       },
     ],
@@ -170,6 +212,97 @@ describe("conservation in tick phases", () => {
     expect(() =>
       assertInventoryChange(before, state, {
         produced: [{ item: "berries", quantity: 10 }],
+      }),
+    ).not.toThrow();
+  });
+
+  it("accounts for animal production from its events", () => {
+    const content = testContent({
+      animals: [
+        {
+          id: "chicken",
+          name: "Chicken",
+          produces: [{ item: "egg", quantity: 2 }],
+          feedItem: "hay",
+        },
+      ],
+      buildings: [storehouse(100)],
+    });
+    const state = testWorldState({
+      buildings: [
+        {
+          id: "b1",
+          plotId: "plot1",
+          type: "storehouse",
+          level: 1,
+          constructionKind: null,
+          constructionCompleteTick: null,
+          craftQueue: [],
+        },
+      ],
+      animals: [{ id: "a1", plotId: "plot1", type: "chicken", count: 1, fed: true }],
+    });
+    const before = structuredClone(state);
+    const events = new EventLog(5);
+
+    runAnimalProduction(state, content, events);
+
+    const produced = events.events
+      .filter((event) => event.type === "animal_produced")
+      .map((event) => {
+        const payload = event.payload as AnimalProducedPayload;
+        return { item: payload.item, quantity: payload.quantity };
+      });
+    expect(produced).toEqual([{ item: "egg", quantity: 2 }]);
+    expect(() => assertInventoryChange(before, state, { produced })).not.toThrow();
+  });
+
+  it("accounts for crafting consumption and production from its events", () => {
+    const content = testContent({ buildings: [kitchen()], recipes: [INSTANT_RECIPE] });
+    const state = testWorldState({
+      buildings: [
+        {
+          id: "kitchen-1",
+          plotId: "plot1",
+          type: "kitchen",
+          level: 1,
+          constructionKind: null,
+          constructionCompleteTick: null,
+          craftQueue: [],
+        },
+      ],
+      inventory: [{ plotId: "plot1", item: "grain", quantity: 10, locked: 0 }],
+    });
+    const before = structuredClone(state);
+    const events = new EventLog(5);
+    const player = state.players[0]!;
+    const context = {
+      state,
+      content,
+      order: testOrder({
+        id: "craft-1",
+        type: "craft",
+        payload: { buildingId: "kitchen-1", recipeId: "berry_jam" },
+      }),
+      player,
+      location: { regionId: "r1" },
+      reachable: new Set<string>(["r1"]),
+      path: [],
+      events,
+    } as OrderExecutionContext & { events: EventLog };
+
+    expect(resolveOrder(context).ok).toBe(true);
+
+    const completed = events.events.find((event) => event.type === "craft_completed");
+    expect(completed).toBeDefined();
+    const recipe = content.recipes.find(
+      (candidate) => candidate.id === (completed?.payload as CraftPayloadEvent).recipeId,
+    );
+    expect(recipe).toBeDefined();
+    expect(() =>
+      assertInventoryChange(before, state, {
+        consumed: recipe!.inputs,
+        produced: recipe!.outputs,
       }),
     ).not.toThrow();
   });

@@ -117,6 +117,40 @@ describe("tick repository", () => {
     expect(stored?.events.map((entry) => entry.type)).toEqual(["weather"]);
   });
 
+  it("rejects rewrites and deletions of archived replay data", () => {
+    const database = open();
+    seed(database);
+    appendTickLog(database, {
+      worldId: "w1",
+      tick: 5,
+      header: header(5),
+      stateHash: "hash-5",
+      events: [event(5, 0, "weather")],
+      avatarPaths: [avatarPath(5)],
+    });
+
+    expect(() =>
+      database.run("UPDATE tick_logs SET state_hash = 'tampered' WHERE world_id = 'w1'"),
+    ).toThrow(/immutable/);
+    expect(() => database.run("DELETE FROM tick_logs WHERE world_id = 'w1'")).toThrow(/immutable/);
+    expect(() =>
+      database.run("UPDATE archived_events SET type = 'node_regrown' WHERE world_id = 'w1'"),
+    ).toThrow(/immutable/);
+    expect(() => database.run("DELETE FROM archived_events WHERE world_id = 'w1'")).toThrow(
+      /immutable/,
+    );
+    expect(() =>
+      database.run("UPDATE avatar_paths SET returned_home = 0 WHERE world_id = 'w1'"),
+    ).toThrow(/immutable/);
+    expect(() => database.run("DELETE FROM avatar_paths WHERE world_id = 'w1'")).toThrow(
+      /immutable/,
+    );
+
+    expect(loadTickLog(database, "w1", 5)?.stateHash).toBe("hash-5");
+    expect(loadArchivedEvents(database, "w1", 5).map((entry) => entry.type)).toEqual(["weather"]);
+    expect(loadAvatarPaths(database, "w1", 5)).toEqual([avatarPath(5)]);
+  });
+
   it("rejects duplicate event sequences within a tick", () => {
     const database = open();
     seed(database);

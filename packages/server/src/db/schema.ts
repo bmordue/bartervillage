@@ -364,8 +364,46 @@ CREATE TABLE tick_resolution_failures (
 );
 `;
 
+/**
+ * Replay tables are append-only (spec §10, §13; M2.F09). Keys already stop a
+ * second write for the same tick; these triggers also reject rewrites or
+ * deletions of history that has been archived.
+ */
+export const IMMUTABLE_REPLAY_MIGRATION = `
+CREATE TRIGGER tick_logs_no_update BEFORE UPDATE ON tick_logs
+BEGIN
+  SELECT RAISE(ABORT, 'tick_logs are immutable');
+END;
+
+CREATE TRIGGER tick_logs_no_delete BEFORE DELETE ON tick_logs
+BEGIN
+  SELECT RAISE(ABORT, 'tick_logs are immutable');
+END;
+
+CREATE TRIGGER archived_events_no_update BEFORE UPDATE ON archived_events
+BEGIN
+  SELECT RAISE(ABORT, 'archived_events are immutable');
+END;
+
+CREATE TRIGGER archived_events_no_delete BEFORE DELETE ON archived_events
+BEGIN
+  SELECT RAISE(ABORT, 'archived_events are immutable');
+END;
+
+CREATE TRIGGER avatar_paths_no_update BEFORE UPDATE ON avatar_paths
+BEGIN
+  SELECT RAISE(ABORT, 'avatar_paths are immutable');
+END;
+
+CREATE TRIGGER avatar_paths_no_delete BEFORE DELETE ON avatar_paths
+BEGIN
+  SELECT RAISE(ABORT, 'avatar_paths are immutable');
+END;
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
   { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
   { version: 3, name: "tick_resolution_failures", sql: TICK_RESOLUTION_FAILURES },
+  { version: 4, name: "immutable_replay", sql: IMMUTABLE_REPLAY_MIGRATION },
 ];

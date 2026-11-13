@@ -14,8 +14,9 @@ import { provisionStarterBuildings } from "./playerRepository.js";
 import { createSession, type Session } from "./sessionRepository.js";
 
 export const STARTING_ENERGY = 100;
+export const MAX_PLAYERS = 20;
 
-export type OnboardFailureReason = "invite_invalid" | "site_unavailable";
+export type OnboardFailureReason = "invite_invalid" | "site_unavailable" | "player_cap_reached";
 
 export type OnboardResult =
   | { ok: true; playerId: string; plotId: string; session: Session }
@@ -42,6 +43,14 @@ export function onboardPlayer(db: Database, options: OnboardPlayerOptions): Onbo
   try {
     return db.transaction(() => {
       const now = options.now ?? new Date();
+      const world = db.get<{ player_cap: number }>("SELECT player_cap FROM worlds LIMIT 1");
+      const playerCap = Math.min(world?.player_cap ?? MAX_PLAYERS, MAX_PLAYERS);
+      const { count } = db.get<{ count: number }>("SELECT COUNT(*) AS count FROM players") ?? {
+        count: 0,
+      };
+      if (count >= playerCap) {
+        throw new OnboardFailure("player_cap_reached");
+      }
       db.run(
         `INSERT INTO players (id, name, plot_id, joined_tick, energy)
          VALUES (?, ?, ?, 0, ?)`,

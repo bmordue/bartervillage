@@ -168,8 +168,8 @@
 - [x] **M2.F05** Node amount stays between 0 and its capacity (spec §13). _Depends on: CT.02, M2.C01._
 - [x] **M2.F06** Post quantities are positive; expiry is 1 to 28 ticks; a counter's parent must be open; counter depth is at most one; wanted requests have no locked side; expired posts cannot be accepted; one crop per plot tile (spec §13). _Depends on: CT.02, M2.B08, M2.E01-M2.E20._
 - [x] **M2.F07** A failed order cannot change state (spec §13). _Depends on: CT.02, M2.A04._
-- [ ] **M2.F08** Every inventory change is recorded in the event log; conservation tests cover production and consumption (spec §13). _Depends on: CT.08, M2.A03, M2.D07._
-- [ ] **M2.F09** Archived events are immutable with a unique `(tick, sequence)`; one state hash is stored per tick (spec §13). _Depends on: CT.03, M3.18, M4.A18._
+- [x] **M2.F08** Every inventory change is recorded in the event log; conservation tests cover production and consumption (spec §13). _Depends on: CT.08, M2.A03, M2.D07._
+- [x] **M2.F09** Archived events are immutable with a unique `(tick, sequence)`; one state hash is stored per tick (spec §13). _Depends on: CT.03, M3.18, M4.A18._
 
 ## Milestone 3: Map generator, database schema and content schema (spec §16.3)
 
@@ -239,10 +239,10 @@
 - [ ] **M4.B03** Re-validate every order server-side against current state: energy, free inventory, capacity, locks, location, building requirements and offer state (spec §12, §14.5). _Depends on: M2.A04, M2.A15, M2.D06, M2.E18-M2.E20, M4.B02._
 - [ ] **M4.B04** Keep client-side rules checks light and non-authoritative (spec §12). _Depends on: M5.B02._
 - [x] **M4.B05** Return 409 for mutations while the resolving lease is held; rely on SQLite's writer lock to block mutations during the transaction (spec §14.9). _Depends on: M4.A03, M4.B01._
-- [ ] **M4.B06** Enforce invite-only access and the 20-player cap through invites (spec §3, §12). _Depends on: M3.01, M4.B02, M4.C05._
+- [x] **M4.B06** Enforce invite-only access and the 20-player cap through invites (spec §3, §12). _Depends on: M3.01, M4.B02, M4.C05._
 - [x] **M4.B07** Protect mutations with CSRF protection; use HttpOnly and SameSite session cookies (spec §12). _Depends on: M4.B01, M4.C06._
 - [ ] **M4.B08** Rate-limit auth endpoints (spec §12). _Depends on: M4.B02, M4.C01-M4.C06._
-- [ ] **M4.B09** Encrypt OAuth tokens at rest; never store passwords (spec §12). _Depends on: M3.01, M4.B02._
+- [x] **M4.B09** Encrypt OAuth tokens at rest; never store passwords (spec §12). _Depends on: M3.01, M4.B02._
 - [x] **M4.B10** Keep infrastructure secrets in deployment configuration, not the repository (spec §12). _Depends on: M4.B01._
 
 ### Auth and onboarding
