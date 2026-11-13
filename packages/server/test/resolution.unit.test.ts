@@ -14,12 +14,16 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import {
   Database,
+  acquireResolvingLease,
   loadLatestTickLog,
+  loadTickResolutionFailure,
+  recordTickResolutionFailure,
   loadWorldState,
   persistMap,
   provisionStarterBuildings,
   resolveWorldTick,
   resolveWorldTickInTransaction,
+  retryWorldTick,
   saveWorldState,
   type ResolveWorldTickOptions,
 } from "../src/index.js";
@@ -279,5 +283,61 @@ describe("transactional tick resolution", () => {
 
     expect(() => resolveWorldTickInTransaction(database, "w1")).toThrow("Content version mismatch");
     expect(loadWorldState(database, "w1")?.world.currentTick).toBe(0);
+  });
+});
+
+describe("safe manual tick retry (D.09/M4.A32)", () => {
+  it("resolves the current tick through the retry path", () => {
+    const { database } = setup();
+    recordTickResolutionFailure(database, "w1", 0);
+    recordTickResolutionFailure(database, "w1", 0);
+
+    const result = retryWorldTick(database, "w1", 0);
+
+    expect(result.success).toBe(true);
+    expect(result.tick).toBe(0);
+    expect(result.stateHash).toBeDefined();
+    expect(loadLatestTickLog(database, "w1")?.tick).toBe(0);
+    expect(loadTickResolutionFailure(database, "w1", 0)?.resolved).toBe(true);
+  });
+
+  it("reports world_not_found for an unknown world", () => {
+    const { database } = setup();
+
+    const result = retryWorldTick(database, "missing", 0);
+
+    expect(result).toMatchObject({ success: false, error: "world_not_found" });
+  });
+
+  it("rejects a retry for a tick other than the current tick", () => {
+    const { database } = setup();
+
+    const result = retryWorldTick(database, "w1", 99);
+
+    expect(result).toMatchObject({ success: false, tick: 0, error: "tick_mismatch" });
+    expect(loadLatestTickLog(database, "w1")).toBeUndefined();
+  });
+
+  it("refuses to retry while a resolving lease is held", () => {
+    const { database } = setup();
+    acquireResolvingLease(database, "w1", { owner: "worker-a" });
+
+    const result = retryWorldTick(database, "w1", 0);
+
+    expect(result).toMatchObject({ success: false, error: "tick_in_progress" });
+    expect(loadLatestTickLog(database, "w1")).toBeUndefined();
+  });
+
+  it("leaves the world at the previous tick when the retry resolution fails", () => {
+    const { database } = setup();
+    database.run(
+      "INSERT INTO tick_logs (world_id, tick, header_json, state_hash) VALUES ('w1', 0, '{}', 'manual')",
+    );
+
+    const result = retryWorldTick(database, "w1", 0);
+
+    expect(result.success).toBe(false);
+    expect(loadWorldState(database, "w1")?.world.currentTick).toBe(0);
+    expect(database.all("SELECT tick FROM tick_logs")).toHaveLength(1);
   });
 });

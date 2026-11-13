@@ -8,6 +8,9 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
+import type { Database } from "./db/database.js";
+import { retryWorldTick } from "./retry.js";
+
 export interface JsonResponse {
   status: number;
   body: unknown;
@@ -18,6 +21,8 @@ export interface ApiRequest {
   path: string;
   headers: IncomingMessage["headers"];
   body?: unknown;
+  /** Path parameters captured from `:name` segments. */
+  params?: Record<string, string>;
 }
 
 export type RouteHandler = (request: ApiRequest) => JsonResponse | Promise<JsonResponse>;
@@ -54,6 +59,53 @@ function defaultRoutes(): Routes {
   };
 }
 
+function splitPath(path: string): string[] {
+  return path.split("/").filter((segment) => segment.length > 0);
+}
+
+/** True when a `:param`-aware route path matches the concrete request path. */
+function routePathMatches(routePath: string, path: string): boolean {
+  const routeSegments = splitPath(routePath);
+  const pathSegments = splitPath(path);
+  if (routeSegments.length !== pathSegments.length) {
+    return false;
+  }
+  return routeSegments.every(
+    (segment, index) => segment.startsWith(":") || segment === pathSegments[index],
+  );
+}
+
+interface RouteMatch {
+  handler: RouteHandler;
+  params: Record<string, string>;
+}
+
+/** Resolve an exact route first, then fall back to `:param` patterns. */
+function matchRoute(routes: Routes, method: string, path: string): RouteMatch | undefined {
+  const exact = routes[`${method} ${path}`];
+  if (exact) {
+    return { handler: exact, params: {} };
+  }
+  const pathSegments = splitPath(path);
+  for (const [key, handler] of Object.entries(routes)) {
+    const [routeMethod, routePath] = key.split(" ");
+    if (routeMethod !== method || routePath === undefined) {
+      continue;
+    }
+    if (!routePathMatches(routePath, path)) {
+      continue;
+    }
+    const params: Record<string, string> = {};
+    splitPath(routePath).forEach((segment, index) => {
+      if (segment.startsWith(":")) {
+        params[segment.slice(1)] = decodeURIComponent(pathSegments[index] ?? "");
+      }
+    });
+    return { handler, params };
+  }
+  return undefined;
+}
+
 export function createApiServer(options: ApiServerOptions = {}): Server {
   const routes = options.routes ?? defaultRoutes();
   const logger = options.logger ?? (() => undefined);
@@ -61,10 +113,15 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
   return createServer(async (request, response) => {
     const method = (request.method ?? "GET").toUpperCase();
     const path = requestPath(request);
-    const handler = routes[`${method} ${path}`];
+    const match = matchRoute(routes, method, path);
 
-    if (!handler) {
-      const pathExists = Object.keys(routes).some((key) => key.endsWith(` ${path}`));
+    if (!match) {
+      const pathExists = Object.entries(routes).some(([key]) => {
+        const [routeMethod, routePath] = key.split(" ");
+        return (
+          routeMethod !== method && routePath !== undefined && routePathMatches(routePath, path)
+        );
+      });
       if (pathExists) {
         writeJson(response, 405, { error: "method_not_allowed" });
       } else {
@@ -74,7 +131,12 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
     }
 
     try {
-      const result = await handler({ method, path, headers: request.headers });
+      const result = await match.handler({
+        method,
+        path,
+        headers: request.headers,
+        params: match.params,
+      });
       writeJson(response, result.status, result.body);
     } catch (error) {
       logger(`request ${method} ${path} failed: ${String(error)}`);
@@ -116,15 +178,52 @@ export function startApiServer(
 }
 
 /** Build routes for the REST API endpoints (M4.B02). */
-export function buildApiRoutes(database: any): Routes {
+type WorldStateRow = {
+  id: string;
+  current_tick: number;
+  season: string;
+  weather: string;
+  next_deadline: string | null;
+};
+
+type PlotStateRow = {
+  id: string;
+  player_id: string | null;
+  region_id: string;
+  site_x: number;
+  site_y: number;
+  width: number;
+  height: number;
+  world_owned: number;
+};
+
+type QueuedOrderRow = {
+  id: string;
+  sequence: number;
+  type: string;
+  payload_json: string | null;
+  status: string;
+  failure_reason: string | null;
+};
+
+type TickLogTickRow = { tick: number };
+
+type ArchivedEventRow = {
+  tick: number;
+  sequence: number;
+  type: string;
+  payload_json: string | null;
+};
+
+export function buildApiRoutes(database: Database): Routes {
   function getWorldId(request: ApiRequest): string {
-    return request.headers["x-world-id"] as string || "w1";
+    return (request.headers["x-world-id"] as string) || "w1";
   }
 
   return {
     "GET /world": (request) => {
       const worldId = getWorldId(request);
-      const world = database.get(`SELECT * FROM worlds WHERE id = ?`, worldId);
+      const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);
       if (!world) {
         return { status: 404, body: { error: "world_not_found" } };
       }
@@ -145,12 +244,9 @@ export function buildApiRoutes(database: any): Routes {
     },
 
     "GET /plot/:plotId": (request) => {
-      const plotId = request.path.split("/").pop();
+      const plotId = request.path.split("/").pop() ?? "";
 
-      const plot = database.get(
-        `SELECT * FROM plots WHERE id = ?`,
-        plotId,
-      );
+      const plot = database.get<PlotStateRow>(`SELECT * FROM plots WHERE id = ?`, plotId);
       if (!plot) {
         return { status: 404, body: { error: "plot_not_found" } };
       }
@@ -176,9 +272,9 @@ export function buildApiRoutes(database: any): Routes {
     },
 
     "GET /player/:playerId/orders": (request) => {
-      const playerId = request.path.split("/").pop();
+      const playerId = request.path.split("/").pop() ?? "";
 
-      const orders = database.all(
+      const orders = database.all<QueuedOrderRow>(
         `SELECT * FROM orders WHERE player_id = ? AND status = 'queued'`,
         playerId,
       );
@@ -186,7 +282,7 @@ export function buildApiRoutes(database: any): Routes {
       return {
         status: 200,
         body: {
-          orders: orders.map((o: any) => ({
+          orders: orders.map((o) => ({
             id: o.id,
             sequence: o.sequence,
             type: o.type,
@@ -216,7 +312,7 @@ export function buildApiRoutes(database: any): Routes {
     "GET /replay/latest": (request) => {
       const worldId = getWorldId(request);
 
-      const latestTick = database.get(
+      const latestTick = database.get<TickLogTickRow>(
         `SELECT tick FROM tick_logs WHERE world_id = ? ORDER BY tick DESC LIMIT 1`,
         worldId,
       )?.tick;
@@ -225,7 +321,7 @@ export function buildApiRoutes(database: any): Routes {
         return { status: 404, body: { error: "no_replay_data" } };
       }
 
-      const events = database.all(
+      const events = database.all<ArchivedEventRow>(
         `SELECT tick, sequence, type, payload_json FROM archived_events WHERE world_id = ? AND tick = ? ORDER BY sequence`,
         worldId,
         latestTick,
@@ -242,7 +338,7 @@ export function buildApiRoutes(database: any): Routes {
             contentVersion: "content-1",
             rulesVersion: "1.0.0",
           },
-          events: events.map((e: any) => ({
+          events: events.map((e) => ({
             tick: e.tick,
             sequence: e.sequence,
             type: e.type,
@@ -258,11 +354,11 @@ export function buildApiRoutes(database: any): Routes {
     }),
 
     "POST /site": (request) => {
-      const body = JSON.parse(
-        request.body as string || '{"playerId":""}',
-      ) as { playerId: string };
+      const body = JSON.parse((request.body as string) || '{"playerId":""}') as {
+        playerId: string;
+      };
 
-      const plot = database.get(
+      const plot = database.get<PlotStateRow>(
         `SELECT * FROM plots WHERE player_id = ? AND world_owned = 0`,
         body.playerId,
       );
@@ -271,11 +367,7 @@ export function buildApiRoutes(database: any): Routes {
         return { status: 404, body: { error: "plot_not_found" } };
       }
 
-      database.run(
-        `UPDATE plots SET player_id = ? WHERE id = ?`,
-        body.playerId,
-        plot.id,
-      );
+      database.run(`UPDATE plots SET player_id = ? WHERE id = ?`, body.playerId, plot.id);
 
       return {
         status: 200,
@@ -290,5 +382,23 @@ export function buildApiRoutes(database: any): Routes {
       status: 200,
       body: { players: [] },
     }),
+
+    "POST /world/:worldId/ticks/:tick/retry": (request) => {
+      const worldId = request.params?.worldId ?? getWorldId(request);
+      const requestedTick = Number.parseInt(request.params?.tick ?? "", 10);
+      if (!Number.isFinite(requestedTick)) {
+        return { status: 400, body: { error: "invalid_tick" } };
+      }
+      const result = retryWorldTick(database, worldId, requestedTick);
+      if (result.success) {
+        return {
+          status: 200,
+          body: { ok: true, tick: result.tick, stateHash: result.stateHash },
+        };
+      }
+      const status =
+        result.error === "world_not_found" ? 404 : result.error === "tick_mismatch" ? 400 : 409;
+      return { status, body: { error: result.error ?? "retry_failed", tick: result.tick } };
+    },
   };
 }

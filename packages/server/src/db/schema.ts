@@ -353,7 +353,19 @@ CREATE TABLE order_locks (
 CREATE INDEX order_locks_order ON order_locks(order_id);
 `;
 
+export const TICK_RESOLUTION_FAILURES = `
+CREATE TABLE tick_resolution_failures (
+  world_id TEXT NOT NULL REFERENCES worlds(id),
+  tick INTEGER NOT NULL,
+  failure_count INTEGER NOT NULL DEFAULT 1,
+  last_failure_tick INTEGER NOT NULL,
+  resolved INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (world_id, tick)
+);
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
   { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
+  { version: 3, name: "tick_resolution_failures", sql: TICK_RESOLUTION_FAILURES },
 ];

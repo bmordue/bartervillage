@@ -4,20 +4,46 @@
  * Deployment runs this as its own Node process under systemd. Configuration is
  * read from the environment; the poller takes the global tick lock and the
  * following M4.A tasks add the resolving lease and state persistence.
+ *
+ * Manual recovery (D.09, M4.A32): `npm start -- retry-tick` performs a single
+ * safe retry of the current tick and exits. The same path is exposed over HTTP
+ * as `POST /world/:worldId/ticks/:tick/retry`.
  */
 
 import { hostname } from "node:os";
 import { dirname, join } from "node:path";
 
-import { Database, resolveWorldTickInTransaction } from "@bartervillage/server";
+import { Database, resolveWorldTickInTransaction, retryWorldTick } from "@bartervillage/server";
 
 import { DEFAULT_POLL_INTERVAL_MS, WorkerLoop } from "./loop.js";
 import { isTickDue } from "./schedule.js";
 import { createTickPoller } from "./tickWorker.js";
 
+function retryCommand(database: Database, worldId: string): void {
+  const result = retryWorldTick(database, worldId);
+  if (result.success) {
+    console.log(`retry: resolved world ${worldId} tick ${result.tick} (${result.stateHash})`);
+    process.exitCode = 0;
+    return;
+  }
+  console.error(`retry: failed for world ${worldId} tick ${result.tick}: ${result.error}`);
+  process.exitCode = 1;
+}
+
 export async function main(): Promise<void> {
   const databasePath = process.env.DATABASE_PATH ?? "barter-village.sqlite";
   const worldId = process.env.WORLD_ID ?? "village";
+
+  if (process.argv[2] === "retry-tick") {
+    const database = Database.open({ path: databasePath });
+    try {
+      retryCommand(database, worldId);
+    } finally {
+      database.close();
+    }
+    return;
+  }
+
   const lockPath = process.env.TICK_LOCK_PATH ?? join(dirname(databasePath), "tick.lock");
   const intervalMs = Number.parseInt(
     process.env.POLL_INTERVAL_MS ?? String(DEFAULT_POLL_INTERVAL_MS),
@@ -38,6 +64,7 @@ export async function main(): Promise<void> {
       resolve: (context) => {
         const result = resolveWorldTickInTransaction(context.database, context.worldId);
         logger(`worker: resolved world ${context.worldId} tick ${result.header.tick}`);
+        return result;
       },
     }),
     intervalMs,

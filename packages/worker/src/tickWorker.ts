@@ -5,6 +5,12 @@
  * returns without resolving. Once the lock is held, the short-lived resolving
  * lease is taken in its own transaction; the lease and lock are released after
  * resolution succeeds or throws, and a crashed worker's lease expires by TTL.
+ *
+ * Persistent resolution failures are tracked in their own table (D.09): every
+ * failed attempt is recorded per tick and, once the consecutive count reaches
+ * the alert threshold (three by default), a structured alert is logged. The
+ * poller keeps retrying on its normal cadence, and the host can also trigger a
+ * safe manual retry through `retryWorldTick` or the REST endpoint.
  */
 
 import {
@@ -14,7 +20,10 @@ import {
   loadWorld,
   releaseResolvingLease,
   resolveWorldTickInTransaction,
+  recordTickResolutionFailure,
+  clearTickResolutionFailure,
 } from "@bartervillage/server";
+import type { ResolveTickResult } from "@bartervillage/rules";
 
 import { tryAcquireLock } from "./lock.js";
 
@@ -30,18 +39,20 @@ export interface TickPollerOptions {
   lockPath: string;
   owner: string;
   logger: (message: string) => void;
-  resolve?: (context: TickContext) => void;
+  resolve?: (context: TickContext) => ResolveTickResult | void;
   shouldResolve?: (context: TickContext & { now: Date }) => boolean;
   now?: () => number;
   staleAfterMs?: number;
   leaseTtlMs?: number;
+  /** Alert threshold for consecutive tick failures; defaults to 3 (D.09). */
+  alertThreshold?: number;
 }
 
 export function createTickPoller(options: TickPollerOptions): () => Promise<void> {
   const resolve =
     options.resolve ??
     ((context: TickContext) => {
-      resolveWorldTickInTransaction(context.database, context.worldId);
+      return resolveWorldTickInTransaction(context.database, context.worldId);
     });
 
   return async () => {
@@ -90,16 +101,36 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
     }
 
     try {
+      const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
+      const attemptedTick = world.currentTick;
       options.database.raw.exec("BEGIN IMMEDIATE");
       try {
-        const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
         resolve({ database: options.database, worldId: options.worldId, tick });
+        clearTickResolutionFailure(options.database, options.worldId, attemptedTick);
         options.database.raw.exec("COMMIT");
+        return;
       } catch (error) {
         try {
           options.database.raw.exec("ROLLBACK");
         } catch {
           // The original error is more useful than a failed rollback.
+        }
+        // Record this tick failure in our persistent failure table (D.09).
+        // The table is keyed by (world_id, tick) and tracks consecutive attempts.
+        const newCount = recordTickResolutionFailure(
+          options.database,
+          options.worldId,
+          attemptedTick,
+          attemptedTick,
+        );
+        options.logger(
+          `worker: tick ${options.worldId} tick ${attemptedTick} failed (attempts=${newCount})`,
+        );
+        const alertThreshold = options.alertThreshold ?? 3;
+        if (newCount >= alertThreshold) {
+          options.logger(
+            `worker: ALERT [D.09] tick ${options.worldId} tick ${attemptedTick} reached ${newCount} consecutive failures`,
+          );
         }
         throw error;
       }

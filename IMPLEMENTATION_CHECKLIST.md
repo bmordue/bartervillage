@@ -229,7 +229,7 @@
 - [x] **M4.A29** Exclude mid-tick joins from the current tick (spec §4.1). _Depends on: M4.A06, M4.A28._
 - [x] **M4.A30** Reject mutations with a "tick in progress" response while the resolving lease is held (spec §4.1, §14.9). _Depends on: M4.A03, M4.B05._
 - [x] **M4.A31** Keep wall-clock time out of the rules; use it only for scheduling the next deadline, and exclude the deadline from the replay state hash (spec §14). _Depends on: M4.A07, M4.A26._
-- [ ] **M4.A32** Add host alerting and a safe manual retry path for persistent resolution failures (spec §15). _Depends on: M4.A24; blocked by D.09._
+- [x] **M4.A32** Add host alerting and a safe manual retry path for persistent resolution failures (spec §15). _Depends on: M4.A24; blocked by D.09._
 - [ ] **M4.A33** Benchmark 20 players with full order queues over a 28-tick soak; p95 under 60 seconds (spec §3). _Depends on: CT.07, M4.A05, M4.A15, M4.A18, M4.A28._
 
 ### REST API
@@ -362,7 +362,7 @@
 - [x] **D.06** **Decision:** zero-share forage handling, either block the claim or warn in the UI (spec §15). _Blocks: M2.C07, M2.C08, M5.B06. Informs: M2.C03._
 - [x] **D.07** **Decision:** keep one-way travel with a free return home or revise it (spec §15). _Blocks: M2.A13-M2.A15, M8.06. Informs: M2.A16._
 - [x] **D.08** **Decision:** wild depletion tuning and depletion warnings (spec §15). _Blocks: M2.C01, M2.C02, M8.05. Informs: M5.B06._
-- [ ] **D.09** **Decision:** tick-failure alerting and safe manual retry path (spec §15). _Blocks: M4.A32, M9.11._
+- [x] **D.09** **Decision:** tick-failure alerting and safe manual retry path. Persistent resolution failure = 3 consecutive failures for the same tick. Alert: structured log line with world/tick IDs and failure count. Manual retry: admin REST POST `/world/:worldId/ticks/:tick/retry` (requires no resolving lease) plus a worker CLI retry command. _Blocks: M4.A32, M9.11._
 - [ ] **D.10** **Decision:** replay payload size strategy, including compression or snapshot reconstruction (spec §15). _Blocks: M5.C01, M5.C03._
 - [x] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
 - [ ] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07._

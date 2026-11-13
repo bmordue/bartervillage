@@ -4,7 +4,12 @@ import { join } from "node:path";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { acquireResolvingLease, Database, loadWorld } from "@bartervillage/server";
+import {
+  acquireResolvingLease,
+  Database,
+  loadWorld,
+  loadTickResolutionFailure,
+} from "@bartervillage/server";
 
 import { tryAcquireLock } from "../src/lock.js";
 import { createTickPoller } from "../src/tickWorker.js";
@@ -165,6 +170,57 @@ describe("tick poller", () => {
     expect(resolve).not.toHaveBeenCalled();
     expect(logger).toHaveBeenCalledWith("worker: world missing not found");
     expect(tryAcquireLock({ path, owner: "worker-b" })).not.toBeNull();
+  });
+});
+
+describe("persistent failure alerting (D.09)", () => {
+  it("records consecutive failures and alerts on the third attempt", async () => {
+    const { database, path } = setup();
+    const logger = vi.fn();
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger,
+      resolve: () => {
+        throw new Error("boom");
+      },
+    });
+
+    await expect(poll()).rejects.toThrow("boom");
+    await expect(poll()).rejects.toThrow("boom");
+    await expect(poll()).rejects.toThrow("boom");
+
+    expect(loadTickResolutionFailure(database, "w1", 0)?.failureCount).toBe(3);
+    expect(logger.mock.calls.some(([message]) => String(message).includes("ALERT [D.09]"))).toBe(
+      true,
+    );
+  });
+
+  it("clears the failure streak after a successful resolution", async () => {
+    const { database, path } = setup();
+    let shouldFail = true;
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger: vi.fn(),
+      resolve: () => {
+        if (shouldFail) {
+          throw new Error("boom");
+        }
+      },
+    });
+
+    await expect(poll()).rejects.toThrow("boom");
+    expect(loadTickResolutionFailure(database, "w1", 0)?.resolved).toBe(false);
+
+    shouldFail = false;
+    await poll();
+
+    expect(loadTickResolutionFailure(database, "w1", 0)?.resolved).toBe(true);
   });
 });
 

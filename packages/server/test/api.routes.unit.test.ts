@@ -212,4 +212,34 @@ describe("REST API routes", () => {
     expect(data.players).toBeDefined();
     expect(Array.isArray(data.players)).toBe(true);
   });
+
+  it("POST /world/:worldId/ticks/:tick/retry returns 404 for an unknown world", async () => {
+    harness = await startTestApi({
+      buildRoutes: (database) => ({
+        ...buildApiRoutes(database),
+      }),
+    });
+
+    const response = await fetch(`${harness.baseUrl}/world/missing/ticks/0/retry`, {
+      method: "POST",
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: "world_not_found" });
+  });
+
+  it("POST /world/:worldId/ticks/:tick/retry rejects an invalid tick", async () => {
+    harness = await startTestApi({
+      buildRoutes: (database) => ({
+        ...buildApiRoutes(database),
+      }),
+    });
+
+    const response = await fetch(`${harness.baseUrl}/world/w1/ticks/not-a-tick/retry`, {
+      method: "POST",
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "invalid_tick" });
+  });
 });
