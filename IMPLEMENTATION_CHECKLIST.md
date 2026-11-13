@@ -328,7 +328,7 @@
 - [x] **M8.03** Approximately 8 building types, including biome-locked buildings such as the dock, with levels, costs, capacities and recipe unlocks (spec §6.1). _Depends on: M2.D01, M3.16; blocked by D.04._
 - [x] **M8.04** Approximately 40 cooking, baking and crafting recipes (wood, metal, textiles) with inputs, outputs, durations and instant or timed behaviour (spec §6.2). _Depends on: M2.D08, M2.D09, M3.16._
 - [ ] **M8.05** Animal types, wild nodes, shared water zones and forage/fishing yields (spec §6.2). _Depends on: M2.B09, M2.C01, M3.15, M3.16; blocked by D.04._
-- [ ] **M8.06** Default energy budget (100), travel cost (5 per boundary), goodwill awards (+5 gift, +1 help), weather modifiers and goal schedules (spec §4.3, §8, §9). _Depends on: M3.16, M7.04, M7.05; blocked by D.01, D.02._
+- [x] **M8.06** Default energy budget (100), travel cost (5 per boundary), goodwill awards (+5 gift, +1 help), weather modifiers and goal schedules (spec §4.3, §8, §9). _Depends on: M3.16, M7.04, M7.05; blocked by D.01, D.02._
 - [x] **M8.07** Phrase book contents (spec §8). _Depends on: M3.16; blocked by D.03._
 - [x] **M8.08** Content schema validation in CI and a pinned content version (spec §12). _Depends on: M1.04, M3.16, M3.17._
 - [ ] **M8.09** Playtesting tuning pass for energy costs, goodwill and barter liquidity (spec §15). _Depends on: M8.01-M8.07, M9.12; blocked by D.01-D.04, D.13._
