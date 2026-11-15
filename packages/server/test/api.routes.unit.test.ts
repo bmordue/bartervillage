@@ -332,4 +332,40 @@ describe("REST API routes", () => {
     expect(response.status).toBe(201);
     expect((await response.json()).order.sequence).toBe(8);
   });
+
+  it("GET /player/:playerId returns energy and ready state", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 63);
+    harness.database.run(`INSERT INTO ready (player_id, tick, position) VALUES ('p1', 0, 4)`);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1`);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      player: { id: "p1", plotId: "plot1", energy: 63 },
+      ready: { tick: 0, position: 4 },
+    });
+  });
+
+  it("GET /player/:playerId returns null ready when the player has not readied", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 50);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1`);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).ready).toBeNull();
+  });
+
+  it("GET /player/:playerId returns 404 for an unknown player", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+
+    const response = await fetch(`${harness.baseUrl}/player/ghost`);
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: "player_not_found" });
+  });
 });

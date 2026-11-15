@@ -227,6 +227,18 @@ type QueuedOrderRow = {
   failure_reason: string | null;
 };
 
+type PlayerStatusRow = {
+  id: string;
+  name: string;
+  plot_id: string;
+  energy: number;
+};
+
+type ReadyRow = {
+  tick: number;
+  position: number;
+};
+
 type TickLogTickRow = { tick: number };
 
 type ArchivedEventRow = {
@@ -311,6 +323,42 @@ export function buildApiRoutes(database: Database): Routes {
             status: o.status,
             failureReason: o.failure_reason,
           })),
+        },
+      };
+    },
+
+    "GET /player/:playerId": (request) => {
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+
+      const player = database.get<PlayerStatusRow>(
+        `SELECT id, name, plot_id, energy FROM players WHERE id = ?`,
+        playerId,
+      );
+      if (!player) {
+        return { status: 404, body: { error: "player_not_found" } };
+      }
+
+      const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);
+      const ready =
+        world === undefined
+          ? undefined
+          : database.get<ReadyRow>(
+              `SELECT tick, position FROM ready WHERE player_id = ? AND tick = ?`,
+              playerId,
+              world.current_tick,
+            );
+
+      return {
+        status: 200,
+        body: {
+          player: {
+            id: player.id,
+            name: player.name,
+            plotId: player.plot_id,
+            energy: player.energy,
+          },
+          ready: ready ?? null,
         },
       };
     },

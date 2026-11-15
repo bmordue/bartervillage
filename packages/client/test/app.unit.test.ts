@@ -69,4 +69,28 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain('class="map-canvas"');
     expect(html).not.toContain("Map and replay render here.");
   });
+
+  it("shows energy and ready state for a player", () => {
+    const ready = render(
+      App({
+        player: {
+          player: { id: "p1", name: "Ada", plotId: "plot1", energy: 63 },
+          ready: { tick: 5, position: 2 },
+        },
+      }),
+    );
+    expect(ready).toContain("63");
+    expect(ready).toContain("Ready");
+
+    const notReady = render(
+      App({
+        player: {
+          player: { id: "p1", name: "Ada", plotId: "plot1", energy: 7 },
+          ready: null,
+        },
+      }),
+    );
+    expect(notReady).toContain("7");
+    expect(notReady).toContain("Not ready");
+  });
 });

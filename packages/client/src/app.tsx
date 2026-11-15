@@ -11,11 +11,13 @@ import type { ComponentChildren } from "preact";
 
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
+import type { PlayerStatus } from "./player.js";
 import type { WorldSnapshot } from "./world.js";
 
 export interface AppProps {
   title?: string;
   world?: WorldSnapshot;
+  player?: PlayerStatus;
   mapView?: MapView;
 }
 
@@ -44,7 +46,7 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string | 
   );
 }
 
-export function App({ title = "Barter Village", world, mapView }: AppProps) {
+export function App({ title = "Barter Village", world, player, mapView }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
       <header class="app-header">
@@ -53,10 +55,15 @@ export function App({ title = "Barter Village", world, mapView }: AppProps) {
           <p class="app-tagline">A shared, turn-based farming and crafting world</p>
         </div>
         <div class="world-status" aria-label="World status">
+          <StatusItem label="Energy" value={player ? String(player.player.energy) : undefined} />
           <StatusItem label="Tick" value={world ? String(world.currentTick) : undefined} />
           <StatusItem label="Season" value={world?.season} />
           <StatusItem label="Weather" value={world?.weather} />
           <StatusItem label="Deadline" value={world?.nextDeadline} />
+          <StatusItem
+            label="Ready"
+            value={player ? (player.ready ? "Ready" : "Not ready") : undefined}
+          />
         </div>
       </header>
 
