@@ -1,0 +1,144 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f1e8;
+  --surface: #fffdf7;
+  --border: #d8cfbd;
+  --ink: #2f2a22;
+  --muted: #6f675a;
+  --accent: #4f7a3a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+#app {
+  height: 100%;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  min-width: 960px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.app-tagline {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.world-status {
+  display: flex;
+  gap: 20px;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.status-value {
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+.app-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  min-height: 0;
+  padding: 16px 24px;
+}
+
+.viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.viewport-placeholder {
+  color: var(--muted);
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.panel-title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.panel-body {
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.app-footer {
+  padding: 8px 24px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+@media (max-width: 960px) {
+  .app-shell {
+    min-width: 0;
+  }
+
+  .app-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

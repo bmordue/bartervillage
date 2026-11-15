@@ -260,7 +260,7 @@
 
 ### Client shell
 
-- [ ] **M5.A01** Preact client app with a desktop-first layout (spec §11). _Depends on: M1.01, M4.B02._
+- [x] **M5.A01** Preact client app with a desktop-first layout (spec §11). _Depends on: M1.01, M4.B02._
 - [ ] **M5.A02** PixiJS renderer for the map and replay using 32x32 pixel tiles (spec §11). _Depends on: M3.11, M4.B02, M5.A01; final art: M8.10._
 - [ ] **M5.A03** Panels for orders, barter board and inventory (spec §11). _Depends on: M2.D06, M2.E01, M4.B02, M5.A01._
 - [ ] **M5.A04** Display energy, tick, season, weather, deadline and ready state. _Depends on: M4.B02, M5.A01; season/weather data: M7.01, M7.03._

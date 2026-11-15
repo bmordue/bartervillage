@@ -10,9 +10,17 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "build:app": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@bartervillage/rules": "*"
+    "@bartervillage/rules": "*",
+    "preact": "^10.29.8"
+  },
+  "devDependencies": {
+    "preact-render-to-string": "^6.8.3",
+    "vite": "^5.4.21"
   }
 }
