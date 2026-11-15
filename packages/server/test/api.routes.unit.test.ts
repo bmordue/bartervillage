@@ -2,6 +2,29 @@ import { afterEach, describe, expect, it } from "vitest";
 import { buildApiRoutes } from "../src/api.js";
 import { insertWorld, startTestApi, type TestApi } from "./support/harness.js";
 
+function insertPlayer(
+  database: Parameters<typeof insertWorld>[0],
+  id: string,
+  plotId: string,
+  energy = 100,
+): void {
+  database.run("INSERT INTO regions (id, x, y, width, height) VALUES (?, 0, 0, 12, 12)", "r1");
+  database.run(
+    `INSERT INTO players (id, name, plot_id, joined_tick, energy)
+     VALUES (?, ?, ?, 0, ?)`,
+    id,
+    id,
+    plotId,
+    energy,
+  );
+  database.run(
+    `INSERT INTO plots (id, player_id, region_id, site_x, site_y, width, height)
+     VALUES (?, ?, 'r1', 0, 0, 12, 12)`,
+    plotId,
+    id,
+  );
+}
+
 describe("REST API routes", () => {
   let harness: TestApi | undefined;
 
@@ -241,5 +264,72 @@ describe("REST API routes", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ error: "invalid_tick" });
+  });
+
+  it("POST /player/:playerId/orders returns 404 for an unknown player", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+
+    const response = await fetch(`${harness.baseUrl}/player/ghost/orders`, {
+      method: "POST",
+      body: JSON.stringify({ type: "gift", payload: { toPlayerId: "p1", items: [] } }),
+    });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: "player_not_found" });
+  });
+
+  it("POST /player/:playerId/orders rejects an order with insufficient energy", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 0);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
+      method: "POST",
+      body: JSON.stringify({ type: "forage", payload: { nodeId: "n1" } }),
+    });
+
+    expect(response.status).toBe(400);
+    const data = await response.json();
+    expect(data.error).toContain("Not enough energy");
+  });
+
+  it("POST /player/:playerId/orders queues a valid order", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 100);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
+      method: "POST",
+      body: JSON.stringify({ type: "gift", payload: { toPlayerId: "p2", items: [] } }),
+    });
+
+    expect(response.status).toBe(201);
+    const data = await response.json();
+    expect(data.order).toBeDefined();
+    expect(data.order.sequence).toBe(1);
+
+    const row = harness.database.get<{ type: string }>(
+      "SELECT type FROM orders WHERE player_id = 'p1'",
+    );
+    expect(row?.type).toBe("gift");
+  });
+
+  it("POST /player/:playerId/orders derives the sequence from existing orders", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 100);
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('existing', 'p1', 0, 7, 'gift', '{}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
+      method: "POST",
+      body: JSON.stringify({ type: "gift", payload: { toPlayerId: "p2", items: [] } }),
+    });
+
+    expect(response.status).toBe(201);
+    expect((await response.json()).order.sequence).toBe(8);
   });
 });

@@ -236,7 +236,7 @@
 
 - [x] **M4.B01** One Node API process serving plain REST with JSON; clients poll every 5 seconds (spec §12). _Depends on: M1.01, M3.05._
 - [x] **M4.B02** Endpoints for auth and sessions, world state, player plot, inventory, order queue, ready state, barter board, posts, latest replay, push subscription and onboarding site claim. _Depends on: M2.A01, M2.E01, M3.01, M3.05, M4.A18, M4.B01._
-- [ ] **M4.B03** Re-validate every order server-side against current state: energy, free inventory, capacity, locks, location, building requirements and offer state (spec §12, §14.5). _Depends on: M2.A04, M2.A15, M2.D06, M2.E18-M2.E20, M4.B02._
+- [x] **M4.B03** Re-validate every order server-side against current state: energy, free inventory, capacity, locks, location, building requirements and offer state (spec §12, §14.5). _Depends on: M2.A04, M2.A15, M2.D06, M2.E18-M2.E20, M4.B02._
 - [ ] **M4.B04** Keep client-side rules checks light and non-authoritative (spec §12). _Depends on: M5.B02._
 - [x] **M4.B05** Return 409 for mutations while the resolving lease is held; rely on SQLite's writer lock to block mutations during the transaction (spec §14.9). _Depends on: M4.A03, M4.B01._
 - [x] **M4.B06** Enforce invite-only access and the 20-player cap through invites (spec §3, §12). _Depends on: M3.01, M4.B02, M4.C05._

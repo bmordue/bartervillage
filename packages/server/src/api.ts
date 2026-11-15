@@ -8,7 +8,11 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
+import { content as bundledContent } from "@bartervillage/content";
+import type { Order, OrderType } from "@bartervillage/rules";
 import type { Database } from "./db/database.js";
+import { loadWorldState } from "./db/stateRepository.js";
+import { validateOrderServerSide } from "./orderValidation.js";
 import { retryWorldTick } from "./retry.js";
 
 export interface JsonResponse {
@@ -106,6 +110,21 @@ function matchRoute(routes: Routes, method: string, path: string): RouteMatch | 
   return undefined;
 }
 
+function readRequestBody(request: IncomingMessage): Promise<string | undefined> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    request.on("data", (chunk: Buffer) => chunks.push(chunk));
+    request.on("end", () => {
+      if (chunks.length === 0) {
+        resolve(undefined);
+        return;
+      }
+      resolve(Buffer.concat(chunks).toString("utf8"));
+    });
+    request.on("error", reject);
+  });
+}
+
 export function createApiServer(options: ApiServerOptions = {}): Server {
   const routes = options.routes ?? defaultRoutes();
   const logger = options.logger ?? (() => undefined);
@@ -131,11 +150,13 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
     }
 
     try {
+      const body = await readRequestBody(request);
       const result = await match.handler({
         method,
         path,
         headers: request.headers,
         params: match.params,
+        body,
       });
       writeJson(response, result.status, result.body);
     } catch (error) {
@@ -382,6 +403,66 @@ export function buildApiRoutes(database: Database): Routes {
       status: 200,
       body: { players: [] },
     }),
+
+    "POST /player/:playerId/orders": (request) => {
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+      const body = JSON.parse((request.body as string) || "{}") as {
+        type: string;
+        payload: Record<string, unknown>;
+        sequence?: number;
+      };
+
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+
+      // Find the player
+      const player = state.players.find((p) => p.id === playerId);
+      if (!player) {
+        return { status: 404, body: { error: "player_not_found" } };
+      }
+
+      // Assign tick and sequence
+      const tick = state.world.currentTick;
+      const sequence = body.sequence ?? state.nextOrderSequence;
+
+      const order = {
+        id: `order-${playerId}-${tick}-${sequence}`,
+        playerId,
+        tick,
+        sequence,
+        type: body.type as OrderType,
+        payload: body.payload,
+        status: "queued" as const,
+        failureReason: null,
+      } as Order;
+
+      const validation = validateOrderServerSide(state, bundledContent, order);
+      if (!validation.ok) {
+        return { status: 400, body: { error: validation.reason } };
+      }
+
+      // Persist order
+      database.run(
+        `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        order.id,
+        order.playerId,
+        order.tick,
+        order.sequence,
+        order.type,
+        JSON.stringify(order.payload),
+        order.status,
+        order.failureReason,
+      );
+
+      return {
+        status: 201,
+        body: { order: { id: order.id, sequence: order.sequence } },
+      };
+    },
 
     "POST /world/:worldId/ticks/:tick/retry": (request) => {
       const worldId = request.params?.worldId ?? getWorldId(request);
