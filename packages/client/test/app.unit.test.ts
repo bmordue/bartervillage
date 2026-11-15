@@ -35,4 +35,22 @@ describe("client app shell (M5.A01)", () => {
   it("uses the supplied page title", () => {
     expect(render(App({ title: "Test Village" }))).toContain("Test Village");
   });
+
+  it("renders world snapshot values when supplied", () => {
+    const html = render(
+      App({
+        world: {
+          id: "w1",
+          currentTick: 42,
+          season: "summer",
+          weather: "rain",
+          nextDeadline: "2026-11-15T20:00:00.000Z",
+        },
+      }),
+    );
+    expect(html).toContain("42");
+    expect(html).toContain("summer");
+    expect(html).toContain("rain");
+    expect(html).toContain("2026-11-15T20:00:00.000Z");
+  });
 });

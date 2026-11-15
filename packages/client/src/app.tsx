@@ -9,8 +9,11 @@
 
 import type { ComponentChildren } from "preact";
 
+import type { WorldSnapshot } from "./world.js";
+
 export interface AppProps {
   title?: string;
+  world?: WorldSnapshot;
 }
 
 export interface PanelProps {
@@ -29,7 +32,7 @@ export function Panel({ title, children }: PanelProps) {
 }
 
 /** Placeholder status chip shown until live world data is wired in (M5.A04). */
-function StatusItem({ label, value = "—" }: { label: string; value?: string }) {
+function StatusItem({ label, value = "—" }: { label: string; value?: string | undefined }) {
   return (
     <span class="status-item">
       <span class="status-label">{label}</span>
@@ -38,7 +41,7 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string })
   );
 }
 
-export function App({ title = "Barter Village" }: AppProps) {
+export function App({ title = "Barter Village", world }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
       <header class="app-header">
@@ -47,10 +50,10 @@ export function App({ title = "Barter Village" }: AppProps) {
           <p class="app-tagline">A shared, turn-based farming and crafting world</p>
         </div>
         <div class="world-status" aria-label="World status">
-          <StatusItem label="Tick" />
-          <StatusItem label="Season" />
-          <StatusItem label="Weather" />
-          <StatusItem label="Deadline" />
+          <StatusItem label="Tick" value={world ? String(world.currentTick) : undefined} />
+          <StatusItem label="Season" value={world?.season} />
+          <StatusItem label="Weather" value={world?.weather} />
+          <StatusItem label="Deadline" value={world?.nextDeadline} />
         </div>
       </header>
 
