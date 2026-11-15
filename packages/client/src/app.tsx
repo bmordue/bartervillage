@@ -9,11 +9,14 @@
 
 import type { ComponentChildren } from "preact";
 
+import { MapCanvas } from "./map/MapCanvas.js";
+import type { MapView } from "./map/geometry.js";
 import type { WorldSnapshot } from "./world.js";
 
 export interface AppProps {
   title?: string;
   world?: WorldSnapshot;
+  mapView?: MapView;
 }
 
 export interface PanelProps {
@@ -41,7 +44,7 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string | 
   );
 }
 
-export function App({ title = "Barter Village", world }: AppProps) {
+export function App({ title = "Barter Village", world, mapView }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
       <header class="app-header">
@@ -59,9 +62,13 @@ export function App({ title = "Barter Village", world }: AppProps) {
 
       <main class="app-main">
         <section class="viewport" aria-label="World view">
-          <div class="viewport-placeholder">
-            <p>Map and replay render here.</p>
-          </div>
+          {mapView ? (
+            <MapCanvas view={mapView} />
+          ) : (
+            <div class="viewport-placeholder">
+              <p>Map and replay render here.</p>
+            </div>
+          )}
         </section>
 
         <aside class="sidebar" aria-label="Game panels">

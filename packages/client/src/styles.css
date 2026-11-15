@@ -100,6 +100,18 @@ body {
   color: var(--muted);
 }
 
+.map-canvas {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.map-canvas canvas {
+  display: block;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;

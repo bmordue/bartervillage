@@ -16,7 +16,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@bartervillage/content": "^0.1.0",
     "@bartervillage/rules": "*",
+    "pixi.js": "^8.23.0",
     "preact": "^10.29.8"
   },
   "devDependencies": {

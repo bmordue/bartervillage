@@ -8,6 +8,7 @@
 
 import { render } from "preact";
 import { App } from "./app.js";
+import { createPreviewMapView } from "./map/preview.js";
 import { createWorldPoller } from "./world.js";
 
 /** Mount the application shell into `root`, or `#app` when omitted. */
@@ -17,11 +18,14 @@ export function mountApp(root?: HTMLElement | null): void {
     throw new Error('Client mount point "#app" not found');
   }
 
-  render(<App />, target);
+  // Placeholder region until the server exposes tiles (M5.A02 / M8.10 art).
+  const mapView = createPreviewMapView();
+
+  render(<App mapView={mapView} />, target);
 
   const poller = createWorldPoller({
     onData: (world) => {
-      render(<App world={world} />, target);
+      render(<App world={world} mapView={mapView} />, target);
     },
     onError: (error) => {
       console.error("world poll failed", error);

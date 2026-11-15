@@ -6,6 +6,16 @@ import { describe, expect, it } from "vitest";
 import { render } from "preact-render-to-string";
 
 import { App } from "../src/app.js";
+import type { MapView } from "../src/map/geometry.js";
+
+const emptyView: MapView = {
+  width: 32,
+  height: 32,
+  background: 0xf4f1e8,
+  rects: [],
+  outlines: [],
+  markers: [],
+};
 
 describe("client app shell (M5.A01)", () => {
   const html = render(App({}));
@@ -52,5 +62,11 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("summer");
     expect(html).toContain("rain");
     expect(html).toContain("2026-11-15T20:00:00.000Z");
+  });
+
+  it("mounts the map canvas when a view is supplied", () => {
+    const html = render(App({ mapView: emptyView }));
+    expect(html).toContain('class="map-canvas"');
+    expect(html).not.toContain("Map and replay render here.");
   });
 });
