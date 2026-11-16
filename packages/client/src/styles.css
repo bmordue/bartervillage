@@ -87,13 +87,195 @@ body {
 }
 
 .viewport {
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   min-height: 0;
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
+}
+
+.view-switch {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.view-tab {
+  padding: 3px 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.view-tab-active {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.view-tab:disabled {
+  color: var(--border);
+  cursor: not-allowed;
+}
+
+.plot-view {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 24px;
+}
+
+.plot-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.plot-title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.plot-meta {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.plot-badge {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.plot-buildings {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.plot-building {
+  min-width: 140px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.plot-building-name {
+  margin: 0;
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.plot-building-status {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.plot-grid-wrap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.plot-section-title {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--accent);
+}
+
+.plot-grid {
+  display: grid;
+  gap: 1px;
+  max-width: 480px;
+  padding: 1px;
+  background: #b9b09a;
+  border-radius: 6px;
+}
+
+.plot-tile {
+  aspect-ratio: 1;
+  background: #9ec97a;
+}
+
+.plot-tile-crop {
+  background: #d6c05a;
+  box-shadow: inset 0 0 0 2px #a98e2a;
+}
+
+.plot-tile-failed {
+  background: #8c6a4f;
+  box-shadow: inset 0 0 0 2px #5c3f2c;
+}
+
+.plot-side {
+  min-width: 0;
+}
+
+.plot-side .plot-section-title:not(:first-child) {
+  margin-top: 16px;
+}
+
+.plot-storage {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.plot-storage-bar {
+  height: 8px;
+  margin-top: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.plot-storage-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.plot-animals,
+.plot-crops {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+
+.plot-animal-status,
+.plot-crop-status {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.plot-view .empty-state {
+  color: var(--muted);
+  font-size: 0.82rem;
 }
 
 .viewport-placeholder {

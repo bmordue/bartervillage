@@ -12,5 +12,7 @@ export * from "./orders.js";
 export * from "./panel.js";
 export * from "./panels.js";
 export * from "./player.js";
+export * from "./plot.js";
+export * from "./plotView.js";
 export * from "./polling.js";
 export * from "./world.js";

@@ -171,6 +171,71 @@ describe("REST API routes", () => {
     ]);
   });
 
+  it("GET /plot returns buildings, crops, animals and storage", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO buildings (id, plot_id, type, level) VALUES ('b1', 'plot1', 'home', 1)`,
+    );
+    harness.database.run(
+      `INSERT INTO buildings (id, plot_id, type, level) VALUES ('b2', 'plot1', 'storehouse', 1)`,
+    );
+    harness.database.run(
+      `INSERT INTO crops (id, plot_id, tile_x, tile_y, type, planted_tick, growth_ticks,
+                          watered, tended)
+       VALUES ('c1', 'plot1', 0, 0, 'wheat', 1, 2, 1, 1)`,
+    );
+    harness.database.run(
+      `INSERT INTO animals (id, plot_id, type, count, fed)
+       VALUES ('a1', 'plot1', 'chicken', 2, 1)`,
+    );
+    harness.database.run(
+      `INSERT INTO inventory (plot_id, item, quantity, locked) VALUES ('plot1', 'wheat', 10, 3)`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/plot/plot1`);
+
+    expect(response.status).toBe(200);
+    const data = await response.json();
+    expect(data.buildings).toEqual([
+      {
+        id: "b1",
+        plotId: "plot1",
+        type: "home",
+        level: 1,
+        constructionKind: null,
+        constructionCompleteTick: null,
+      },
+      {
+        id: "b2",
+        plotId: "plot1",
+        type: "storehouse",
+        level: 1,
+        constructionKind: null,
+        constructionCompleteTick: null,
+      },
+    ]);
+    expect(data.crops).toEqual([
+      {
+        id: "c1",
+        plotId: "plot1",
+        tileX: 0,
+        tileY: 0,
+        type: "wheat",
+        plantedTick: 1,
+        growthTicks: 2,
+        watered: true,
+        tended: true,
+        failed: false,
+      },
+    ]);
+    expect(data.animals).toEqual([
+      { id: "a1", plotId: "plot1", type: "chicken", count: 2, fed: true },
+    ]);
+    expect(data.storage).toEqual({ capacity: 100, used: 10, free: 90 });
+  });
+
   it("GET /barter returns only open offers", async () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);

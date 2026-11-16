@@ -189,4 +189,76 @@ describe("client app shell (M5.A01)", () => {
     expect(html).not.toContain("Add order");
     expect(html).not.toContain("Remove");
   });
+
+  it("renders the plot view with the home, field and storehouse", () => {
+    const html = render(
+      App({
+        mapView: emptyView,
+        plot: {
+          plot: {
+            id: "plot1",
+            playerId: "p1",
+            regionId: "r1",
+            siteX: 2,
+            siteY: 3,
+            width: 4,
+            height: 4,
+            worldOwned: false,
+          },
+          buildings: [
+            {
+              id: "b1",
+              plotId: "plot1",
+              type: "home",
+              level: 2,
+              constructionKind: null,
+              constructionCompleteTick: null,
+            },
+            {
+              id: "b2",
+              plotId: "plot1",
+              type: "field",
+              level: 1,
+              constructionKind: null,
+              constructionCompleteTick: null,
+            },
+            {
+              id: "b3",
+              plotId: "plot1",
+              type: "storehouse",
+              level: 1,
+              constructionKind: null,
+              constructionCompleteTick: null,
+            },
+          ],
+          crops: [
+            {
+              id: "c1",
+              plotId: "plot1",
+              tileX: 0,
+              tileY: 0,
+              type: "wheat",
+              plantedTick: 1,
+              growthTicks: 2,
+              watered: true,
+              tended: true,
+              failed: false,
+            },
+          ],
+          animals: [],
+          storage: { capacity: 40, used: 10, free: 30 },
+          inventory: [{ item: "wheat", quantity: 10, locked: 3, free: 7 }],
+          ready: null,
+        },
+      }),
+    );
+
+    expect(html).toContain("Your plot");
+    expect(html).toContain("Home");
+    expect(html).toContain("Field");
+    expect(html).toContain("Storehouse");
+    expect(html).toContain("10 / 40 used");
+    expect(html).toContain("Wheat");
+    expect(html).toContain("Plot");
+  });
 });

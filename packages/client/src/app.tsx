@@ -6,6 +6,8 @@
  * barter board and inventory panels (M5.A03) fill the sidebar.
  */
 
+import { useState } from "preact/hooks";
+
 import type { BarterOffer } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
@@ -13,6 +15,8 @@ import type { MapView } from "./map/geometry.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
 import { BarterPanel, InventoryPanel, OrderPanel } from "./panels.js";
 import type { PlayerStatus } from "./player.js";
+import type { PlotSnapshot } from "./plot.js";
+import { PlotView } from "./plotView.js";
 import type { WorldSnapshot } from "./world.js";
 
 export { Panel } from "./panel.js";
@@ -23,6 +27,7 @@ export interface AppProps {
   world?: WorldSnapshot;
   player?: PlayerStatus;
   mapView?: MapView;
+  plot?: PlotSnapshot;
   orders?: QueuedOrder[];
   offers?: BarterOffer[];
   inventory?: InventoryItem[];
@@ -41,11 +46,57 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string | 
   );
 }
 
+function Viewport({
+  mapView,
+  plot,
+}: {
+  mapView?: MapView | undefined;
+  plot?: PlotSnapshot | undefined;
+}) {
+  const [selectedView, setSelectedView] = useState<"world" | "plot" | null>(null);
+  const activeView = selectedView ?? (plot ? "plot" : "world");
+
+  return (
+    <section class="viewport" aria-label="World view">
+      {plot || mapView ? (
+        <nav class="view-switch" aria-label="Map view">
+          <button
+            type="button"
+            class={activeView === "plot" ? "view-tab view-tab-active" : "view-tab"}
+            disabled={!plot}
+            onClick={() => setSelectedView("plot")}
+          >
+            Plot
+          </button>
+          <button
+            type="button"
+            class={activeView === "world" ? "view-tab view-tab-active" : "view-tab"}
+            disabled={!mapView}
+            onClick={() => setSelectedView("world")}
+          >
+            World
+          </button>
+        </nav>
+      ) : null}
+      {activeView === "plot" && plot ? (
+        <PlotView plot={plot} />
+      ) : mapView ? (
+        <MapCanvas view={mapView} />
+      ) : (
+        <div class="viewport-placeholder">
+          <p>Map and replay render here.</p>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function App({
   title = "Barter Village",
   world,
   player,
   mapView,
+  plot,
   orders,
   offers,
   inventory,
@@ -74,15 +125,7 @@ export function App({
       </header>
 
       <main class="app-main">
-        <section class="viewport" aria-label="World view">
-          {mapView ? (
-            <MapCanvas view={mapView} />
-          ) : (
-            <div class="viewport-placeholder">
-              <p>Map and replay render here.</p>
-            </div>
-          )}
-        </section>
+        <Viewport mapView={mapView} plot={plot} />
 
         <aside class="sidebar" aria-label="Game panels">
           <OrderPanel

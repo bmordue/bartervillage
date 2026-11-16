@@ -234,6 +234,36 @@ type InventoryRow = {
   locked: number;
 };
 
+type BuildingRow = {
+  id: string;
+  plot_id: string;
+  type: string;
+  level: number;
+  construction_kind: string | null;
+  construction_complete_tick: number | null;
+};
+
+type CropRow = {
+  id: string;
+  plot_id: string;
+  tile_x: number;
+  tile_y: number;
+  type: string;
+  planted_tick: number;
+  growth_ticks: number;
+  watered: number;
+  tended: number;
+  failed: number;
+};
+
+type AnimalRow = {
+  id: string;
+  plot_id: string;
+  type: string;
+  count: number;
+  fed: number;
+};
+
 type BarterOfferRow = {
   id: string;
   poster_id: string;
@@ -321,6 +351,32 @@ export function buildApiRoutes(database: Database): Routes {
           free: row.quantity - row.locked,
         }));
 
+      const buildings = database.all<BuildingRow>(
+        `SELECT id, plot_id, type, level, construction_kind, construction_complete_tick
+         FROM buildings WHERE plot_id = ? ORDER BY type, id`,
+        plotId,
+      );
+      const crops = database.all<CropRow>(
+        `SELECT id, plot_id, tile_x, tile_y, type, planted_tick, growth_ticks,
+                watered, tended, failed
+         FROM crops WHERE plot_id = ? ORDER BY tile_y, tile_x`,
+        plotId,
+      );
+      const animals = database.all<AnimalRow>(
+        `SELECT id, plot_id, type, count, fed FROM animals WHERE plot_id = ? ORDER BY type, id`,
+        plotId,
+      );
+
+      const storehouse = buildings.find((building) => building.type === "storehouse");
+      const storehouseDefinition = bundledContent.buildings.find(
+        (definition) => definition.id === "storehouse",
+      );
+      const storehouseLevel = storehouseDefinition?.levels.find(
+        (level) => level.level === storehouse?.level,
+      );
+      const capacity = storehouseLevel?.storageCapacity ?? 0;
+      const used = inventory.reduce((total, row) => total + row.quantity, 0);
+
       return {
         status: 200,
         body: {
@@ -334,7 +390,38 @@ export function buildApiRoutes(database: Database): Routes {
             height: plot.height,
             worldOwned: plot.world_owned,
           },
-          buildings: [],
+          buildings: buildings.map((building) => ({
+            id: building.id,
+            plotId: building.plot_id,
+            type: building.type,
+            level: building.level,
+            constructionKind: building.construction_kind,
+            constructionCompleteTick: building.construction_complete_tick,
+          })),
+          crops: crops.map((crop) => ({
+            id: crop.id,
+            plotId: crop.plot_id,
+            tileX: crop.tile_x,
+            tileY: crop.tile_y,
+            type: crop.type,
+            plantedTick: crop.planted_tick,
+            growthTicks: crop.growth_ticks,
+            watered: crop.watered === 1,
+            tended: crop.tended === 1,
+            failed: crop.failed === 1,
+          })),
+          animals: animals.map((animal) => ({
+            id: animal.id,
+            plotId: animal.plot_id,
+            type: animal.type,
+            count: animal.count,
+            fed: animal.fed === 1,
+          })),
+          storage: {
+            capacity,
+            used,
+            free: Math.max(0, capacity - used),
+          },
           inventory,
           ready: null,
         },

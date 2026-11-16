@@ -271,7 +271,7 @@
 
 ### Plot and order queue
 
-- [ ] **M5.B01** Plot view showing the home, field and storehouse (spec §6.1). _Depends on: M3.10, M4.B02, M5.A02._
+- [x] **M5.B01** Plot view showing the home, field and storehouse (spec §6.1). _Depends on: M3.10, M4.B02, M5.A02._
 - [x] **M5.B02** Order queue UI for adding, removing and reordering orders before the tick (spec §4.2). _Depends on: M2.A06, M4.B02, M5.A03._
 - [ ] **M5.B03** Batch order selection ("fill this row or area") with upfront expansion into per-unit orders (spec §4.2, §4.3). _Depends on: M2.A05, M5.B02._
 - [ ] **M5.B04** Ready toggle with clear indication that the queue is fixed after the tick starts. _Depends on: M2.A07, M4.B02, M5.B02._
