@@ -86,7 +86,7 @@
 - [x] **M2.A13** Travel costs: free within the player's own region, 5 energy per region boundary crossed, diagonal neighbours count as two steps (spec §4.3, §5). _Depends on: M2.A11, M2.A12, M3.11; blocked by D.07._
 - [x] **M2.A14** Avatars start each tick at their own plot; one-way travel orders move them, and they return home at the end of the tick at no extra cost (spec §4.3, §5). _Depends on: M2.A02, M2.A13._
 - [x] **M2.A15** Orders acting on a remote site validate that an earlier travel order in the same queue reached that region (spec §4.2, §4.3). _Depends on: M2.A10, M2.A13, M2.A14._
-- [ ] **M2.A16** Help energy is paid by the helper; travel is paid by the travel order; the host pays nothing (spec §4.3). _Depends on: M2.A02, M2.A11; help order: M6.09._
+- [x] **M2.A16** Help energy is paid by the helper; travel is paid by the travel order; the host pays nothing (spec §4.3). _Depends on: M2.A02, M2.A11; help order: M6.09._
 - [x] **M2.A17** Missed-tick defaults appended after explicit orders for unready players: auto-harvest, then auto-water, then auto-feed (spec §4.4). _Depends on: M2.A09, M2.A10, M2.B01, M2.B09; blocked by D.05._
 - [x] **M2.A18** Missed-tick defaults are enabled per player by default, respect energy and capacity, stop when exhausted and log what they did (spec §4.4). _Depends on: M2.A11, M2.A17, M2.D06._
 - [x] **M2.A19** Missed-tick defaults never queue building, crafting, trading, gifting or goal contributions (spec §4.4). _Depends on: M2.A17._
