@@ -546,6 +546,59 @@ describe("REST API routes", () => {
     expect((await response.json()).order.sequence).toBe(8);
   });
 
+  it("POST /player/:playerId/orders/batch creates multiple orders at once", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 100);
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders/batch`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        orders: [
+          { type: "plant", payload: { tile: { x: 0, y: 0 }, crop: "wheat" } },
+          { type: "plant", payload: { tile: { x: 1, y: 0 }, crop: "wheat" } },
+        ],
+      }),
+    });
+    expect(response.status).toBe(201);
+    const data = await response.json();
+    expect(data.orders).toHaveLength(2);
+    expect(data.orders[0].sequence).toBe(1);
+    expect(data.orders[1].sequence).toBe(2);
+    const rows = harness.database.all<{ type: string }>(
+      "SELECT type FROM orders WHERE player_id = 'p1' ORDER BY sequence",
+    );
+    expect(rows).toEqual([{ type: "plant" }, { type: "plant" }]);
+  });
+
+  it("POST /player/:playerId/orders/batch rejects invalid payloads", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 100);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders/batch`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orders: [{ payload: {} }] }),
+    });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe("invalid_orders");
+  });
+
+  it("POST /player/:playerId/orders/batch rejects empty list", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1", 100);
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders/batch`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orders: [] }),
+    });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe("invalid_orders");
+  });
+
   it("GET /player/:playerId returns energy and ready state", async () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);

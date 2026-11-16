@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   addOrder,
+  addOrders,
   fetchOrderFailures,
   fetchOrders,
   moveOrder,
@@ -102,6 +103,80 @@ describe("order queue editing (M5.B02)", () => {
       }),
     );
     expect(result).toEqual({ id: "o1", sequence: 3 });
+  });
+
+  it("posts batch order drafts to the batch endpoint", async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            orders: [
+              { id: "o1", sequence: 4 },
+              { id: "o2", sequence: 5 },
+            ],
+          }),
+          { status: 201, headers: { "content-type": "application/json" } },
+        ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const drafts = [
+      { type: "plant", payload: { tile: { x: 0, y: 0 }, crop: "wheat" } },
+      { type: "plant", payload: { tile: { x: 1, y: 0 }, crop: "wheat" } },
+    ];
+
+    const result = await addOrders("http://api.test", "w9", "p2", drafts);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/player/p2/orders/batch",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "x-world-id": "w9",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ orders: drafts }),
+      }),
+    );
+    expect(result).toEqual([
+      { id: "o1", sequence: 4 },
+      { id: "o2", sequence: 5 },
+    ]);
+  });
+
+  it("posts a batch of per-unit orders", async () => {
+    const fetched = {
+      orders: [
+        { id: "o1", sequence: 3 },
+        { id: "o2", sequence: 4 },
+      ],
+    };
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify(fetched), {
+          status: 201,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    const drafts = [
+      { type: "plant", payload: { tile: { x: 1, y: 2 }, crop: "wheat" } },
+      { type: "plant", payload: { tile: { x: 2, y: 2 }, crop: "wheat" } },
+    ];
+
+    const result = await addOrders("http://api.test", "w9", "p2", drafts);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/player/p2/orders/batch",
+      expect.objectContaining({
+        method: "POST",
+        headers: {
+          "x-world-id": "w9",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({ orders: drafts }),
+      }),
+    );
+    expect(result).toEqual(fetched.orders);
   });
 
   it("deletes one queued order", async () => {

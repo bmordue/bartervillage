@@ -779,6 +779,93 @@ export function buildApiRoutes(database: Database): Routes {
       };
     },
 
+    "POST /player/:playerId/orders/batch": (request) => {
+      const blocked = mutationBlocked(request);
+      if (blocked) {
+        return blocked;
+      }
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+      const body = JSON.parse((request.body as string) || "{}") as { orders?: unknown };
+      if (!Array.isArray(body.orders) || body.orders.length === 0 || body.orders.length > 144) {
+        return { status: 400, body: { error: "invalid_orders" } };
+      }
+
+      const drafts: { type: OrderType; payload: Record<string, unknown> }[] = [];
+      for (const entry of body.orders) {
+        if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+          return { status: 400, body: { error: "invalid_orders" } };
+        }
+        const draft = entry as { type?: unknown; payload?: unknown };
+        if (
+          typeof draft.type !== "string" ||
+          typeof draft.payload !== "object" ||
+          draft.payload === null ||
+          Array.isArray(draft.payload)
+        ) {
+          return { status: 400, body: { error: "invalid_orders" } };
+        }
+        drafts.push({
+          type: draft.type as OrderType,
+          payload: draft.payload as Record<string, unknown>,
+        });
+      }
+
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+      if (!state.players.some((player) => player.id === playerId)) {
+        return { status: 404, body: { error: "player_not_found" } };
+      }
+
+      const tick = state.world.currentTick;
+      const orders = drafts.map((draft, index) => {
+        const sequence = state.nextOrderSequence + index;
+        return {
+          id: `order-${playerId}-${tick}-${sequence}`,
+          playerId,
+          tick,
+          sequence,
+          type: draft.type,
+          payload: draft.payload,
+          status: "queued" as const,
+          failureReason: null,
+        } as Order;
+      });
+
+      for (const order of orders) {
+        const validation = validateOrderServerSide(state, bundledContent, order);
+        if (!validation.ok) {
+          return { status: 400, body: { error: validation.reason } };
+        }
+      }
+
+      database.transaction(() => {
+        for (const order of orders) {
+          database.run(
+            `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            order.id,
+            order.playerId,
+            order.tick,
+            order.sequence,
+            order.type,
+            JSON.stringify(order.payload),
+            order.status,
+            order.failureReason,
+          );
+        }
+      });
+
+      return {
+        status: 201,
+        body: {
+          orders: orders.map((order) => ({ id: order.id, sequence: order.sequence })),
+        },
+      };
+    },
+
     "PUT /player/:playerId/orders": (request) => {
       const blocked = mutationBlocked(request);
       if (blocked) {

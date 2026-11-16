@@ -33,6 +33,10 @@ interface AddOrderResponse {
   order?: { id: string; sequence: number };
 }
 
+interface AddOrdersResponse {
+  orders?: { id: string; sequence: number }[];
+}
+
 /** True when the API rejected a mutation because a tick is resolving. */
 export class TickInProgressError extends Error {
   constructor() {
@@ -131,6 +135,28 @@ export async function addOrder(
     throw new Error("POST /player/:playerId/orders returned no order");
   }
   return body.order;
+}
+
+/** Queue several per-unit orders in one request. Throws on a non-2xx response. */
+export async function addOrders(
+  baseUrl = "",
+  worldId = "w1",
+  playerId = "p1",
+  drafts: readonly OrderDraft[],
+  signal?: AbortSignal,
+): Promise<{ id: string; sequence: number }[]> {
+  const response = await fetch(
+    `${baseUrl}/player/${encodeURIComponent(playerId)}/orders/batch`,
+    requestInit("POST", worldId, { orders: drafts }, signal),
+  );
+  if (!response.ok) {
+    throw await apiError(response, `POST /player/${playerId}/orders/batch failed`);
+  }
+  const body = (await response.json()) as AddOrdersResponse;
+  if (!body.orders) {
+    throw new Error("POST /player/:playerId/orders/batch returned no orders");
+  }
+  return body.orders;
 }
 
 /** Remove one queued order. Throws on a non-2xx response. */

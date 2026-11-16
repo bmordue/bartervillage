@@ -40,6 +40,7 @@ export interface AppProps {
   offers?: BarterOffer[];
   inventory?: InventoryItem[];
   onAddOrder?: (draft: OrderDraft) => void | Promise<void>;
+  onAddOrders?: (drafts: OrderDraft[]) => void | Promise<void>;
   onRemoveOrder?: (orderId: string) => void | Promise<void>;
   onReorderOrders?: (orderIds: string[]) => void | Promise<void>;
   onViewPlot?: (plotId: string) => void | Promise<void>;
@@ -180,6 +181,7 @@ export function App({
   offers,
   inventory,
   onAddOrder,
+  onAddOrders,
   onRemoveOrder,
   onReorderOrders,
   onViewPlot,
@@ -226,6 +228,7 @@ export function App({
             failures={orderFailures}
             failureTick={failureTick}
             onAddOrder={onAddOrder}
+            onAddOrders={onAddOrders}
             onRemoveOrder={onRemoveOrder}
             onReorderOrders={onReorderOrders}
           />

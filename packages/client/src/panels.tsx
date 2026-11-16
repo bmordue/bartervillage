@@ -7,6 +7,7 @@
 
 import { useState } from "preact/hooks";
 
+import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
 import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
@@ -104,6 +105,7 @@ export interface OrderPanelProps {
   failures?: QueuedOrder[] | undefined;
   failureTick?: number | null | undefined;
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
+  onAddOrders?: ((drafts: OrderDraft[]) => void | Promise<void>) | undefined;
   onRemoveOrder?: ((orderId: string) => void | Promise<void>) | undefined;
   onReorderOrders?: ((orderIds: string[]) => void | Promise<void>) | undefined;
 }
@@ -142,6 +144,7 @@ export function OrderPanel({
   failures = [],
   failureTick,
   onAddOrder,
+  onAddOrders,
   onRemoveOrder,
   onReorderOrders,
 }: OrderPanelProps) {
@@ -149,6 +152,10 @@ export function OrderPanel({
   const [payloadText, setPayloadText] = useState<string>(ORDER_TEMPLATES.plant ?? "{}");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [batchMode, setBatchMode] = useState<BatchMode>("single");
+  const [rowCount, setRowCount] = useState(4);
+  const [areaWidth, setAreaWidth] = useState(2);
+  const [areaHeight, setAreaHeight] = useState(2);
 
   const run = async (task: () => void | Promise<void>): Promise<void> => {
     setBusy(true);
@@ -178,7 +185,23 @@ export function OrderPanel({
       setError("Order payload must be a JSON object.");
       return;
     }
-    void run(() => onAddOrder({ type, payload: payload as Record<string, unknown> }));
+    const draft = { type, payload: payload as Record<string, unknown> };
+    if (onAddOrders && batchMode !== "single") {
+      const layout: BatchLayout = {
+        mode: batchMode,
+        count: rowCount,
+        width: areaWidth,
+        height: areaHeight,
+      };
+      try {
+        const drafts = expandTileBatch(draft, layout);
+        void run(() => onAddOrders(drafts));
+      } catch (caught) {
+        setError(errorMessage(caught));
+      }
+      return;
+    }
+    void run(() => onAddOrder(draft));
   };
 
   const move = (index: number, direction: -1 | 1): void => {
@@ -267,6 +290,73 @@ export function OrderPanel({
               ))}
             </select>
           </label>
+          {onAddOrders ? (
+            <div class="order-batch">
+              <label class="order-field">
+                <span>Batch</span>
+                <select
+                  value={batchMode}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setBatchMode((event.currentTarget as HTMLSelectElement).value as BatchMode);
+                    setError(null);
+                  }}
+                >
+                  <option value="single">Single order</option>
+                  <option value="row">Fill row</option>
+                  <option value="area">Fill area</option>
+                </select>
+              </label>
+              {batchMode === "row" ? (
+                <label class="order-field">
+                  <span>Row size</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={144}
+                    value={rowCount}
+                    disabled={busy}
+                    onInput={(event) =>
+                      setRowCount(Number((event.currentTarget as HTMLInputElement).value))
+                    }
+                  />
+                </label>
+              ) : null}
+              {batchMode === "area" ? (
+                <>
+                  <label class="order-field">
+                    <span>Width</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={144}
+                      value={areaWidth}
+                      disabled={busy}
+                      onInput={(event) =>
+                        setAreaWidth(Number((event.currentTarget as HTMLInputElement).value))
+                      }
+                    />
+                  </label>
+                  <label class="order-field">
+                    <span>Height</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={144}
+                      value={areaHeight}
+                      disabled={busy}
+                      onInput={(event) =>
+                        setAreaHeight(Number((event.currentTarget as HTMLInputElement).value))
+                      }
+                    />
+                  </label>
+                </>
+              ) : null}
+              <p class="order-batch-hint">
+                Each tile becomes its own order. The server validates every order.
+              </p>
+            </div>
+          ) : null}
           <label class="order-field">
             <span>Payload (JSON)</span>
             <textarea
@@ -280,7 +370,7 @@ export function OrderPanel({
           </label>
           {error ? <p class="order-error">{error}</p> : null}
           <button type="submit" class="order-add" disabled={busy}>
-            Add order
+            {batchMode === "single" ? "Add order" : "Add orders"}
           </button>
         </form>
       ) : null}

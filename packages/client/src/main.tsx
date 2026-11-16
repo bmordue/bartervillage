@@ -14,6 +14,7 @@ import type { InventoryItem } from "./inventory.js";
 import { createPreviewMapView } from "./map/preview.js";
 import {
   addOrder,
+  addOrders,
   fetchOrderFailures,
   fetchOrders,
   removeOrder,
@@ -169,6 +170,11 @@ export function mountApp(root?: HTMLElement | null): void {
         onAddOrder={(draft: OrderDraft) =>
           applyQueueChange(async () => {
             await addOrder("", "w1", playerId, draft);
+          })
+        }
+        onAddOrders={(drafts: OrderDraft[]) =>
+          applyQueueChange(async () => {
+            await addOrders("", "w1", playerId, drafts);
           })
         }
         onRemoveOrder={(orderId: string) =>

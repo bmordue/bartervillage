@@ -490,6 +490,7 @@ body {
 }
 
 .order-field select,
+.order-field input,
 .order-field textarea {
   width: 100%;
   padding: 4px 6px;
@@ -500,6 +501,20 @@ body {
   font: inherit;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8rem;
+}
+
+.order-batch {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.order-batch-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .order-error {
