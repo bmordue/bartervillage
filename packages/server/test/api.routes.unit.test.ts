@@ -261,6 +261,14 @@ describe("REST API routes", () => {
        VALUES ('o2', 'p1', 'wanted_request', '[]',
                '[{"item":"stone","quantity":3}]', 1, 0, 7, 'settled', NULL)`,
     );
+    harness.database.run(
+      `INSERT INTO inventory (plot_id, item, quantity, locked)
+       VALUES ('plot1', 'wheat', 5, 2)`,
+    );
+    harness.database.run(
+      `INSERT INTO inventory (plot_id, item, quantity, locked)
+       VALUES ('plot1', 'wood', 4, 0)`,
+    );
 
     const response = await fetch(`${harness.baseUrl}/barter`);
 
@@ -269,6 +277,7 @@ describe("REST API routes", () => {
       {
         id: "o1",
         posterId: "p1",
+        posterName: "p1",
         kind: "offer",
         gives: [{ item: "wheat", quantity: 2 }],
         wants: [{ item: "wood", quantity: 1 }],
@@ -277,6 +286,10 @@ describe("REST API routes", () => {
         expiryTick: 7,
         status: "open",
         parentOfferId: null,
+        posterFreeStock: [
+          { item: "wheat", free: 3 },
+          { item: "wood", free: 4 },
+        ],
       },
     ]);
   });

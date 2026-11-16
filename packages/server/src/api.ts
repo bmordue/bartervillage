@@ -284,6 +284,10 @@ type PlayerStatusRow = {
   energy: number;
 };
 
+type PlotInventoryRow = InventoryRow & {
+  plot_id: string;
+};
+
 type ReadyRow = {
   tick: number;
   position: number;
@@ -497,6 +501,25 @@ export function buildApiRoutes(database: Database): Routes {
     }),
 
     "GET /barter": () => {
+      const players = database.all<PlayerStatusRow>(
+        `SELECT id, name, plot_id, energy FROM players`,
+      );
+      const plotByPlayer = new Map(players.map((player) => [player.id, player.plot_id]));
+      const nameByPlayer = new Map(players.map((player) => [player.id, player.name]));
+
+      const inventory = database.all<PlotInventoryRow>(
+        `SELECT plot_id, item, quantity, locked FROM inventory`,
+      );
+      const freeStockByPlot = new Map<string, Map<string, number>>();
+      for (const row of inventory) {
+        let stock = freeStockByPlot.get(row.plot_id);
+        if (!stock) {
+          stock = new Map<string, number>();
+          freeStockByPlot.set(row.plot_id, stock);
+        }
+        stock.set(row.item, row.quantity - row.locked);
+      }
+
       const offers = database
         .all<BarterOfferRow>(
           `SELECT id, poster_id, kind, gives_json, wants_json, quantity,
@@ -505,18 +528,27 @@ export function buildApiRoutes(database: Database): Routes {
            WHERE status = 'open'
            ORDER BY created_at_tick, id`,
         )
-        .map((row) => ({
-          id: row.id,
-          posterId: row.poster_id,
-          kind: row.kind,
-          gives: JSON.parse(row.gives_json),
-          wants: JSON.parse(row.wants_json),
-          quantity: row.quantity,
-          createdAtTick: row.created_at_tick,
-          expiryTick: row.expiry_tick,
-          status: row.status,
-          parentOfferId: row.parent_offer_id,
-        }));
+        .map((row) => {
+          const gives = JSON.parse(row.gives_json) as { item: string; quantity: number }[];
+          const wants = JSON.parse(row.wants_json) as { item: string; quantity: number }[];
+          const stock =
+            freeStockByPlot.get(plotByPlayer.get(row.poster_id) ?? "") ?? new Map<string, number>();
+          const items = [...new Set([...gives, ...wants].map((stack) => stack.item))].sort();
+          return {
+            id: row.id,
+            posterId: row.poster_id,
+            posterName: nameByPlayer.get(row.poster_id) ?? row.poster_id,
+            kind: row.kind,
+            gives,
+            wants,
+            quantity: row.quantity,
+            createdAtTick: row.created_at_tick,
+            expiryTick: row.expiry_tick,
+            status: row.status,
+            parentOfferId: row.parent_offer_id,
+            posterFreeStock: items.map((item) => ({ item, free: stock.get(item) ?? 0 })),
+          };
+        });
 
       return {
         status: 200,

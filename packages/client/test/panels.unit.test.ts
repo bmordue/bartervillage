@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "preact-render-to-string";
 
-import { InventoryPanel } from "../src/panels.js";
+import { BarterPanel, InventoryPanel } from "../src/panels.js";
 
 describe("inventory panel (M5.B05)", () => {
   it("shows held, locked, free and capacity", () => {
@@ -42,5 +42,53 @@ describe("inventory panel (M5.B05)", () => {
     const html = render(InventoryPanel({ items: [] }));
 
     expect(html).not.toContain("capacity");
+  });
+});
+
+describe("barter panel (M6.01)", () => {
+  it("lists posts with poster names, free stock and counter links", () => {
+    const html = render(
+      BarterPanel({
+        offers: [
+          {
+            id: "o1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "offer",
+            gives: [{ item: "wheat", quantity: 2 }],
+            wants: [{ item: "wood", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [
+              { item: "wheat", free: 3 },
+              { item: "wood", free: 4 },
+            ],
+          },
+          {
+            id: "o2",
+            posterId: "p2",
+            posterName: "Bea",
+            kind: "counter_offer",
+            gives: [{ item: "stone", quantity: 1 }],
+            wants: [{ item: "wheat", quantity: 2 }],
+            quantity: 1,
+            createdAtTick: 4,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: "o1",
+            posterFreeStock: [],
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("Ada");
+    expect(html).toContain("Bea");
+    expect(html).toContain("Counter-offer");
+    expect(html).toContain("Poster free stock: 3 Wheat, 4 Wood");
+    expect(html).toContain("counters o1");
   });
 });

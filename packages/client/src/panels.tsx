@@ -37,6 +37,10 @@ function describeOffer(offer: BarterOffer): string {
   }
 }
 
+function describeFreeStock(stock: { item: string; free: number }[]): string {
+  return stock.map((entry) => `${entry.free} ${humanize(entry.item)}`).join(", ");
+}
+
 function kindLabel(kind: string): string {
   switch (kind) {
     case "wanted_request":
@@ -305,12 +309,20 @@ export function BarterPanel({ offers = [] }: BarterPanelProps) {
             <li key={offer.id} class="offer-item">
               <div class="offer-heading">
                 <span class="offer-kind">{kindLabel(offer.kind)}</span>
-                <span class="offer-poster">{offer.posterId}</span>
+                <span class="offer-poster">{offer.posterName ?? offer.posterId}</span>
               </div>
               <p class="offer-trade">{describeOffer(offer)}</p>
               <p class="offer-meta">
                 Qty {offer.quantity} · expires tick {offer.expiryTick}
+                {offer.kind === "counter_offer" && offer.parentOfferId
+                  ? ` · counters ${offer.parentOfferId}`
+                  : ""}
               </p>
+              {offer.posterFreeStock && offer.posterFreeStock.length > 0 ? (
+                <p class="offer-free">
+                  Poster free stock: {describeFreeStock(offer.posterFreeStock)}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>

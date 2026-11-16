@@ -11,6 +11,7 @@ const payload = {
     {
       id: "o1",
       posterId: "p1",
+      posterName: "Ada",
       kind: "offer",
       gives: [{ item: "wheat", quantity: 2 }],
       wants: [{ item: "wood", quantity: 1 }],
@@ -19,6 +20,7 @@ const payload = {
       expiryTick: 10,
       status: "open",
       parentOfferId: null,
+      posterFreeStock: [{ item: "wheat", free: 3 }],
     },
   ],
 };

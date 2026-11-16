@@ -517,6 +517,12 @@ body {
   font-size: 0.75rem;
 }
 
+.offer-free {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 .inventory-capacity {
   margin-bottom: 10px;
 }

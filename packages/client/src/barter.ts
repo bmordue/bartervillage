@@ -10,9 +10,15 @@ export interface ItemStack {
   quantity: number;
 }
 
+export interface ItemStock {
+  item: string;
+  free: number;
+}
+
 export interface BarterOffer {
   id: string;
   posterId: string;
+  posterName?: string;
   kind: string;
   gives: ItemStack[];
   wants: ItemStack[];
@@ -21,6 +27,7 @@ export interface BarterOffer {
   expiryTick: number;
   status: string;
   parentOfferId: string | null;
+  posterFreeStock?: ItemStock[];
 }
 
 interface BarterResponse {
