@@ -348,6 +348,44 @@ body {
   margin: 0;
 }
 
+.ready-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ready-state {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.ready-state-on {
+  color: var(--ink);
+}
+
+.ready-toggle {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.ready-toggle:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.ready-hint {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 .order-list,
 .offer-list,
 .player-list {

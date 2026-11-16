@@ -158,6 +158,60 @@ describe("REST API routes", () => {
     expect(Array.isArray(data.ready)).toBe(true);
   });
 
+  it("PUT /player/:playerId/ready readies, unreadies and assigns a position", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    const readyResponse = await fetch(`${harness.baseUrl}/player/p1/ready`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ready: true }),
+    });
+
+    expect(readyResponse.status).toBe(200);
+    expect(await readyResponse.json()).toEqual({
+      ready: { playerId: "p1", tick: 0, position: 1 },
+    });
+    expect(await (await fetch(`${harness.baseUrl}/player/p1`)).json()).toMatchObject({
+      ready: { tick: 0, position: 1 },
+    });
+
+    const unreadyResponse = await fetch(`${harness.baseUrl}/player/p1/ready`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ready: false }),
+    });
+
+    expect(unreadyResponse.status).toBe(200);
+    expect(await unreadyResponse.json()).toEqual({ ready: null });
+    expect(await (await fetch(`${harness.baseUrl}/player/p1`)).json()).toMatchObject({
+      ready: null,
+    });
+  });
+
+  it("PUT /player/:playerId/ready rejects invalid bodies and unknown players", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    const invalid = await fetch(`${harness.baseUrl}/player/p1/ready`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ready: "yes" }),
+    });
+    const missing = await fetch(`${harness.baseUrl}/player/ghost/ready`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ ready: true }),
+    });
+
+    expect(invalid.status).toBe(400);
+    expect(await invalid.json()).toEqual({ error: "invalid_ready_state" });
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ error: "player_not_found" });
+  });
+
   it("GET /plot returns held, locked and free inventory", async () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);

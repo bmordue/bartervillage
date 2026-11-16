@@ -21,7 +21,7 @@ import {
   type OrderDraft,
   type QueuedOrder,
 } from "./orders.js";
-import { fetchPlayer, type PlayerStatus } from "./player.js";
+import { fetchPlayer, setReady, type PlayerStatus } from "./player.js";
 import { fetchPlayers, type PlayerSummary } from "./players.js";
 import { fetchPlot, type PlotSnapshot } from "./plot.js";
 import { createPoller } from "./polling.js";
@@ -148,6 +148,11 @@ export function mountApp(root?: HTMLElement | null): void {
         currentPlayerId={latest.player?.player.id}
         onViewPlot={viewPlot}
         onCloseViewedPlot={closeViewedPlot}
+        onToggleReady={(ready: boolean) =>
+          applyQueueChange(async () => {
+            await setReady("", "w1", playerId, ready);
+          })
+        }
         onAddOrder={(draft: OrderDraft) =>
           applyQueueChange(async () => {
             await addOrder("", "w1", playerId, draft);

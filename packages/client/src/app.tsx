@@ -13,6 +13,7 @@ import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
+import { Panel } from "./panel.js";
 import { BarterPanel, InventoryPanel, OrderPanel, PlayersPanel } from "./panels.js";
 import type { PlayerStatus } from "./player.js";
 import type { PlayerSummary } from "./players.js";
@@ -41,6 +42,7 @@ export interface AppProps {
   onReorderOrders?: (orderIds: string[]) => void | Promise<void>;
   onViewPlot?: (plotId: string) => void | Promise<void>;
   onCloseViewedPlot?: () => void;
+  onToggleReady?: (ready: boolean) => void | Promise<void>;
 }
 
 /** Placeholder status chip shown until live world data is wired in (M5.A04). */
@@ -50,6 +52,48 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string | 
       <span class="status-label">{label}</span>
       <strong class="status-value">{value}</strong>
     </span>
+  );
+}
+
+function ReadyToggle({
+  player,
+  onToggleReady,
+}: {
+  player?: PlayerStatus | undefined;
+  onToggleReady?: ((ready: boolean) => void | Promise<void>) | undefined;
+}) {
+  const [pending, setPending] = useState(false);
+  if (!player || !onToggleReady) {
+    return null;
+  }
+
+  const ready = player.ready;
+  return (
+    <Panel title="Ready for tick">
+      <div class="ready-row">
+        <strong class={ready ? "ready-state ready-state-on" : "ready-state"}>
+          {ready ? "Ready" : "Not ready"}
+        </strong>
+        <button
+          type="button"
+          class="ready-toggle"
+          disabled={pending}
+          onClick={() => {
+            setPending(true);
+            void Promise.resolve(onToggleReady(ready === null))
+              .catch(() => undefined)
+              .finally(() => setPending(false));
+          }}
+        >
+          {ready ? "Cancel ready" : "Ready"}
+        </button>
+      </div>
+      <p class="ready-hint">
+        {ready
+          ? `Ready at position ${ready.position}. Cancel to edit your queue.`
+          : "The queue is fixed once the tick starts."}
+      </p>
+    </Panel>
   );
 }
 
@@ -136,6 +180,7 @@ export function App({
   onReorderOrders,
   onViewPlot,
   onCloseViewedPlot,
+  onToggleReady,
 }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
@@ -171,6 +216,7 @@ export function App({
         />
 
         <aside class="sidebar" aria-label="Game panels">
+          <ReadyToggle player={player} onToggleReady={onToggleReady} />
           <OrderPanel
             orders={orders}
             onAddOrder={onAddOrder}

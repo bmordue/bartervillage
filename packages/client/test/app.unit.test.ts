@@ -320,4 +320,32 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("Read-only");
     expect(html).toContain("Back to my plot");
   });
+
+  it("offers a ready toggle and explains queue locking", () => {
+    const notReady = render(
+      App({
+        player: {
+          player: { id: "p1", name: "Ada", plotId: "plot1", energy: 90 },
+          ready: null,
+        },
+        onToggleReady: () => undefined,
+      }),
+    );
+    const ready = render(
+      App({
+        player: {
+          player: { id: "p1", name: "Ada", plotId: "plot1", energy: 90 },
+          ready: { tick: 3, position: 2 },
+        },
+        onToggleReady: () => undefined,
+      }),
+    );
+
+    expect(notReady).toContain("Ready for tick");
+    expect(notReady).toContain("Not ready");
+    expect(notReady).toContain("The queue is fixed once the tick starts.");
+    expect(notReady).toContain(">Ready</button>");
+    expect(ready).toContain("Ready at position 2. Cancel to edit your queue.");
+    expect(ready).toContain("Cancel ready");
+  });
 });

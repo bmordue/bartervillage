@@ -9,7 +9,14 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
 import { content as bundledContent } from "@bartervillage/content";
-import { removeOrder, reorderQueue, type Order, type OrderType } from "@bartervillage/rules";
+import {
+  ready as markReady,
+  removeOrder,
+  reorderQueue,
+  unready,
+  type Order,
+  type OrderType,
+} from "@bartervillage/rules";
 import type { Database } from "./db/database.js";
 import { loadWorldState, saveWorldState } from "./db/stateRepository.js";
 import { checkMutationAllowed } from "./mutations.js";
@@ -499,6 +506,35 @@ export function buildApiRoutes(database: Database): Routes {
         ownPosition: null,
       },
     }),
+
+    "PUT /player/:playerId/ready": (request) => {
+      const blocked = mutationBlocked(request);
+      if (blocked) {
+        return blocked;
+      }
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+      const body = JSON.parse((request.body as string) || "{}") as { ready?: unknown };
+      if (typeof body.ready !== "boolean") {
+        return { status: 400, body: { error: "invalid_ready_state" } };
+      }
+
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+      if (!state.players.some((player) => player.id === playerId)) {
+        return { status: 404, body: { error: "player_not_found" } };
+      }
+
+      const tick = state.world.currentTick;
+      const entry = body.ready ? markReady(state, playerId, tick) : null;
+      if (!body.ready) {
+        unready(state, playerId, tick);
+      }
+      saveWorldState(database, state);
+      return { status: 200, body: { ready: entry } };
+    },
 
     "GET /barter": () => {
       const players = database.all<PlayerStatusRow>(
