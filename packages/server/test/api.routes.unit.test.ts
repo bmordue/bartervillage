@@ -8,8 +8,13 @@ function insertPlayer(
   id: string,
   plotId: string,
   energy = 100,
+  siteX = 0,
+  siteY = 0,
 ): void {
-  database.run("INSERT INTO regions (id, x, y, width, height) VALUES (?, 0, 0, 12, 12)", "r1");
+  database.run(
+    "INSERT OR IGNORE INTO regions (id, x, y, width, height) VALUES (?, 0, 0, 12, 12)",
+    "r1",
+  );
   database.run(
     `INSERT INTO players (id, name, plot_id, joined_tick, energy)
      VALUES (?, ?, ?, 0, ?)`,
@@ -20,9 +25,11 @@ function insertPlayer(
   );
   database.run(
     `INSERT INTO plots (id, player_id, region_id, site_x, site_y, width, height)
-     VALUES (?, ?, 'r1', 0, 0, 12, 12)`,
+     VALUES (?, ?, 'r1', ?, ?, 12, 12)`,
     plotId,
     id,
+    siteX,
+    siteY,
   );
 }
 
@@ -358,6 +365,21 @@ describe("REST API routes", () => {
     const data = await response.json();
     expect(data.players).toBeDefined();
     expect(Array.isArray(data.players)).toBe(true);
+  });
+
+  it("GET /players lists every player with their plot", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p2", "plot2", 80, 1, 0);
+    insertPlayer(harness.database, "p1", "plot1", 90);
+
+    const response = await fetch(`${harness.baseUrl}/players`);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).players).toEqual([
+      { id: "p1", name: "p1", plotId: "plot1", energy: 90 },
+      { id: "p2", name: "p2", plotId: "plot2", energy: 80 },
+    ]);
   });
 
   it("POST /world/:worldId/ticks/:tick/retry returns 404 for an unknown world", async () => {

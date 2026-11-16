@@ -22,6 +22,7 @@ import {
   type QueuedOrder,
 } from "./orders.js";
 import { fetchPlayer, type PlayerStatus } from "./player.js";
+import { fetchPlayers, type PlayerSummary } from "./players.js";
 import { fetchPlot, type PlotSnapshot } from "./plot.js";
 import { createPoller } from "./polling.js";
 import { fetchWorld, type WorldSnapshot } from "./world.js";
@@ -33,6 +34,8 @@ interface StatusSnapshot {
   offers: BarterOffer[];
   inventory: InventoryItem[];
   plot: PlotSnapshot | null;
+  players: PlayerSummary[];
+  viewedPlot: PlotSnapshot | null;
 }
 
 function currentPlayerId(): string {
@@ -55,13 +58,14 @@ export function mountApp(root?: HTMLElement | null): void {
 
   let latest: Partial<StatusSnapshot> = {};
   let notice: string | null = null;
+  let viewedPlot: PlotSnapshot | null = null;
   let draw: (snapshot?: Partial<StatusSnapshot>) => void = () => undefined;
 
   const poller = createPoller<StatusSnapshot>({
     fetchData: async (signal) => {
       const world = await fetchWorld("", "w1", signal);
       const player = await fetchPlayer("", "w1", playerId, signal).catch(() => null);
-      const [orders, offers, plot] = await Promise.all([
+      const [orders, offers, plot, players, refreshedViewedPlot] = await Promise.all([
         player
           ? fetchOrders("", "w1", player.player.id, signal).catch(() => [])
           : Promise.resolve([]),
@@ -69,8 +73,21 @@ export function mountApp(root?: HTMLElement | null): void {
         player
           ? fetchPlot("", "w1", player.player.plotId, signal).catch(() => null)
           : Promise.resolve(null),
+        fetchPlayers("", "w1", signal).catch(() => []),
+        viewedPlot
+          ? fetchPlot("", "w1", viewedPlot.plot.id, signal).catch(() => viewedPlot)
+          : Promise.resolve(null),
       ]);
-      return { world, player, orders, offers, inventory: plot?.inventory ?? [], plot };
+      return {
+        world,
+        player,
+        orders,
+        offers,
+        inventory: plot?.inventory ?? [],
+        plot,
+        players,
+        viewedPlot: refreshedViewedPlot,
+      };
     },
     onData: (snapshot) => {
       notice = null;
@@ -82,6 +99,21 @@ export function mountApp(root?: HTMLElement | null): void {
   });
 
   const refresh = (): Promise<void> => poller.pollNow();
+
+  const viewPlot = async (plotId: string): Promise<void> => {
+    const other = await fetchPlot("", "w1", plotId).catch(() => null);
+    if (other) {
+      viewedPlot = other;
+      latest = { ...latest, viewedPlot: other };
+      draw();
+    }
+  };
+
+  const closeViewedPlot = (): void => {
+    viewedPlot = null;
+    latest = { ...latest, viewedPlot: null };
+    draw();
+  };
 
   const applyQueueChange = async (task: () => Promise<void>): Promise<void> => {
     try {
@@ -111,6 +143,11 @@ export function mountApp(root?: HTMLElement | null): void {
         {...(latest.offers ? { offers: latest.offers } : {})}
         {...(latest.inventory ? { inventory: latest.inventory } : {})}
         {...(latest.plot ? { plot: latest.plot } : {})}
+        {...(latest.viewedPlot ? { viewedPlot: latest.viewedPlot } : {})}
+        players={latest.players ?? []}
+        currentPlayerId={latest.player?.player.id}
+        onViewPlot={viewPlot}
+        onCloseViewedPlot={closeViewedPlot}
         onAddOrder={(draft: OrderDraft) =>
           applyQueueChange(async () => {
             await addOrder("", "w1", playerId, draft);

@@ -11,6 +11,7 @@ import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
+import type { PlayerSummary } from "./players.js";
 import type { StorageSummary } from "./plot.js";
 
 function humanize(value: string): string {
@@ -248,6 +249,43 @@ export function OrderPanel({
           </button>
         </form>
       ) : null}
+    </Panel>
+  );
+}
+
+export interface PlayersPanelProps {
+  players?: PlayerSummary[] | undefined;
+  currentPlayerId?: string | undefined;
+  onViewPlot?: ((plotId: string) => void | Promise<void>) | undefined;
+}
+
+export function PlayersPanel({ players = [], currentPlayerId, onViewPlot }: PlayersPanelProps) {
+  const others = players.filter((player) => player.id !== currentPlayerId);
+
+  return (
+    <Panel title="Villagers">
+      {others.length === 0 ? (
+        <p class="empty-state">No other villagers yet.</p>
+      ) : (
+        <ul class="player-list">
+          {others.map((player) => (
+            <li key={player.id} class="player-item">
+              <span class="player-name">{player.name}</span>
+              <span class="player-plot">{player.plotId}</span>
+              {onViewPlot ? (
+                <button
+                  type="button"
+                  class="player-view"
+                  aria-label={`View ${player.name}'s plot`}
+                  onClick={() => void onViewPlot(player.plotId)}
+                >
+                  View
+                </button>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      )}
     </Panel>
   );
 }

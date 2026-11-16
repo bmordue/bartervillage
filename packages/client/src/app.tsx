@@ -13,8 +13,9 @@ import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
-import { BarterPanel, InventoryPanel, OrderPanel } from "./panels.js";
+import { BarterPanel, InventoryPanel, OrderPanel, PlayersPanel } from "./panels.js";
 import type { PlayerStatus } from "./player.js";
+import type { PlayerSummary } from "./players.js";
 import type { PlotSnapshot } from "./plot.js";
 import { PlotView } from "./plotView.js";
 import type { WorldSnapshot } from "./world.js";
@@ -29,12 +30,17 @@ export interface AppProps {
   player?: PlayerStatus;
   mapView?: MapView;
   plot?: PlotSnapshot;
+  viewedPlot?: PlotSnapshot;
+  players?: PlayerSummary[];
+  currentPlayerId?: string | undefined;
   orders?: QueuedOrder[];
   offers?: BarterOffer[];
   inventory?: InventoryItem[];
   onAddOrder?: (draft: OrderDraft) => void | Promise<void>;
   onRemoveOrder?: (orderId: string) => void | Promise<void>;
   onReorderOrders?: (orderIds: string[]) => void | Promise<void>;
+  onViewPlot?: (plotId: string) => void | Promise<void>;
+  onCloseViewedPlot?: () => void;
 }
 
 /** Placeholder status chip shown until live world data is wired in (M5.A04). */
@@ -50,12 +56,32 @@ function StatusItem({ label, value = "—" }: { label: string; value?: string | 
 function Viewport({
   mapView,
   plot,
+  viewedPlot,
+  onCloseViewedPlot,
 }: {
   mapView?: MapView | undefined;
   plot?: PlotSnapshot | undefined;
+  viewedPlot?: PlotSnapshot | undefined;
+  onCloseViewedPlot?: (() => void) | undefined;
 }) {
   const [selectedView, setSelectedView] = useState<"world" | "plot" | null>(null);
   const activeView = selectedView ?? (plot ? "plot" : "world");
+
+  if (viewedPlot) {
+    return (
+      <section class="viewport" aria-label="World view">
+        <div class="plot-viewed-banner">
+          <span>Viewing {viewedPlot.plot.id} (read-only)</span>
+          {onCloseViewedPlot ? (
+            <button type="button" class="view-tab view-tab-active" onClick={onCloseViewedPlot}>
+              Back to my plot
+            </button>
+          ) : null}
+        </div>
+        <PlotView plot={viewedPlot} readOnly />
+      </section>
+    );
+  }
 
   return (
     <section class="viewport" aria-label="World view">
@@ -99,12 +125,17 @@ export function App({
   player,
   mapView,
   plot,
+  viewedPlot,
+  players,
+  currentPlayerId,
   orders,
   offers,
   inventory,
   onAddOrder,
   onRemoveOrder,
   onReorderOrders,
+  onViewPlot,
+  onCloseViewedPlot,
 }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
@@ -132,7 +163,12 @@ export function App({
       </header>
 
       <main class="app-main">
-        <Viewport mapView={mapView} plot={plot} />
+        <Viewport
+          mapView={mapView}
+          plot={plot}
+          viewedPlot={viewedPlot}
+          onCloseViewedPlot={onCloseViewedPlot}
+        />
 
         <aside class="sidebar" aria-label="Game panels">
           <OrderPanel
@@ -143,6 +179,11 @@ export function App({
           />
           <BarterPanel offers={offers} />
           <InventoryPanel items={inventory} storage={plot?.storage} />
+          <PlayersPanel
+            players={players}
+            currentPlayerId={currentPlayerId}
+            onViewPlot={onViewPlot}
+          />
         </aside>
       </main>
 

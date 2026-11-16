@@ -593,10 +593,23 @@ export function buildApiRoutes(database: Database): Routes {
       };
     },
 
-    "GET /players": () => ({
-      status: 200,
-      body: { players: [] },
-    }),
+    "GET /players": () => {
+      const players = database.all<PlayerStatusRow>(
+        `SELECT id, name, plot_id, energy FROM players ORDER BY name, id`,
+      );
+
+      return {
+        status: 200,
+        body: {
+          players: players.map((player) => ({
+            id: player.id,
+            name: player.name,
+            plotId: player.plot_id,
+            energy: player.energy,
+          })),
+        },
+      };
+    },
 
     "POST /player/:playerId/orders": (request) => {
       const blocked = mutationBlocked(request);

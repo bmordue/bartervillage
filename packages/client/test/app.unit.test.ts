@@ -272,4 +272,52 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain("A tick is resolving");
   });
+
+  it("lists other villagers and renders a read-only plot", () => {
+    const html = render(
+      App({
+        players: [
+          { id: "p1", name: "Ada", plotId: "plot1", energy: 90 },
+          { id: "p2", name: "Bea", plotId: "plot2", energy: 80 },
+        ],
+        currentPlayerId: "p1",
+        viewedPlot: {
+          plot: {
+            id: "plot2",
+            playerId: "p2",
+            regionId: "r1",
+            siteX: 4,
+            siteY: 5,
+            width: 2,
+            height: 2,
+            worldOwned: false,
+          },
+          buildings: [
+            {
+              id: "b1",
+              plotId: "plot2",
+              type: "home",
+              level: 1,
+              constructionKind: null,
+              constructionCompleteTick: null,
+            },
+          ],
+          crops: [],
+          animals: [],
+          storage: { capacity: 100, used: 0, free: 100 },
+          inventory: [],
+          ready: null,
+        },
+        onViewPlot: () => undefined,
+        onCloseViewedPlot: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Bea");
+    expect(html).not.toContain("Ada</span>");
+    expect(html).toContain("View Bea's plot");
+    expect(html).toContain("Viewing plot2 (read-only)");
+    expect(html).toContain("Read-only");
+    expect(html).toContain("Back to my plot");
+  });
 });

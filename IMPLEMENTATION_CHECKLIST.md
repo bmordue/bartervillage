@@ -267,7 +267,7 @@
 - [x] **M5.A05** Poll the server every 5 seconds (spec §12). _Depends on: M4.B01, M5.A01._
 - [x] **M5.A06** Handle the 409 tick-in-progress response gracefully. _Depends on: M4.B05, M5.A05._
 - [ ] **M5.A07** Keep replay viewing usable on mobile browsers; mobile-first ordering is not required (spec §3). _Depends on: M5.C01._
-- [ ] **M5.A08** Read-only view of other players' plots (spec §8). _Depends on: M4.B02, M5.A02._
+- [x] **M5.A08** Read-only view of other players' plots (spec §8). _Depends on: M4.B02, M5.A02._
 
 ### Plot and order queue
 
