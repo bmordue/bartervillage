@@ -528,6 +528,21 @@ body {
   font-size: 0.75rem;
 }
 
+.order-failures {
+  margin-top: 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.order-failures-title {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .offer-heading {
   display: flex;
   align-items: baseline;

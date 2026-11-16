@@ -20,6 +20,11 @@ export interface OrderDraft {
   payload: Record<string, unknown>;
 }
 
+export interface OrderFailures {
+  tick: number | null;
+  failures: QueuedOrder[];
+}
+
 interface OrdersResponse {
   orders?: QueuedOrder[];
 }
@@ -87,6 +92,23 @@ export async function fetchOrders(
   }
   const body = (await response.json()) as OrdersResponse;
   return body.orders ?? [];
+}
+
+/** Fetch the failed orders from the most recently resolved tick. */
+export async function fetchOrderFailures(
+  baseUrl = "",
+  worldId = "w1",
+  playerId = "p1",
+  signal?: AbortSignal,
+): Promise<OrderFailures> {
+  const response = await fetch(
+    `${baseUrl}/player/${encodeURIComponent(playerId)}/order-failures`,
+    requestInit("GET", worldId, undefined, signal),
+  );
+  if (!response.ok) {
+    throw await apiError(response, `GET /player/${playerId}/order-failures failed`);
+  }
+  return (await response.json()) as OrderFailures;
 }
 
 /** Queue one order. Throws on a non-2xx response. */

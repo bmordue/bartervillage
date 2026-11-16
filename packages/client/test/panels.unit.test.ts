@@ -5,7 +5,7 @@
 import { describe, expect, it } from "vitest";
 import { render } from "preact-render-to-string";
 
-import { BarterPanel, InventoryPanel } from "../src/panels.js";
+import { BarterPanel, InventoryPanel, OrderFailuresPanel } from "../src/panels.js";
 
 describe("inventory panel (M5.B05)", () => {
   it("shows held, locked, free and capacity", () => {
@@ -90,5 +90,41 @@ describe("barter panel (M6.01)", () => {
     expect(html).toContain("Counter-offer");
     expect(html).toContain("Poster free stock: 3 Wheat, 4 Wood");
     expect(html).toContain("counters o1");
+  });
+});
+
+describe("order failures panel (M5.B06)", () => {
+  it("shows failure reasons for the latest resolved tick", () => {
+    const html = render(
+      OrderFailuresPanel({
+        failures: [
+          {
+            id: "o1",
+            sequence: 1,
+            type: "harvest",
+            payload: {},
+            status: "failed",
+            failureReason: "Crop has failed",
+          },
+          {
+            id: "o2",
+            sequence: 2,
+            type: "feed",
+            payload: {},
+            status: "failed",
+            failureReason: null,
+          },
+        ],
+        failureTick: 7,
+      }),
+    );
+
+    expect(html).toContain("Failed in tick 7");
+    expect(html).toContain("Crop has failed");
+    expect(html).toContain("Order failed");
+  });
+
+  it("hides the failure section when nothing failed", () => {
+    expect(render(OrderFailuresPanel({ failures: [], failureTick: null }))).toBe("");
   });
 });

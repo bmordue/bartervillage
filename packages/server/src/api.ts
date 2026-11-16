@@ -302,6 +302,8 @@ type ReadyRow = {
 
 type TickLogTickRow = { tick: number };
 
+type LatestOrderTickRow = { tick: number | null };
+
 type ArchivedEventRow = {
   tick: number;
   sequence: number;
@@ -458,6 +460,40 @@ export function buildApiRoutes(database: Database): Routes {
             payload: JSON.parse(o.payload_json || "{}"),
             status: o.status,
             failureReason: o.failure_reason,
+          })),
+        },
+      };
+    },
+
+    "GET /player/:playerId/order-failures": (request) => {
+      const playerId = request.params?.playerId ?? "";
+      const latest = database.get<LatestOrderTickRow>(
+        `SELECT MAX(tick) AS tick FROM orders WHERE player_id = ? AND status = 'failed'`,
+        playerId,
+      );
+      if (!latest || latest.tick === null) {
+        return { status: 200, body: { tick: null, failures: [] } };
+      }
+
+      const failures = database.all<QueuedOrderRow>(
+        `SELECT * FROM orders
+         WHERE player_id = ? AND status = 'failed' AND tick = ?
+         ORDER BY sequence, id`,
+        playerId,
+        latest.tick,
+      );
+
+      return {
+        status: 200,
+        body: {
+          tick: latest.tick,
+          failures: failures.map((order) => ({
+            id: order.id,
+            sequence: order.sequence,
+            type: order.type,
+            payload: JSON.parse(order.payload_json || "{}"),
+            status: order.status,
+            failureReason: order.failure_reason,
           })),
         },
       };

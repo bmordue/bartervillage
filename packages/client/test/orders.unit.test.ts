@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   addOrder,
+  fetchOrderFailures,
   fetchOrders,
   moveOrder,
   removeOrder,
@@ -155,5 +156,43 @@ describe("order queue editing (M5.B02)", () => {
     expect(moveOrder(ids, 2, 1)).toEqual(["a", "c", "b"]);
     expect(moveOrder(ids, 1, 9)).toEqual(["a", "b", "c"]);
     expect(ids).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("order failures (M5.B06)", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("fetches the latest failed tick and its reasons", async () => {
+    const failures = {
+      tick: 6,
+      failures: [
+        {
+          id: "o1",
+          sequence: 1,
+          type: "harvest",
+          payload: {},
+          status: "failed",
+          failureReason: "Crop has failed",
+        },
+      ],
+    };
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify(failures), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await fetchOrderFailures("http://api.test", "w9", "p2");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://api.test/player/p2/order-failures",
+      expect.objectContaining({ headers: { "x-world-id": "w9" } }),
+    );
+    expect(result).toEqual(failures);
   });
 });

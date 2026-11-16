@@ -14,6 +14,7 @@ import type { InventoryItem } from "./inventory.js";
 import { createPreviewMapView } from "./map/preview.js";
 import {
   addOrder,
+  fetchOrderFailures,
   fetchOrders,
   removeOrder,
   reorderOrders,
@@ -31,6 +32,8 @@ interface StatusSnapshot {
   world: WorldSnapshot;
   player: PlayerStatus | null;
   orders: QueuedOrder[];
+  orderFailures: QueuedOrder[];
+  failureTick: number | null;
   offers: BarterOffer[];
   inventory: InventoryItem[];
   plot: PlotSnapshot | null;
@@ -65,10 +68,16 @@ export function mountApp(root?: HTMLElement | null): void {
     fetchData: async (signal) => {
       const world = await fetchWorld("", "w1", signal);
       const player = await fetchPlayer("", "w1", playerId, signal).catch(() => null);
-      const [orders, offers, plot, players, refreshedViewedPlot] = await Promise.all([
+      const [orders, failures, offers, plot, players, refreshedViewedPlot] = await Promise.all([
         player
           ? fetchOrders("", "w1", player.player.id, signal).catch(() => [])
           : Promise.resolve([]),
+        player
+          ? fetchOrderFailures("", "w1", player.player.id, signal).catch(() => ({
+              tick: null,
+              failures: [],
+            }))
+          : Promise.resolve({ tick: null, failures: [] }),
         fetchBarter("", "w1", signal).catch(() => []),
         player
           ? fetchPlot("", "w1", player.player.plotId, signal).catch(() => null)
@@ -82,6 +91,8 @@ export function mountApp(root?: HTMLElement | null): void {
         world,
         player,
         orders,
+        orderFailures: failures.failures,
+        failureTick: failures.tick,
         offers,
         inventory: plot?.inventory ?? [],
         plot,
@@ -140,6 +151,8 @@ export function mountApp(root?: HTMLElement | null): void {
         {...(latest.world ? { world: latest.world } : {})}
         {...(latest.player ? { player: latest.player } : {})}
         {...(latest.orders ? { orders: latest.orders } : {})}
+        {...(latest.orderFailures ? { orderFailures: latest.orderFailures } : {})}
+        failureTick={latest.failureTick ?? null}
         {...(latest.offers ? { offers: latest.offers } : {})}
         {...(latest.inventory ? { inventory: latest.inventory } : {})}
         {...(latest.plot ? { plot: latest.plot } : {})}

@@ -572,6 +572,64 @@ describe("REST API routes", () => {
     expect((await response.json()).ready).toBeNull();
   });
 
+  it("GET /player/:playerId/order-failures returns only the latest failed tick", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+       VALUES ('o1', 'p1', 0, 1, 'plant', '{}', 'failed', 'Not enough energy')`,
+    );
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+       VALUES ('o2', 'p1', 1, 2, 'harvest', '{}', 'failed', 'Crop has failed')`,
+    );
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+       VALUES ('o3', 'p1', 1, 1, 'tend', '{}', 'failed', 'No water')`,
+    );
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status, failure_reason)
+       VALUES ('o4', 'p1', 1, 3, 'plant', '{}', 'queued', NULL)`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/order-failures`);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      tick: 1,
+      failures: [
+        {
+          id: "o3",
+          sequence: 1,
+          type: "tend",
+          payload: {},
+          status: "failed",
+          failureReason: "No water",
+        },
+        {
+          id: "o2",
+          sequence: 2,
+          type: "harvest",
+          payload: {},
+          status: "failed",
+          failureReason: "Crop has failed",
+        },
+      ],
+    });
+  });
+
+  it("GET /player/:playerId/order-failures returns empty when nothing failed", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/order-failures`);
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ tick: null, failures: [] });
+  });
+
   it("GET /player/:playerId returns 404 for an unknown player", async () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);

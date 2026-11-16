@@ -35,6 +35,8 @@ export interface AppProps {
   players?: PlayerSummary[];
   currentPlayerId?: string | undefined;
   orders?: QueuedOrder[];
+  orderFailures?: QueuedOrder[];
+  failureTick?: number | null;
   offers?: BarterOffer[];
   inventory?: InventoryItem[];
   onAddOrder?: (draft: OrderDraft) => void | Promise<void>;
@@ -173,6 +175,8 @@ export function App({
   players,
   currentPlayerId,
   orders,
+  orderFailures,
+  failureTick,
   offers,
   inventory,
   onAddOrder,
@@ -219,6 +223,8 @@ export function App({
           <ReadyToggle player={player} onToggleReady={onToggleReady} />
           <OrderPanel
             orders={orders}
+            failures={orderFailures}
+            failureTick={failureTick}
             onAddOrder={onAddOrder}
             onRemoveOrder={onRemoveOrder}
             onReorderOrders={onReorderOrders}

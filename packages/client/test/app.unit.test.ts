@@ -348,4 +348,25 @@ describe("client app shell (M5.A01)", () => {
     expect(ready).toContain("Ready at position 2. Cancel to edit your queue.");
     expect(ready).toContain("Cancel ready");
   });
+
+  it("shows the latest resolved order failures", () => {
+    const html = render(
+      App({
+        orderFailures: [
+          {
+            id: "o1",
+            sequence: 2,
+            type: "plant",
+            payload: {},
+            status: "failed",
+            failureReason: "Not enough energy",
+          },
+        ],
+        failureTick: 4,
+      }),
+    );
+
+    expect(html).toContain("Failed in tick 4");
+    expect(html).toContain("Not enough energy");
+  });
 });

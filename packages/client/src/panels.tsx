@@ -101,9 +101,36 @@ const ORDER_TEMPLATES: Record<string, string> = {
 
 export interface OrderPanelProps {
   orders?: QueuedOrder[] | undefined;
+  failures?: QueuedOrder[] | undefined;
+  failureTick?: number | null | undefined;
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
   onRemoveOrder?: ((orderId: string) => void | Promise<void>) | undefined;
   onReorderOrders?: ((orderIds: string[]) => void | Promise<void>) | undefined;
+}
+
+export interface OrderFailuresPanelProps {
+  failures?: QueuedOrder[] | undefined;
+  failureTick?: number | null | undefined;
+}
+
+export function OrderFailuresPanel({ failures = [], failureTick }: OrderFailuresPanelProps) {
+  if (failures.length === 0) {
+    return null;
+  }
+  return (
+    <div class="order-failures">
+      <h3 class="order-failures-title">Failed in tick {failureTick ?? "—"}</h3>
+      <ul class="order-list">
+        {failures.map((order) => (
+          <li key={order.id} class="order-item">
+            <span class="order-sequence">#{order.sequence}</span>
+            <span class="order-type">{humanize(order.type)}</span>
+            <span class="order-failure">{order.failureReason ?? "Order failed"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
 function errorMessage(error: unknown): string {
@@ -112,6 +139,8 @@ function errorMessage(error: unknown): string {
 
 export function OrderPanel({
   orders = [],
+  failures = [],
+  failureTick,
   onAddOrder,
   onRemoveOrder,
   onReorderOrders,
@@ -214,6 +243,8 @@ export function OrderPanel({
           ))}
         </ol>
       )}
+
+      <OrderFailuresPanel failures={failures} failureTick={failureTick} />
 
       {onAddOrder ? (
         <form class="order-form" onSubmit={submit}>
