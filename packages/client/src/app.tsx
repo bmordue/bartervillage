@@ -24,6 +24,7 @@ export type { PanelProps } from "./panel.js";
 
 export interface AppProps {
   title?: string;
+  notice?: string | null;
   world?: WorldSnapshot;
   player?: PlayerStatus;
   mapView?: MapView;
@@ -93,6 +94,7 @@ function Viewport({
 
 export function App({
   title = "Barter Village",
+  notice,
   world,
   player,
   mapView,
@@ -122,6 +124,11 @@ export function App({
             value={player ? (player.ready ? "Ready" : "Not ready") : undefined}
           />
         </div>
+        {notice ? (
+          <p class="app-notice" role="status">
+            {notice}
+          </p>
+        ) : null}
       </header>
 
       <main class="app-main">

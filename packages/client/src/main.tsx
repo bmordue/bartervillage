@@ -17,6 +17,7 @@ import {
   fetchOrders,
   removeOrder,
   reorderOrders,
+  TickInProgressError,
   type OrderDraft,
   type QueuedOrder,
 } from "./orders.js";
@@ -53,6 +54,7 @@ export function mountApp(root?: HTMLElement | null): void {
   const playerId = currentPlayerId();
 
   let latest: Partial<StatusSnapshot> = {};
+  let notice: string | null = null;
   let draw: (snapshot?: Partial<StatusSnapshot>) => void = () => undefined;
 
   const poller = createPoller<StatusSnapshot>({
@@ -70,7 +72,10 @@ export function mountApp(root?: HTMLElement | null): void {
       ]);
       return { world, player, orders, offers, inventory: plot?.inventory ?? [], plot };
     },
-    onData: (snapshot) => draw(snapshot),
+    onData: (snapshot) => {
+      notice = null;
+      draw(snapshot);
+    },
     onError: (error) => {
       console.error("status poll failed", error);
     },
@@ -79,14 +84,27 @@ export function mountApp(root?: HTMLElement | null): void {
   const refresh = (): Promise<void> => poller.pollNow();
 
   const applyQueueChange = async (task: () => Promise<void>): Promise<void> => {
-    await task();
-    await refresh();
+    try {
+      await task();
+      notice = null;
+      await refresh();
+    } catch (error) {
+      if (error instanceof TickInProgressError) {
+        notice = error.message;
+        draw();
+        setTimeout(() => {
+          void refresh();
+        }, 5000);
+      }
+      throw error;
+    }
   };
 
   draw = (snapshot: Partial<StatusSnapshot> = {}): void => {
     latest = { ...latest, ...snapshot };
     render(
       <App
+        {...(notice ? { notice } : {})}
         {...(latest.world ? { world: latest.world } : {})}
         {...(latest.player ? { player: latest.player } : {})}
         {...(latest.orders ? { orders: latest.orders } : {})}

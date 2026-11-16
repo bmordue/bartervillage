@@ -31,7 +31,7 @@ interface AddOrderResponse {
 /** True when the API rejected a mutation because a tick is resolving. */
 export class TickInProgressError extends Error {
   constructor() {
-    super("Tick is in progress");
+    super("A tick is resolving. Your change was not applied; try again in a moment.");
     this.name = "TickInProgressError";
   }
 }

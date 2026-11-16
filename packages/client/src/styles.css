@@ -41,12 +41,24 @@ body {
 
 .app-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px 24px;
   padding: 16px 24px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
+}
+
+.app-notice {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #d9b36a;
+  border-radius: 8px;
+  background: #fdf4dd;
+  color: #6f4f16;
+  font-size: 0.82rem;
 }
 
 .app-title {

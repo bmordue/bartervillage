@@ -261,4 +261,15 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("Wheat");
     expect(html).toContain("Plot");
   });
+
+  it("shows a friendly tick-in-progress notice", () => {
+    const html = render(
+      App({
+        notice: "A tick is resolving. Your change was not applied; try again in a moment.",
+      }),
+    );
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain("A tick is resolving");
+  });
 });
