@@ -460,6 +460,31 @@ body {
   font-size: 0.75rem;
 }
 
+.inventory-capacity {
+  margin-bottom: 10px;
+}
+
+.inventory-capacity-label {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.inventory-capacity-bar {
+  height: 8px;
+  margin-top: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.inventory-capacity-fill {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
 .inventory-table {
   width: 100%;
   border-collapse: collapse;
@@ -487,6 +512,12 @@ body {
 
 .inventory-table tbody th {
   font-weight: 400;
+}
+
+.inventory-table tfoot th,
+.inventory-table tfoot td {
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .app-footer {

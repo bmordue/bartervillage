@@ -135,7 +135,7 @@ export function App({
             onReorderOrders={onReorderOrders}
           />
           <BarterPanel offers={offers} />
-          <InventoryPanel items={inventory} />
+          <InventoryPanel items={inventory} storage={plot?.storage} />
         </aside>
       </main>
 

@@ -275,7 +275,7 @@
 - [x] **M5.B02** Order queue UI for adding, removing and reordering orders before the tick (spec §4.2). _Depends on: M2.A06, M4.B02, M5.A03._
 - [ ] **M5.B03** Batch order selection ("fill this row or area") with upfront expansion into per-unit orders (spec §4.2, §4.3). _Depends on: M2.A05, M5.B02._
 - [ ] **M5.B04** Ready toggle with clear indication that the queue is fixed after the tick starts. _Depends on: M2.A07, M4.B02, M5.B02._
-- [ ] **M5.B05** Inventory panel showing held, locked and free stock plus capacity (spec §7). _Depends on: M2.D06, M4.B02, M5.A03._
+- [x] **M5.B05** Inventory panel showing held, locked and free stock plus capacity (spec §7). _Depends on: M2.D06, M4.B02, M5.A03._
 - [ ] **M5.B06** Display order failure reasons after resolution (spec §4.2). _Depends on: M2.A04, M4.B02, M5.B02._
 - [ ] **M5.B07** Client-side light validation only, with the server remaining authoritative (spec §12). _Depends on: M4.B03, M5.B02._
 

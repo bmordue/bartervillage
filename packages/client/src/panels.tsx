@@ -11,6 +11,7 @@ import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
+import type { StorageSummary } from "./plot.js";
 
 function humanize(value: string): string {
   const words = value.replaceAll("_", " ");
@@ -282,11 +283,28 @@ export function BarterPanel({ offers = [] }: BarterPanelProps) {
 
 export interface InventoryPanelProps {
   items?: InventoryItem[] | undefined;
+  storage?: StorageSummary | undefined;
 }
 
-export function InventoryPanel({ items = [] }: InventoryPanelProps) {
+export function InventoryPanel({ items = [], storage }: InventoryPanelProps) {
+  const held = items.reduce((total, item) => total + item.quantity, 0);
+  const locked = items.reduce((total, item) => total + item.locked, 0);
+  const free = items.reduce((total, item) => total + item.free, 0);
+  const fill = storage && storage.capacity > 0 ? Math.min(1, storage.used / storage.capacity) : 0;
+
   return (
     <Panel title="Inventory">
+      {storage ? (
+        <div class="inventory-capacity">
+          <p class="inventory-capacity-label">
+            {storage.used} / {storage.capacity} capacity · {storage.free} free
+          </p>
+          <div class="inventory-capacity-bar" aria-hidden="true">
+            <span class="inventory-capacity-fill" style={{ width: `${fill * 100}%` }} />
+          </div>
+        </div>
+      ) : null}
+
       {items.length === 0 ? (
         <p class="empty-state">No stored goods.</p>
       ) : (
@@ -309,6 +327,14 @@ export function InventoryPanel({ items = [] }: InventoryPanelProps) {
               </tr>
             ))}
           </tbody>
+          <tfoot>
+            <tr>
+              <th scope="row">Total</th>
+              <td>{held}</td>
+              <td>{locked}</td>
+              <td>{free}</td>
+            </tr>
+          </tfoot>
         </table>
       )}
     </Panel>
