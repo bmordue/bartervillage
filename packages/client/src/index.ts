@@ -4,6 +4,7 @@ export * from "./app.js";
 export * from "./barter.js";
 export * from "./batch.js";
 export * from "./inventory.js";
+export * from "./orderValidation.js";
 export * from "./main.js";
 export * from "./map/MapCanvas.js";
 export * from "./map/geometry.js";

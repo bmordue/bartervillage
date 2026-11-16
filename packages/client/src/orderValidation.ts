@@ -1,0 +1,52 @@
+/**
+ * Light client-side validation for queued orders (M4.B04).
+ *
+ * This module provides light validation only (energy, basic validity). The server
+ * remains authoritative for all business rules (energy, capacity, locks, location,
+ * and offer state).
+ */
+
+import type { OrderDraft } from "./orders.js";
+
+/**
+ * Lightweight validation performed on the client before sending an order to the server.
+ *
+ * This check is non‑authoritative; all substantive rules (energy, capacity,
+ * location, locks, offer state) are enforced server‑side.
+ */
+export function validateOrderDraft(draft: OrderDraft): void {
+  if (!draft.type || typeof draft.type !== "string") {
+    throw new Error("Order type must be a non‑empty string.");
+  }
+
+  // Basic payload shape validation; each order type expects its own payload
+  // structure. For now we ensure the payload is a non‑empty object (or at least
+  // a plain object) to avoid common user errors.
+  if (!draft.payload || typeof draft.payload !== "object" || Array.isArray(draft.payload)) {
+    throw new Error("Order payload must be a JSON object.");
+  }
+
+  // Simple heuristic to catch missing tile coordinates for tile‑targeting orders.
+  // This does not replace server‑side validation of coordinates or ownership.
+  const tile = draft.payload["tile"];
+  if (
+    draft.type === "plant" ||
+    draft.type === "tend" ||
+    draft.type === "harvest" ||
+    draft.type === "forage"
+  ) {
+    if (typeof tile !== "object" || tile === null || Array.isArray(tile)) {
+      throw new Error("Tile orders require a 'tile' object with integer x and y coordinates.");
+    }
+    const x = (tile as Record<string, unknown>)["x"];
+    const y = (tile as Record<string, unknown>)["y"];
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      !Number.isInteger(x) ||
+      !Number.isInteger(y)
+    ) {
+      throw new Error("Tile coordinates must be integers.");
+    }
+  }
+}

@@ -8,6 +8,7 @@
 import { useState } from "preact/hooks";
 
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
+import { validateOrderDraft } from "./orderValidation.js";
 import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
@@ -186,6 +187,12 @@ export function OrderPanel({
       return;
     }
     const draft = { type, payload: payload as Record<string, unknown> };
+    try {
+      validateOrderDraft(draft);
+    } catch (caught) {
+      setError(errorMessage(caught));
+      return;
+    }
     if (onAddOrders && batchMode !== "single") {
       const layout: BatchLayout = {
         mode: batchMode,
