@@ -33,11 +33,10 @@ describe("credential secret encryption", () => {
 
   it("rejects tampered ciphertext", () => {
     const encrypted = encryptSecret("oauth-token-value", key);
-    const parts = encrypted.split(".");
-    const last = parts[parts.length - 1]!;
-    const flipped = last.endsWith("A") ? `${last.slice(0, -1)}B` : `${last.slice(0, -1)}A`;
+    const [version, iv, tag, ciphertext] = encrypted.split(".");
+    const tamperedTag = `${tag!.startsWith("A") ? "B" : "A"}${tag!.slice(1)}`;
 
-    expect(() => decryptSecret([...parts.slice(0, -1), flipped].join("."), key)).toThrow();
+    expect(() => decryptSecret([version, iv, tamperedTag, ciphertext].join("."), key)).toThrow();
   });
 
   it("rejects an unknown format version", () => {
