@@ -10,7 +10,7 @@ import type { BarterOffer } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
-import type { QueuedOrder } from "./orders.js";
+import type { OrderDraft, QueuedOrder } from "./orders.js";
 import { BarterPanel, InventoryPanel, OrderPanel } from "./panels.js";
 import type { PlayerStatus } from "./player.js";
 import type { WorldSnapshot } from "./world.js";
@@ -26,6 +26,9 @@ export interface AppProps {
   orders?: QueuedOrder[];
   offers?: BarterOffer[];
   inventory?: InventoryItem[];
+  onAddOrder?: (draft: OrderDraft) => void | Promise<void>;
+  onRemoveOrder?: (orderId: string) => void | Promise<void>;
+  onReorderOrders?: (orderIds: string[]) => void | Promise<void>;
 }
 
 /** Placeholder status chip shown until live world data is wired in (M5.A04). */
@@ -46,6 +49,9 @@ export function App({
   orders,
   offers,
   inventory,
+  onAddOrder,
+  onRemoveOrder,
+  onReorderOrders,
 }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
@@ -79,7 +85,12 @@ export function App({
         </section>
 
         <aside class="sidebar" aria-label="Game panels">
-          <OrderPanel orders={orders} />
+          <OrderPanel
+            orders={orders}
+            onAddOrder={onAddOrder}
+            onRemoveOrder={onRemoveOrder}
+            onReorderOrders={onReorderOrders}
+          />
           <BarterPanel offers={offers} />
           <InventoryPanel items={inventory} />
         </aside>

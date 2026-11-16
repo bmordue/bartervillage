@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { buildApiRoutes } from "../src/api.js";
+import { acquireResolvingLease, releaseResolvingLease } from "../src/db/worldRepository.js";
 import { insertWorld, startTestApi, type TestApi } from "./support/harness.js";
 
 function insertPlayer(
@@ -425,5 +426,129 @@ describe("REST API routes", () => {
 
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({ error: "player_not_found" });
+  });
+
+  it("GET /player/:playerId/orders returns queued orders in sequence order", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('second', 'p1', 0, 2, 'harvest', '{"tile":{"x":1,"y":0}}', 'queued')`,
+    );
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('first', 'p1', 0, 1, 'plant', '{"tile":{"x":0,"y":0}}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).orders.map((order: { id: string }) => order.id)).toEqual([
+      "first",
+      "second",
+    ]);
+  });
+
+  it("DELETE /player/:playerId/orders/:orderId removes a queued order", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('o1', 'p1', 0, 1, 'plant', '{}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders/o1`, { method: "DELETE" });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ ok: true, orderId: "o1" });
+    expect(
+      harness.database.get<{ count: number }>("SELECT COUNT(*) AS count FROM orders")?.count,
+    ).toBe(0);
+  });
+
+  it("DELETE /player/:playerId/orders/:orderId rejects another player's order", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('o1', 'p1', 0, 1, 'plant', '{}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p2/orders/o1`, { method: "DELETE" });
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toMatchObject({ error: "order_not_found" });
+    expect(
+      harness.database.get<{ count: number }>("SELECT COUNT(*) AS count FROM orders")?.count,
+    ).toBe(1);
+  });
+
+  it("PUT /player/:playerId/orders reorders the whole queue", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('first', 'p1', 0, 1, 'plant', '{}', 'queued')`,
+    );
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('second', 'p1', 0, 2, 'harvest', '{}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orderIds: ["second", "first"] }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ ok: true });
+    const rows = harness.database.all<{ id: string; sequence: number }>(
+      "SELECT id, sequence FROM orders ORDER BY sequence",
+    );
+    expect(rows).toEqual([
+      { id: "second", sequence: 1 },
+      { id: "first", sequence: 2 },
+    ]);
+  });
+
+  it("PUT /player/:playerId/orders rejects an incomplete queue", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('first', 'p1', 0, 1, 'plant', '{}', 'queued')`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ orderIds: [] }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ error: "invalid_queue" });
+  });
+
+  it("returns 409 for queue edits while a tick is resolving", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
+       VALUES ('o1', 'p1', 0, 1, 'plant', '{}', 'queued')`,
+    );
+    acquireResolvingLease(harness.database, "w1", { owner: "worker-1" });
+
+    const response = await fetch(`${harness.baseUrl}/player/p1/orders/o1`, { method: "DELETE" });
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "tick_in_progress" });
+    releaseResolvingLease(harness.database, "w1", "worker-1");
   });
 });

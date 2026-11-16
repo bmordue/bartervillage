@@ -12,7 +12,14 @@ import { App } from "./app.js";
 import { fetchBarter, type BarterOffer } from "./barter.js";
 import { fetchInventory, type InventoryItem } from "./inventory.js";
 import { createPreviewMapView } from "./map/preview.js";
-import { fetchOrders, type QueuedOrder } from "./orders.js";
+import {
+  addOrder,
+  fetchOrders,
+  removeOrder,
+  reorderOrders,
+  type OrderDraft,
+  type QueuedOrder,
+} from "./orders.js";
 import { fetchPlayer, type PlayerStatus } from "./player.js";
 import { createPoller } from "./polling.js";
 import { fetchWorld, type WorldSnapshot } from "./world.js";
@@ -43,21 +50,8 @@ export function mountApp(root?: HTMLElement | null): void {
   const mapView = createPreviewMapView();
   const playerId = currentPlayerId();
 
-  const draw = (snapshot: Partial<StatusSnapshot> = {}): void => {
-    render(
-      <App
-        {...(snapshot.world ? { world: snapshot.world } : {})}
-        {...(snapshot.player ? { player: snapshot.player } : {})}
-        {...(snapshot.orders ? { orders: snapshot.orders } : {})}
-        {...(snapshot.offers ? { offers: snapshot.offers } : {})}
-        {...(snapshot.inventory ? { inventory: snapshot.inventory } : {})}
-        mapView={mapView}
-      />,
-      target,
-    );
-  };
-
-  draw();
+  let latest: Partial<StatusSnapshot> = {};
+  let draw: (snapshot?: Partial<StatusSnapshot>) => void = () => undefined;
 
   const poller = createPoller<StatusSnapshot>({
     fetchData: async (signal) => {
@@ -79,6 +73,45 @@ export function mountApp(root?: HTMLElement | null): void {
       console.error("status poll failed", error);
     },
   });
+
+  const refresh = (): Promise<void> => poller.pollNow();
+
+  const applyQueueChange = async (task: () => Promise<void>): Promise<void> => {
+    await task();
+    await refresh();
+  };
+
+  draw = (snapshot: Partial<StatusSnapshot> = {}): void => {
+    latest = { ...latest, ...snapshot };
+    render(
+      <App
+        {...(latest.world ? { world: latest.world } : {})}
+        {...(latest.player ? { player: latest.player } : {})}
+        {...(latest.orders ? { orders: latest.orders } : {})}
+        {...(latest.offers ? { offers: latest.offers } : {})}
+        {...(latest.inventory ? { inventory: latest.inventory } : {})}
+        onAddOrder={(draft: OrderDraft) =>
+          applyQueueChange(async () => {
+            await addOrder("", "w1", playerId, draft);
+          })
+        }
+        onRemoveOrder={(orderId: string) =>
+          applyQueueChange(async () => {
+            await removeOrder("", "w1", playerId, orderId);
+          })
+        }
+        onReorderOrders={(orderIds: string[]) =>
+          applyQueueChange(async () => {
+            await reorderOrders("", "w1", playerId, orderIds);
+          })
+        }
+        mapView={mapView}
+      />,
+      target,
+    );
+  };
+
+  draw();
   poller.start();
 
   if (typeof window !== "undefined") {

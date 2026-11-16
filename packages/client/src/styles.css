@@ -162,8 +162,78 @@ body {
 
 .order-item {
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: 8px;
+}
+
+.order-controls {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.order-control,
+.order-add {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.order-control:disabled,
+.order-add:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.order-remove {
+  color: #a23b2a;
+}
+
+.order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.order-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.order-field select,
+.order-field textarea {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+}
+
+.order-error {
+  margin: 0;
+  color: #a23b2a;
+  font-size: 0.75rem;
+}
+
+.order-add {
+  align-self: flex-start;
+  font-size: 0.85rem;
 }
 
 .order-sequence {

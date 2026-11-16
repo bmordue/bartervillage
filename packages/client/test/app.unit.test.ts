@@ -142,4 +142,51 @@ describe("client app shell (M5.A01)", () => {
     expect(notReady).toContain("7");
     expect(notReady).toContain("Not ready");
   });
+
+  it("renders queue editing controls when handlers are supplied", () => {
+    const html = render(
+      App({
+        orders: [
+          {
+            id: "o1",
+            sequence: 1,
+            type: "plant",
+            payload: { item: "wheat" },
+            status: "queued",
+            failureReason: null,
+          },
+        ],
+        onAddOrder: () => undefined,
+        onRemoveOrder: () => undefined,
+        onReorderOrders: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Order type");
+    expect(html).toContain("Payload (JSON)");
+    expect(html).toContain("Add order");
+    expect(html).toContain("Remove");
+    expect(html).toContain("Up");
+    expect(html).toContain("Down");
+  });
+
+  it("keeps the order panel read-only without queue handlers", () => {
+    const html = render(
+      App({
+        orders: [
+          {
+            id: "o1",
+            sequence: 1,
+            type: "plant",
+            payload: { item: "wheat" },
+            status: "queued",
+            failureReason: null,
+          },
+        ],
+      }),
+    );
+
+    expect(html).not.toContain("Add order");
+    expect(html).not.toContain("Remove");
+  });
 });

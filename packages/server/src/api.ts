@@ -9,9 +9,10 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
 import { content as bundledContent } from "@bartervillage/content";
-import type { Order, OrderType } from "@bartervillage/rules";
+import { removeOrder, reorderQueue, type Order, type OrderType } from "@bartervillage/rules";
 import type { Database } from "./db/database.js";
-import { loadWorldState } from "./db/stateRepository.js";
+import { loadWorldState, saveWorldState } from "./db/stateRepository.js";
+import { checkMutationAllowed } from "./mutations.js";
 import { validateOrderServerSide } from "./orderValidation.js";
 import { retryWorldTick } from "./retry.js";
 
@@ -272,6 +273,11 @@ export function buildApiRoutes(database: Database): Routes {
     return (request.headers["x-world-id"] as string) || "w1";
   }
 
+  function mutationBlocked(request: ApiRequest): JsonResponse | null {
+    const check = checkMutationAllowed(database, getWorldId(request));
+    return check.allowed ? null : { status: check.status, body: check.body };
+  }
+
   return {
     "GET /world": (request) => {
       const worldId = getWorldId(request);
@@ -336,10 +342,11 @@ export function buildApiRoutes(database: Database): Routes {
     },
 
     "GET /player/:playerId/orders": (request) => {
-      const playerId = request.path.split("/").pop() ?? "";
+      const playerId = request.params?.playerId ?? "";
 
       const orders = database.all<QueuedOrderRow>(
-        `SELECT * FROM orders WHERE player_id = ? AND status = 'queued'`,
+        `SELECT * FROM orders WHERE player_id = ? AND status = 'queued'
+         ORDER BY sequence, id`,
         playerId,
       );
 
@@ -505,6 +512,10 @@ export function buildApiRoutes(database: Database): Routes {
     }),
 
     "POST /player/:playerId/orders": (request) => {
+      const blocked = mutationBlocked(request);
+      if (blocked) {
+        return blocked;
+      }
       const worldId = getWorldId(request);
       const playerId = request.params?.playerId ?? "";
       const body = JSON.parse((request.body as string) || "{}") as {
@@ -562,6 +573,67 @@ export function buildApiRoutes(database: Database): Routes {
         status: 201,
         body: { order: { id: order.id, sequence: order.sequence } },
       };
+    },
+
+    "PUT /player/:playerId/orders": (request) => {
+      const blocked = mutationBlocked(request);
+      if (blocked) {
+        return blocked;
+      }
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+      const body = JSON.parse((request.body as string) || "{}") as {
+        orderIds?: unknown;
+      };
+      if (!Array.isArray(body.orderIds) || body.orderIds.some((id) => typeof id !== "string")) {
+        return { status: 400, body: { error: "invalid_order_ids" } };
+      }
+
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+      if (!state.players.some((player) => player.id === playerId)) {
+        return { status: 404, body: { error: "player_not_found" } };
+      }
+
+      try {
+        reorderQueue(state, playerId, state.world.currentTick, body.orderIds);
+      } catch (error) {
+        return {
+          status: 400,
+          body: { error: "invalid_queue", message: String(error) },
+        };
+      }
+      saveWorldState(database, state);
+      return { status: 200, body: { ok: true } };
+    },
+
+    "DELETE /player/:playerId/orders/:orderId": (request) => {
+      const blocked = mutationBlocked(request);
+      if (blocked) {
+        return blocked;
+      }
+      const worldId = getWorldId(request);
+      const playerId = request.params?.playerId ?? "";
+      const orderId = request.params?.orderId ?? "";
+
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+      const order = state.orders.find((candidate) => candidate.id === orderId);
+      if (!order || order.playerId !== playerId) {
+        return { status: 404, body: { error: "order_not_found" } };
+      }
+      if (order.status !== "queued") {
+        return { status: 409, body: { error: "order_not_queued" } };
+      }
+      if (!removeOrder(state, orderId)) {
+        return { status: 409, body: { error: "order_not_queued" } };
+      }
+      saveWorldState(database, state);
+      return { status: 200, body: { ok: true, orderId } };
     },
 
     "POST /world/:worldId/ticks/:tick/retry": (request) => {

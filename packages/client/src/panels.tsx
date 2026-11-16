@@ -5,9 +5,11 @@
  * inventory detail in M5.B05 and the full barter board in M6.01.
  */
 
+import { useState } from "preact/hooks";
+
 import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
-import type { QueuedOrder } from "./orders.js";
+import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
 
 function humanize(value: string): string {
@@ -44,28 +46,207 @@ function kindLabel(kind: string): string {
   }
 }
 
+const ORDER_TYPE_OPTIONS = [
+  "plant",
+  "harvest",
+  "tend",
+  "feed",
+  "build",
+  "upgrade",
+  "craft",
+  "travel",
+  "help",
+  "gift",
+  "forage",
+  "fish",
+  "post_offer",
+  "post_wanted_request",
+  "cancel_offer",
+  "accept_offer",
+  "counter_offer",
+  "contribute_goal",
+  "place_decoration",
+] as const;
+
+const ORDER_TEMPLATES: Record<string, string> = {
+  plant: '{\n  "tile": { "x": 0, "y": 0 },\n  "crop": "wheat"\n}',
+  harvest: '{\n  "tile": { "x": 0, "y": 0 }\n}',
+  tend: '{\n  "tile": { "x": 0, "y": 0 }\n}',
+  feed: '{\n  "animalId": "animal1"\n}',
+  build: '{\n  "building": "home",\n  "tile": { "x": 0, "y": 0 }\n}',
+  upgrade: '{\n  "buildingId": "building1"\n}',
+  craft: '{\n  "buildingId": "building1",\n  "recipeId": "recipe1"\n}',
+  travel: '{\n  "regionId": "r1"\n}',
+  help: '{\n  "targetPlotId": "plot1",\n  "chore": "water",\n  "tile": { "x": 0, "y": 0 }\n}',
+  gift: '{\n  "toPlayerId": "p2",\n  "items": [{ "item": "wheat", "quantity": 1 }]\n}',
+  forage: '{\n  "nodeId": "node1"\n}',
+  fish: '{\n  "nodeId": "node1"\n}',
+  post_offer:
+    '{\n  "gives": [{ "item": "wheat", "quantity": 1 }],\n  "wants": [{ "item": "wood", "quantity": 1 }],\n  "expiryTicks": 7\n}',
+  post_wanted_request:
+    '{\n  "wants": [{ "item": "wood", "quantity": 1 }],\n  "quantity": 1,\n  "expiryTicks": 7\n}',
+  cancel_offer: '{\n  "offerId": "offer1"\n}',
+  accept_offer: '{\n  "offerId": "offer1"\n}',
+  counter_offer:
+    '{\n  "parentOfferId": "offer1",\n  "gives": [{ "item": "wheat", "quantity": 1 }],\n  "wants": [{ "item": "wood", "quantity": 1 }]\n}',
+  contribute_goal: '{\n  "goalId": "goal1",\n  "items": [{ "item": "wheat", "quantity": 1 }]\n}',
+  place_decoration: '{\n  "decoration": "flower_patch",\n  "tile": { "x": 0, "y": 0 }\n}',
+};
+
 export interface OrderPanelProps {
   orders?: QueuedOrder[] | undefined;
+  onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
+  onRemoveOrder?: ((orderId: string) => void | Promise<void>) | undefined;
+  onReorderOrders?: ((orderIds: string[]) => void | Promise<void>) | undefined;
 }
 
-export function OrderPanel({ orders = [] }: OrderPanelProps) {
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+export function OrderPanel({
+  orders = [],
+  onAddOrder,
+  onRemoveOrder,
+  onReorderOrders,
+}: OrderPanelProps) {
+  const [type, setType] = useState<string>("plant");
+  const [payloadText, setPayloadText] = useState<string>(ORDER_TEMPLATES.plant ?? "{}");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const run = async (task: () => void | Promise<void>): Promise<void> => {
+    setBusy(true);
+    setError(null);
+    try {
+      await task();
+    } catch (caught) {
+      setError(errorMessage(caught));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submit = (event: Event): void => {
+    event.preventDefault();
+    if (!onAddOrder) {
+      return;
+    }
+    let payload: unknown;
+    try {
+      payload = JSON.parse(payloadText);
+    } catch {
+      setError("Order payload must be valid JSON.");
+      return;
+    }
+    if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+      setError("Order payload must be a JSON object.");
+      return;
+    }
+    void run(() => onAddOrder({ type, payload: payload as Record<string, unknown> }));
+  };
+
+  const move = (index: number, direction: -1 | 1): void => {
+    if (!onReorderOrders) {
+      return;
+    }
+    const ids = orders.map((order) => order.id);
+    const target = index + direction;
+    if (target < 0 || target >= ids.length) {
+      return;
+    }
+    void run(() => onReorderOrders(moveOrder(ids, index, target)));
+  };
+
   return (
     <Panel title="Orders">
       {orders.length === 0 ? (
         <p class="empty-state">No orders queued for this tick.</p>
       ) : (
         <ol class="order-list">
-          {orders.map((order) => (
+          {orders.map((order, index) => (
             <li key={order.id} class="order-item">
               <span class="order-sequence">#{order.sequence}</span>
               <span class="order-type">{humanize(order.type)}</span>
               {order.failureReason ? (
                 <span class="order-failure">{order.failureReason}</span>
               ) : null}
+              {onReorderOrders ? (
+                <span class="order-controls">
+                  <button
+                    type="button"
+                    class="order-control"
+                    aria-label={`Move ${order.type} order up`}
+                    disabled={busy || index === 0}
+                    onClick={() => move(index, -1)}
+                  >
+                    Up
+                  </button>
+                  <button
+                    type="button"
+                    class="order-control"
+                    aria-label={`Move ${order.type} order down`}
+                    disabled={busy || index === orders.length - 1}
+                    onClick={() => move(index, 1)}
+                  >
+                    Down
+                  </button>
+                </span>
+              ) : null}
+              {onRemoveOrder ? (
+                <button
+                  type="button"
+                  class="order-control order-remove"
+                  aria-label={`Remove ${order.type} order`}
+                  disabled={busy}
+                  onClick={() => void run(() => onRemoveOrder(order.id))}
+                >
+                  Remove
+                </button>
+              ) : null}
             </li>
           ))}
         </ol>
       )}
+
+      {onAddOrder ? (
+        <form class="order-form" onSubmit={submit}>
+          <label class="order-field">
+            <span>Order type</span>
+            <select
+              value={type}
+              disabled={busy}
+              onChange={(event) => {
+                const next = (event.currentTarget as HTMLSelectElement).value;
+                setType(next);
+                setPayloadText(ORDER_TEMPLATES[next] ?? "{}");
+                setError(null);
+              }}
+            >
+              {ORDER_TYPE_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {humanize(option)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label class="order-field">
+            <span>Payload (JSON)</span>
+            <textarea
+              rows={5}
+              value={payloadText}
+              disabled={busy}
+              onInput={(event) =>
+                setPayloadText((event.currentTarget as HTMLTextAreaElement).value)
+              }
+            />
+          </label>
+          {error ? <p class="order-error">{error}</p> : null}
+          <button type="submit" class="order-add" disabled={busy}>
+            Add order
+          </button>
+        </form>
+      ) : null}
     </Panel>
   );
 }
