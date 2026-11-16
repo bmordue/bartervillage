@@ -12,6 +12,13 @@ describe("default content values", () => {
     expect(content.goodwill).toEqual({ gift: 5, help: 1 });
   });
 
+  it("contains no currency or coin concept (M3.03)", () => {
+    const forbidden =
+      /\b(currency|coins?|money|cash|gold|silver|dollars?|credits?|wallet|balance|prices?)\b/i;
+
+    expect(JSON.stringify(content)).not.toMatch(forbidden);
+  });
+
   it("defines the weather modifiers", () => {
     const weather = new Map(content.weather.map((entry) => [entry.id, entry]));
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { openDatabase, migrate } from "../src/db/migrate.js";
+import { MIGRATIONS } from "../src/db/schema.js";
 import type { DatabaseSync } from "node:sqlite";
 
 let db: DatabaseSync | undefined;
@@ -61,6 +62,22 @@ describe("schema migrations", () => {
     expect(names).not.toContain("password");
     expect(names).not.toContain("secret");
     expect(names).not.toContain("token");
+  });
+
+  it("contains no currency or coin concept (M3.03)", () => {
+    const forbidden =
+      /\b(currency|coins?|money|cash|gold|silver|dollars?|credits?|wallet|balance|prices?)\b/i;
+
+    for (const migration of MIGRATIONS) {
+      expect(migration.sql).not.toMatch(forbidden);
+    }
+    db = openDatabase();
+    for (const table of tableNames(db)) {
+      const columns = db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+      for (const column of columns) {
+        expect(column.name).not.toMatch(forbidden);
+      }
+    }
   });
 
   it("is idempotent", () => {
