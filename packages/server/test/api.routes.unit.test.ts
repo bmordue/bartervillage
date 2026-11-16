@@ -150,6 +150,64 @@ describe("REST API routes", () => {
     expect(Array.isArray(data.ready)).toBe(true);
   });
 
+  it("GET /plot returns held, locked and free inventory", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO inventory (plot_id, item, quantity, locked) VALUES ('plot1', 'wheat', 10, 3)`,
+    );
+    harness.database.run(
+      `INSERT INTO inventory (plot_id, item, quantity, locked) VALUES ('plot1', 'wood', 4, 0)`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/plot/plot1`);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).inventory).toEqual([
+      { item: "wheat", quantity: 10, locked: 3, free: 7 },
+      { item: "wood", quantity: 4, locked: 0, free: 4 },
+    ]);
+  });
+
+  it("GET /barter returns only open offers", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+    harness.database.run(
+      `INSERT INTO offers
+         (id, poster_id, kind, gives_json, wants_json, quantity, created_at_tick,
+          expiry_tick, status, parent_offer_id)
+       VALUES ('o1', 'p1', 'offer', '[{"item":"wheat","quantity":2}]',
+               '[{"item":"wood","quantity":1}]', 1, 0, 7, 'open', NULL)`,
+    );
+    harness.database.run(
+      `INSERT INTO offers
+         (id, poster_id, kind, gives_json, wants_json, quantity, created_at_tick,
+          expiry_tick, status, parent_offer_id)
+       VALUES ('o2', 'p1', 'wanted_request', '[]',
+               '[{"item":"stone","quantity":3}]', 1, 0, 7, 'settled', NULL)`,
+    );
+
+    const response = await fetch(`${harness.baseUrl}/barter`);
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).offers).toEqual([
+      {
+        id: "o1",
+        posterId: "p1",
+        kind: "offer",
+        gives: [{ item: "wheat", quantity: 2 }],
+        wants: [{ item: "wood", quantity: 1 }],
+        quantity: 1,
+        createdAtTick: 0,
+        expiryTick: 7,
+        status: "open",
+        parentOfferId: null,
+      },
+    ]);
+  });
+
   it("GET /barter returns empty offers", async () => {
     harness = await startTestApi({
       buildRoutes: (database) => ({

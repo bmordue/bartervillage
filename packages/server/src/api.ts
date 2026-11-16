@@ -227,6 +227,25 @@ type QueuedOrderRow = {
   failure_reason: string | null;
 };
 
+type InventoryRow = {
+  item: string;
+  quantity: number;
+  locked: number;
+};
+
+type BarterOfferRow = {
+  id: string;
+  poster_id: string;
+  kind: string;
+  gives_json: string;
+  wants_json: string;
+  quantity: number;
+  created_at_tick: number;
+  expiry_tick: number;
+  status: string;
+  parent_offer_id: string | null;
+};
+
 type PlayerStatusRow = {
   id: string;
   name: string;
@@ -284,6 +303,18 @@ export function buildApiRoutes(database: Database): Routes {
         return { status: 404, body: { error: "plot_not_found" } };
       }
 
+      const inventory = database
+        .all<InventoryRow>(
+          `SELECT item, quantity, locked FROM inventory WHERE plot_id = ? ORDER BY item`,
+          plotId,
+        )
+        .map((row) => ({
+          item: row.item,
+          quantity: row.quantity,
+          locked: row.locked,
+          free: row.quantity - row.locked,
+        }));
+
       return {
         status: 200,
         body: {
@@ -298,7 +329,7 @@ export function buildApiRoutes(database: Database): Routes {
             worldOwned: plot.world_owned,
           },
           buildings: [],
-          inventory: [],
+          inventory,
           ready: null,
         },
       };
@@ -371,12 +402,33 @@ export function buildApiRoutes(database: Database): Routes {
       },
     }),
 
-    "GET /barter": () => ({
-      status: 200,
-      body: {
-        offers: [],
-      },
-    }),
+    "GET /barter": () => {
+      const offers = database
+        .all<BarterOfferRow>(
+          `SELECT id, poster_id, kind, gives_json, wants_json, quantity,
+                  created_at_tick, expiry_tick, status, parent_offer_id
+           FROM offers
+           WHERE status = 'open'
+           ORDER BY created_at_tick, id`,
+        )
+        .map((row) => ({
+          id: row.id,
+          posterId: row.poster_id,
+          kind: row.kind,
+          gives: JSON.parse(row.gives_json),
+          wants: JSON.parse(row.wants_json),
+          quantity: row.quantity,
+          createdAtTick: row.created_at_tick,
+          expiryTick: row.expiry_tick,
+          status: row.status,
+          parentOfferId: row.parent_offer_id,
+        }));
+
+      return {
+        status: 200,
+        body: { offers },
+      };
+    },
 
     "GET /replay/latest": (request) => {
       const worldId = getWorldId(request);

@@ -138,6 +138,105 @@ body {
   font-size: 0.875rem;
 }
 
+.empty-state {
+  margin: 0;
+}
+
+.order-list,
+.offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.order-item,
+.offer-item {
+  padding: 6px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.order-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.order-sequence {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.order-type {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.order-failure {
+  color: #a23b2a;
+  font-size: 0.75rem;
+}
+
+.offer-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.offer-kind {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.offer-poster {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.offer-trade {
+  margin: 4px 0 0;
+  color: var(--ink);
+}
+
+.offer-meta {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--ink);
+}
+
+.inventory-table th,
+.inventory-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+.inventory-table th:first-child,
+.inventory-table td:first-child {
+  padding-left: 0;
+  text-align: left;
+}
+
+.inventory-table thead th {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inventory-table tbody th {
+  font-weight: 400;
+}
+
 .app-footer {
   padding: 8px 24px;
   border-top: 1px solid var(--border);
