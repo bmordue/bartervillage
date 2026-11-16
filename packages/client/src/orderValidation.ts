@@ -33,7 +33,8 @@ export function validateOrderDraft(draft: OrderDraft): void {
     draft.type === "plant" ||
     draft.type === "tend" ||
     draft.type === "harvest" ||
-    draft.type === "forage"
+    draft.type === "forage" ||
+    draft.type === "help"
   ) {
     if (typeof tile !== "object" || tile === null || Array.isArray(tile)) {
       throw new Error("Tile orders require a 'tile' object with integer x and y coordinates.");

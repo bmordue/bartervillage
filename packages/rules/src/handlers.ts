@@ -9,11 +9,13 @@ import { registerDecorationHandlers } from "./decorations.js";
 import { registerDefaultHandlers } from "./defaults.js";
 import { registerForageHandlers } from "./forage.js";
 import { registerGoalHandlers } from "./goals.js";
+import { registerHelpHandlers } from "./help.js";
 
 registerDefaultHandlers();
 registerBuildingHandlers();
 registerCraftingHandlers();
 registerForageHandlers();
+registerHelpHandlers();
 registerBarterHandlers();
 registerDecorationHandlers();
 registerGoalHandlers();
