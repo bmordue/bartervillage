@@ -247,7 +247,7 @@
 
 ### Auth and onboarding
 
-- [ ] **M4.C01** Passkey (WebAuthn) registration and login with HTTPS and a stable RP ID; private keys never leave authenticators (spec §12). _Depends on: M3.01, M4.B01._
+- [x] **M4.C01** Passkey (WebAuthn) registration and login with HTTPS and a stable RP ID; private keys never leave authenticators (spec §12). _Depends on: M3.01, M4.B01._
 - [ ] **M4.C02** Discord OAuth login (spec §12). _Depends on: M3.01, M4.B01, M4.B09._
 - [ ] **M4.C03** GitHub OAuth login (spec §12). _Depends on: M3.01, M4.B01, M4.B09._
 - [ ] **M4.C04** Support multiple credentials per player, including account linking (spec §12). _Depends on: M4.C01-M4.C03._

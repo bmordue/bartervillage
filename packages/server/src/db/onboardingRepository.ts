@@ -7,6 +7,7 @@
  * back completely.
  */
 
+import { createCredential, type CreateCredentialOptions } from "./credentialRepository.js";
 import type { Database } from "./database.js";
 import { redeemInvite } from "./inviteRepository.js";
 import { claimPlot } from "./mapRepository.js";
@@ -28,6 +29,7 @@ export interface OnboardPlayerOptions {
   plotId: string;
   inviteCodeHash: string;
   sessionId: string;
+  credential?: Omit<CreateCredentialOptions, "playerId">;
   now?: Date;
   sessionTtlMs?: number;
 }
@@ -69,6 +71,9 @@ export function onboardPlayer(db: Database, options: OnboardPlayerOptions): Onbo
       }
 
       provisionStarterBuildings(db, options.plotId);
+      if (options.credential !== undefined) {
+        createCredential(db, { ...options.credential, playerId: options.playerId, now }, undefined);
+      }
       const session = createSession(db, {
         id: options.sessionId,
         playerId: options.playerId,

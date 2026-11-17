@@ -130,6 +130,18 @@
               description = "Port the API listens on.";
             };
 
+            rpID = lib.mkOption {
+              type = lib.types.str;
+              default = "localhost";
+              description = "Stable WebAuthn relying-party ID (the site's domain).";
+            };
+
+            origin = lib.mkOption {
+              type = lib.types.str;
+              default = "http://localhost:3000";
+              description = "Public HTTPS origin clients use for WebAuthn.";
+            };
+
             environmentFile = lib.mkOption {
               type = lib.types.nullOr lib.types.path;
               default = null;
@@ -164,6 +176,8 @@
                 WORLD_ID = cfg.worldId;
                 HOST = cfg.host;
                 PORT = toString cfg.port;
+                BARTER_RP_ID = cfg.rpID;
+                BARTER_ORIGIN = cfg.origin;
                 NODE_ENV = "production";
               };
               serviceConfig = {

@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@bartervillage/content": "*",
-    "@bartervillage/rules": "*"
+    "@bartervillage/rules": "*",
+    "@simplewebauthn/server": "^14.1.0"
   }
 }

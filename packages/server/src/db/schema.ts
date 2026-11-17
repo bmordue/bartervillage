@@ -563,10 +563,37 @@ BEGIN
 END;
 `;
 
+/**
+ * Passkey registration and authentication (spec §12; M4.C01).
+ *
+ * WebAuthn credentials keep their public key and signature counter alongside
+ * the existing credential row. Challenges are short-lived server-side rows so a
+ * registration or login cannot be replayed, and private keys never leave the
+ * authenticator.
+ */
+export const PASSKEY_MIGRATION = `
+ALTER TABLE credentials ADD COLUMN public_key TEXT;
+ALTER TABLE credentials ADD COLUMN counter INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE credentials ADD COLUMN transports_json TEXT;
+ALTER TABLE credentials ADD COLUMN device_type TEXT;
+ALTER TABLE credentials ADD COLUMN backed_up INTEGER NOT NULL DEFAULT 0;
+
+CREATE TABLE webauthn_challenges (
+  id TEXT PRIMARY KEY,
+  kind TEXT NOT NULL CHECK (kind IN ('registration', 'authentication')),
+  challenge TEXT NOT NULL,
+  payload_json TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX webauthn_challenges_expiry ON webauthn_challenges(expires_at);
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
   { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
   { version: 3, name: "tick_resolution_failures", sql: TICK_RESOLUTION_FAILURES },
   { version: 4, name: "immutable_replay", sql: IMMUTABLE_REPLAY_MIGRATION },
   { version: 5, name: "domain_constraints", sql: DOMAIN_CONSTRAINTS_MIGRATION },
+  { version: 6, name: "passkey_auth", sql: PASSKEY_MIGRATION },
 ];

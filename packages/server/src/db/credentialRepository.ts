@@ -20,6 +20,11 @@ export interface Credential {
   kind: CredentialKind;
   subject: string;
   secretCiphertext: string | null;
+  publicKey: string | null;
+  counter: number;
+  transports: string[];
+  deviceType: string | null;
+  backedUp: boolean;
   createdAt: string;
 }
 
@@ -29,6 +34,11 @@ export interface CreateCredentialOptions {
   kind: CredentialKind;
   subject: string;
   secret?: string | null;
+  publicKey?: string | null;
+  counter?: number;
+  transports?: string[];
+  deviceType?: string | null;
+  backedUp?: boolean;
   now?: Date;
 }
 
@@ -38,8 +48,23 @@ type CredentialRow = {
   kind: CredentialKind;
   subject: string;
   secret_ciphertext: string | null;
+  public_key: string | null;
+  counter: number;
+  transports_json: string | null;
+  device_type: string | null;
+  backed_up: number;
   created_at: string;
 };
+
+function parseTransports(value: string | null): string[] {
+  if (value === null) {
+    return [];
+  }
+  const parsed = JSON.parse(value) as unknown;
+  return Array.isArray(parsed) && parsed.every((entry) => typeof entry === "string")
+    ? (parsed as string[])
+    : [];
+}
 
 function toCredential(row: CredentialRow): Credential {
   return {
@@ -48,6 +73,11 @@ function toCredential(row: CredentialRow): Credential {
     kind: row.kind,
     subject: row.subject,
     secretCiphertext: row.secret_ciphertext,
+    publicKey: row.public_key,
+    counter: row.counter,
+    transports: parseTransports(row.transports_json),
+    deviceType: row.device_type,
+    backedUp: row.backed_up === 1,
     createdAt: row.created_at,
   };
 }
@@ -55,31 +85,71 @@ function toCredential(row: CredentialRow): Credential {
 export function createCredential(
   db: Database,
   options: CreateCredentialOptions,
-  key: Buffer,
+  key?: Buffer,
 ): Credential {
+  const hasSecret = options.secret !== undefined && options.secret !== null;
+  if (hasSecret && key === undefined) {
+    throw new Error("A credential key is required to store a secret");
+  }
   const credential: Credential = {
     id: options.id,
     playerId: options.playerId,
     kind: options.kind,
     subject: options.subject,
-    secretCiphertext:
-      options.secret === undefined || options.secret === null
-        ? null
-        : encryptSecret(options.secret, key),
+    secretCiphertext: hasSecret ? encryptSecret(options.secret as string, key as Buffer) : null,
+    publicKey: options.publicKey ?? null,
+    counter: options.counter ?? 0,
+    transports: options.transports ?? [],
+    deviceType: options.deviceType ?? null,
+    backedUp: options.backedUp ?? false,
     createdAt: (options.now ?? new Date()).toISOString(),
   };
   db.run(
     `INSERT INTO credentials
-       (id, player_id, kind, subject, secret_ciphertext, created_at)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+       (id, player_id, kind, subject, secret_ciphertext, public_key, counter,
+        transports_json, device_type, backed_up, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     credential.id,
     credential.playerId,
     credential.kind,
     credential.subject,
     credential.secretCiphertext,
+    credential.publicKey,
+    credential.counter,
+    JSON.stringify(credential.transports),
+    credential.deviceType,
+    credential.backedUp ? 1 : 0,
     credential.createdAt,
   );
   return credential;
+}
+
+export interface UpdatePasskeyCredentialOptions {
+  counter: number;
+  transports?: string[];
+  deviceType?: string | null;
+  backedUp?: boolean;
+}
+
+export function updatePasskeyCredential(
+  db: Database,
+  id: string,
+  options: UpdatePasskeyCredentialOptions,
+): boolean {
+  const result = db.run(
+    `UPDATE credentials
+     SET counter = ?,
+         transports_json = COALESCE(?, transports_json),
+         device_type = COALESCE(?, device_type),
+         backed_up = COALESCE(?, backed_up)
+     WHERE id = ? AND kind = 'passkey'`,
+    options.counter,
+    options.transports === undefined ? null : JSON.stringify(options.transports),
+    options.deviceType ?? null,
+    options.backedUp === undefined ? null : options.backedUp ? 1 : 0,
+    id,
+  );
+  return Number(result.changes) === 1;
 }
 
 export function loadCredential(db: Database, id: string): Credential | undefined {

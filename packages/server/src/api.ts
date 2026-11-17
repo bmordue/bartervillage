@@ -17,6 +17,8 @@ import {
   type Order,
   type OrderType,
 } from "@bartervillage/rules";
+import { createPasskeyRoutes } from "./auth/passkeyRoutes.js";
+import type { PasskeyAuth } from "./auth/passkey.js";
 import type { Database } from "./db/database.js";
 import { loadWorldState, saveWorldState } from "./db/stateRepository.js";
 import { checkMutationAllowed } from "./mutations.js";
@@ -26,6 +28,7 @@ import { retryWorldTick } from "./retry.js";
 export interface JsonResponse {
   status: number;
   body: unknown;
+  headers?: Record<string, string | string[]>;
 }
 
 export interface ApiRequest {
@@ -49,12 +52,18 @@ export interface ApiServerOptions {
 
 export const POLL_INTERVAL_MS = 5000;
 
-function writeJson(response: ServerResponse, status: number, body: unknown): void {
+function writeJson(
+  response: ServerResponse,
+  status: number,
+  body: unknown,
+  headers: Record<string, string | string[]> = {},
+): void {
   const payload = JSON.stringify(body);
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "content-length": Buffer.byteLength(payload),
     "cache-control": "no-store",
+    ...headers,
   });
   response.end(payload);
 }
@@ -166,7 +175,7 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
         params: match.params,
         body,
       });
-      writeJson(response, result.status, result.body);
+      writeJson(response, result.status, result.body, result.headers);
     } catch (error) {
       logger(`request ${method} ${path} failed: ${String(error)}`);
       writeJson(response, 500, { error: "internal_error" });
@@ -311,7 +320,11 @@ type ArchivedEventRow = {
   payload_json: string | null;
 };
 
-export function buildApiRoutes(database: Database): Routes {
+export interface BuildApiRoutesOptions {
+  passkey?: PasskeyAuth;
+}
+
+export function buildApiRoutes(database: Database, options: BuildApiRoutesOptions = {}): Routes {
   function getWorldId(request: ApiRequest): string {
     return (request.headers["x-world-id"] as string) || "w1";
   }
@@ -321,7 +334,10 @@ export function buildApiRoutes(database: Database): Routes {
     return check.allowed ? null : { status: check.status, body: check.body };
   }
 
+  const passkeyRoutes = options.passkey ? createPasskeyRoutes(database, options.passkey) : {};
+
   return {
+    ...passkeyRoutes,
     "GET /world": (request) => {
       const worldId = getWorldId(request);
       const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);
