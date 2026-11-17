@@ -30,6 +30,7 @@ import {
   registerDecorationHandlers,
   registerDefaultHandlers,
   registerForageHandlers,
+  registerHelpHandlers,
 } from "@bartervillage/rules";
 
 // Register every rules handler so that dry-run validation exercises the real
@@ -41,6 +42,7 @@ registerCraftingHandlers();
 registerDecorationHandlers();
 registerDefaultHandlers();
 registerForageHandlers();
+registerHelpHandlers();
 
 export interface OrderValidationResult {
   ok: boolean;

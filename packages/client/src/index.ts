@@ -3,6 +3,7 @@ export const packageName = "@bartervillage/client";
 export * from "./app.js";
 export * from "./barter.js";
 export * from "./batch.js";
+export * from "./help.js";
 export * from "./inventory.js";
 export * from "./orderValidation.js";
 export * from "./main.js";

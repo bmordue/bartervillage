@@ -297,7 +297,7 @@
 - [ ] **M6.06** Show the negotiation cascade: parent, siblings and settled counter (spec §7). _Depends on: M2.E17, M6.03, M6.05._
 - [ ] **M6.07** Enforce and surface the 10-open-post cap (spec §7). _Depends on: M2.E09, M6.02._
 - [ ] **M6.08** Gift flow: remote transfer, recipient capacity check, lock enforcement and +5 goodwill to the giver (spec §8). _Depends on: M2.A02, M2.D06, M2.D07, M4.B02, M5.B02._
-- [ ] **M6.09** Help flow: water, feed or tend on another player's plot; helper pays energy and earns +1 goodwill; host receives the benefit (spec §8). _Depends on: M2.A16, M2.B03, M2.B09, M4.B02, M5.A08._
+- [x] **M6.09** Help flow: water, feed or tend on another player's plot; helper pays energy and earns +1 goodwill; host receives the benefit (spec §8). _Depends on: M2.A16, M2.B03, M2.B09, M4.B02, M5.A08._
 - [ ] **M6.10** Restrict each chore to once per tick and resolve contention by queue order (spec §8). _Depends on: M2.A09, M6.09._
 - [ ] **M6.11** Block helping on your own plot (spec §8). _Depends on: M6.09._
 - [ ] **M6.12** Goodwill score and badges as cosmetic only, with no tradeable, spendable or functional effect (spec §8). _Depends on: M3.01, M6.08, M6.09; blocked by D.02._

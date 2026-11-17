@@ -10,6 +10,7 @@
 import { render } from "preact";
 import { App } from "./app.js";
 import { fetchBarter, type BarterOffer } from "./barter.js";
+import { createHelpOrder, type HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
 import { createPreviewMapView } from "./map/preview.js";
 import {
@@ -162,6 +163,11 @@ export function mountApp(root?: HTMLElement | null): void {
         currentPlayerId={latest.player?.player.id}
         onViewPlot={viewPlot}
         onCloseViewedPlot={closeViewedPlot}
+        onHelp={(targetPlotId: string, chore: HelpChore) =>
+          applyQueueChange(async () => {
+            await addOrder("", "w1", playerId, createHelpOrder(targetPlotId, chore));
+          })
+        }
         onToggleReady={(ready: boolean) =>
           applyQueueChange(async () => {
             await setReady("", "w1", playerId, ready);

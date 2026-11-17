@@ -187,6 +187,48 @@ body {
   font-size: 0.75rem;
 }
 
+.plot-help {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.plot-help-hint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.plot-help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.plot-help-action {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.plot-help-action:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.plot-help-error {
+  margin: 6px 0 0;
+  color: #a23b2a;
+  font-size: 0.75rem;
+}
+
 .plot-buildings {
   display: flex;
   flex-wrap: wrap;

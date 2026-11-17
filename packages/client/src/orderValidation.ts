@@ -26,6 +26,20 @@ export function validateOrderDraft(draft: OrderDraft): void {
     throw new Error("Order payload must be a JSON object.");
   }
 
+  // Help orders target a host plot and a chore; the tile is optional because a
+  // chore applies to the host's whole plot (M6.09).
+  if (draft.type === "help") {
+    const targetPlotId = draft.payload["targetPlotId"];
+    if (typeof targetPlotId !== "string" || targetPlotId.length === 0) {
+      throw new Error("Help orders require a 'targetPlotId' string.");
+    }
+    const chore = draft.payload["chore"];
+    if (chore !== "water" && chore !== "tend" && chore !== "feed") {
+      throw new Error("Help orders require a chore of water, tend or feed.");
+    }
+    return;
+  }
+
   // Simple heuristic to catch missing tile coordinates for tile‑targeting orders.
   // This does not replace server‑side validation of coordinates or ownership.
   const tile = draft.payload["tile"];
@@ -33,8 +47,7 @@ export function validateOrderDraft(draft: OrderDraft): void {
     draft.type === "plant" ||
     draft.type === "tend" ||
     draft.type === "harvest" ||
-    draft.type === "forage" ||
-    draft.type === "help"
+    draft.type === "forage"
   ) {
     if (typeof tile !== "object" || tile === null || Array.isArray(tile)) {
       throw new Error("Tile orders require a 'tile' object with integer x and y coordinates.");

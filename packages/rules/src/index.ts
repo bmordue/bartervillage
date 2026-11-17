@@ -24,5 +24,6 @@ export * from "./crops.js";
 export * from "./decorations.js";
 export * from "./defaults.js";
 export * from "./forage.js";
+export * from "./help.js";
 export * from "./ready.js";
 export * from "./seasons.js";

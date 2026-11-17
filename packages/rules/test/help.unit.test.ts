@@ -70,7 +70,7 @@ function makeContext(
     reachable: new Set<string>(["r1"]),
     path: [],
   } as OrderExecutionContext & { events?: EventLog };
-  context.events = new EventLog();
+  context.events = new EventLog(state.world.currentTick);
   return context;
 }
 
@@ -135,6 +135,31 @@ describe("help order handler (M2.A16)", () => {
 
     expect(outcome.ok).toBe(true);
     expect(state.crops[0]?.watered).toBe(true);
+  });
+
+  it("emits a help event naming the helper and host", () => {
+    registerHelpHandlers();
+    const state = twoPlotState([crop()]);
+    const order = makeOrder("help", { targetPlotId: "plot2", chore: "water" });
+    const context = makeContext(state, "p1", order);
+
+    const outcome = resolveOrder(context);
+
+    expect(outcome.ok).toBe(true);
+    expect(context.events?.events).toEqual([
+      {
+        tick: 5,
+        sequence: 0,
+        version: 1,
+        type: "help",
+        payload: {
+          helperId: "p1",
+          hostPlayerId: "p2",
+          plotId: "plot2",
+          chore: "water",
+        },
+      },
+    ]);
   });
 
   it("tends the host's crop", () => {

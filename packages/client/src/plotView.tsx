@@ -5,12 +5,26 @@
  * storage. Placeholder geometry stands in for final art until M8.10.
  */
 
+import { useState } from "preact/hooks";
+
+import {
+  availableHelpChores,
+  HELP_CHORES,
+  HELP_ENERGY_COST,
+  HELP_GOODWILL,
+  HELP_LABELS,
+  type HelpChore,
+} from "./help.js";
 import type { PlotBuilding, PlotCrop, PlotSnapshot } from "./plot.js";
 
 export interface PlotViewProps {
   plot: PlotSnapshot;
-  /** Others' plots are read-only (M5.A08). */
+  /** Others' plots are read-only except for the help actions (M5.A08, M6.09). */
   readOnly?: boolean;
+  /** Queue a help order for one chore on this plot (M6.09). */
+  onHelp?: ((chore: HelpChore) => void | Promise<void>) | undefined;
+  /** The helper's current energy, used for a light affordability check. */
+  helperEnergy?: number | undefined;
 }
 
 function humanize(value: string): string {
@@ -53,7 +67,65 @@ function cropStatus(crop: PlotCrop): string {
   return "growing";
 }
 
-export function PlotView({ plot, readOnly = false }: PlotViewProps) {
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function HelpSection({
+  plot,
+  helperEnergy,
+  onHelp,
+}: {
+  plot: PlotSnapshot;
+  helperEnergy?: number | undefined;
+  onHelp: (chore: HelpChore) => void | Promise<void>;
+}) {
+  const [pending, setPending] = useState<HelpChore | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const available = availableHelpChores(plot);
+  const canAfford = helperEnergy === undefined || helperEnergy >= HELP_ENERGY_COST;
+
+  const perform = (chore: HelpChore): void => {
+    setPending(chore);
+    setError(null);
+    void Promise.resolve(onHelp(chore))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setPending(null));
+  };
+
+  return (
+    <section class="plot-help" aria-label="Help this plot">
+      <h3 class="plot-section-title">Help out</h3>
+      <p class="plot-help-hint">
+        Each chore costs {HELP_ENERGY_COST} energy and earns +{HELP_GOODWILL} goodwill. The host
+        gets the benefit.
+      </p>
+      {available.length === 0 ? (
+        <p class="empty-state">This plot needs no help right now.</p>
+      ) : null}
+      {!canAfford ? (
+        <p class="plot-help-error">You need {HELP_ENERGY_COST} energy to help.</p>
+      ) : null}
+      <div class="plot-help-actions">
+        {HELP_CHORES.map((chore) => (
+          <button
+            key={chore}
+            type="button"
+            class="plot-help-action"
+            data-chore={chore}
+            disabled={pending !== null || !canAfford || !available.includes(chore)}
+            onClick={() => perform(chore)}
+          >
+            {pending === chore ? "Queuing…" : HELP_LABELS[chore]}
+          </button>
+        ))}
+      </div>
+      {error ? <p class="plot-help-error">{error}</p> : null}
+    </section>
+  );
+}
+
+export function PlotView({ plot, readOnly = false, onHelp, helperEnergy }: PlotViewProps) {
   const buildings = sortBuildings(plot.buildings);
   const cropsByTile = new Map(plot.crops.map((crop) => [`${crop.tileX},${crop.tileY}`, crop]));
   const cells = Array.from({ length: plot.plot.width * plot.plot.height }, (_, index) => {
@@ -78,6 +150,10 @@ export function PlotView({ plot, readOnly = false }: PlotViewProps) {
         </div>
         {readOnly ? <span class="plot-badge">Read-only</span> : null}
       </header>
+
+      {readOnly && onHelp ? (
+        <HelpSection plot={plot} helperEnergy={helperEnergy} onHelp={onHelp} />
+      ) : null}
 
       <div class="plot-buildings">
         {buildings.length === 0 ? (

@@ -72,6 +72,11 @@ function helpHandler(context: OrderExecutionContext): OrderOutcome {
     return orderFailed(`Target plot ${payload.targetPlotId} not found`);
   }
 
+  const targetPlot = context.state.plots.find((plot) => plot.id === payload.targetPlotId);
+  if (!targetPlot || targetPlot.playerId === null || targetPlot.worldOwned) {
+    return orderFailed(`Target plot ${payload.targetPlotId} has no host`);
+  }
+
   const cost = orderEnergyCost(context.content, "help");
   if (!spendEnergy(context.player, cost)) {
     return orderFailed(`Not enough energy to help (needs ${cost})`);
@@ -112,6 +117,13 @@ function helpHandler(context: OrderExecutionContext): OrderOutcome {
   } else {
     context.state.goodwill.push({ playerId: context.player.id, score: amount });
   }
+
+  context.events?.emit("help", {
+    helperId: context.player.id,
+    hostPlayerId: targetPlot.playerId,
+    plotId: targetPlot.id,
+    chore: payload.chore,
+  });
 
   return orderSucceeded;
 }

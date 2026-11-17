@@ -233,4 +233,62 @@ describe("validateOrderServerSide (M4.B03)", () => {
     validateOrderServerSide(state, makeContent(), makeOrder("travel", { regionId: "r2" }));
     expect(state).toEqual(before);
   });
+
+  it("rejects helping on your own plot", () => {
+    const result = validateOrderServerSide(
+      makeState(),
+      makeContent(),
+      makeOrder("help", { targetPlotId: "plot1", chore: "water" }),
+    );
+    expect(result.ok).toBe(false);
+    expect(result.reason).toContain("own plot");
+  });
+
+  it("accepts helping another player's plot", () => {
+    const state = makeState({
+      plots: [
+        {
+          id: "plot1",
+          playerId: "p1",
+          regionId: "r1",
+          siteX: 0,
+          siteY: 0,
+          width: 12,
+          height: 12,
+          worldOwned: false,
+        },
+        {
+          id: "plot2",
+          playerId: "p2",
+          regionId: "r1",
+          siteX: 12,
+          siteY: 0,
+          width: 12,
+          height: 12,
+          worldOwned: false,
+        },
+      ],
+      crops: [
+        {
+          id: "c1",
+          plotId: "plot2",
+          tileX: 0,
+          tileY: 0,
+          type: "wheat",
+          plantedTick: 1,
+          growthTicks: 3,
+          watered: false,
+          tended: false,
+          failed: false,
+        },
+      ],
+    });
+    const result = validateOrderServerSide(
+      state,
+      makeContent(),
+      makeOrder("help", { targetPlotId: "plot2", chore: "water" }),
+    );
+    expect(result.ok).toBe(true);
+    expect(result.reason).toBeNull();
+  });
 });

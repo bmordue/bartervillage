@@ -9,6 +9,7 @@
 import { useState } from "preact/hooks";
 
 import type { BarterOffer } from "./barter.js";
+import type { HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
@@ -45,6 +46,7 @@ export interface AppProps {
   onReorderOrders?: (orderIds: string[]) => void | Promise<void>;
   onViewPlot?: (plotId: string) => void | Promise<void>;
   onCloseViewedPlot?: () => void;
+  onHelp?: (targetPlotId: string, chore: HelpChore) => void | Promise<void>;
   onToggleReady?: (ready: boolean) => void | Promise<void>;
 }
 
@@ -105,11 +107,15 @@ function Viewport({
   plot,
   viewedPlot,
   onCloseViewedPlot,
+  onHelp,
+  helperEnergy,
 }: {
   mapView?: MapView | undefined;
   plot?: PlotSnapshot | undefined;
   viewedPlot?: PlotSnapshot | undefined;
   onCloseViewedPlot?: (() => void) | undefined;
+  onHelp?: ((targetPlotId: string, chore: HelpChore) => void | Promise<void>) | undefined;
+  helperEnergy?: number | undefined;
 }) {
   const [selectedView, setSelectedView] = useState<"world" | "plot" | null>(null);
   const activeView = selectedView ?? (plot ? "plot" : "world");
@@ -125,7 +131,12 @@ function Viewport({
             </button>
           ) : null}
         </div>
-        <PlotView plot={viewedPlot} readOnly />
+        <PlotView
+          plot={viewedPlot}
+          readOnly
+          helperEnergy={helperEnergy}
+          {...(onHelp ? { onHelp: (chore: HelpChore) => onHelp(viewedPlot.plot.id, chore) } : {})}
+        />
       </section>
     );
   }
@@ -186,6 +197,7 @@ export function App({
   onReorderOrders,
   onViewPlot,
   onCloseViewedPlot,
+  onHelp,
   onToggleReady,
 }: AppProps) {
   return (
@@ -219,6 +231,8 @@ export function App({
           plot={plot}
           viewedPlot={viewedPlot}
           onCloseViewedPlot={onCloseViewedPlot}
+          onHelp={onHelp}
+          helperEnergy={player?.player.energy}
         />
 
         <aside class="sidebar" aria-label="Game panels">

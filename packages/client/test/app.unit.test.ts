@@ -369,4 +369,54 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("Failed in tick 4");
     expect(html).toContain("Not enough energy");
   });
+
+  it("offers help chores on another player's plot", () => {
+    const html = render(
+      App({
+        player: {
+          player: { id: "p1", name: "Ada", plotId: "plot1", energy: 90 },
+          ready: null,
+        },
+        viewedPlot: {
+          plot: {
+            id: "plot2",
+            playerId: "p2",
+            regionId: "r1",
+            siteX: 4,
+            siteY: 5,
+            width: 2,
+            height: 2,
+            worldOwned: false,
+          },
+          buildings: [],
+          crops: [
+            {
+              id: "c1",
+              plotId: "plot2",
+              tileX: 0,
+              tileY: 0,
+              type: "wheat",
+              plantedTick: 1,
+              growthTicks: 2,
+              watered: false,
+              tended: false,
+              failed: false,
+            },
+          ],
+          animals: [{ id: "a1", plotId: "plot2", type: "chicken", count: 1, fed: false }],
+          storage: { capacity: 100, used: 0, free: 100 },
+          inventory: [],
+          ready: null,
+        },
+        onHelp: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Help out");
+    expect(html).toContain('data-chore="water"');
+    expect(html).toContain('data-chore="tend"');
+    expect(html).toContain('data-chore="feed"');
+    expect(html).toContain("+1");
+    expect(html).toContain("Water crops");
+  });
 });
