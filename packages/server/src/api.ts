@@ -28,6 +28,7 @@ import type { Database } from "./db/database.js";
 import { loadWorldState, saveWorldState } from "./db/stateRepository.js";
 import { checkMutationAllowed } from "./mutations.js";
 import { validateOrderServerSide } from "./orderValidation.js";
+import { DEFAULT_AUTH_RATE_LIMIT, RateLimiter, type RateLimitOptions } from "./rateLimit.js";
 import { retryWorldTick } from "./retry.js";
 
 export interface JsonResponse {
@@ -40,6 +41,8 @@ export interface ApiRequest {
   method: string;
   path: string;
   headers: IncomingMessage["headers"];
+  /** Peer address from the socket, used for per-client rate limiting. */
+  remoteAddress?: string;
   body?: unknown;
   /** Query parameters parsed from the request URL. */
   query?: Record<string, string>;
@@ -197,6 +200,9 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
         method,
         path,
         headers: request.headers,
+        ...(request.socket.remoteAddress === undefined
+          ? {}
+          : { remoteAddress: request.socket.remoteAddress }),
         params: match.params,
         query: requestQuery(request),
         body,
@@ -350,6 +356,40 @@ export interface BuildApiRoutesOptions {
   passkey?: PasskeyAuth;
   discord?: DiscordAuth;
   github?: GithubAuth;
+  /** Override the per-client auth endpoint limit (spec §12; M4.B08). */
+  authRateLimit?: RateLimitOptions;
+}
+
+function clientAddress(request: ApiRequest): string {
+  const forwarded = request.headers["x-forwarded-for"];
+  const first = Array.isArray(forwarded) ? forwarded[0] : forwarded;
+  const forwardedAddress = first?.split(",")[0]?.trim();
+  if (forwardedAddress !== undefined && forwardedAddress.length > 0) {
+    return forwardedAddress;
+  }
+  return request.remoteAddress ?? "unknown";
+}
+
+function rateLimitAuthRoutes(routes: Routes, options: RateLimitOptions): Routes {
+  const limiter = new RateLimiter(options);
+  for (const [key, handler] of Object.entries(routes)) {
+    const [method, path] = key.split(" ");
+    if (method === undefined || path === undefined || !path.startsWith("/auth/")) {
+      continue;
+    }
+    routes[key] = (request) => {
+      const result = limiter.check(clientAddress(request));
+      if (!result.allowed) {
+        return {
+          status: 429,
+          body: { error: "rate_limited", retryAfterSeconds: result.retryAfterSeconds },
+          headers: { "retry-after": String(result.retryAfterSeconds) },
+        };
+      }
+      return handler(request);
+    };
+  }
+  return routes;
 }
 
 export function buildApiRoutes(database: Database, options: BuildApiRoutesOptions = {}): Routes {
@@ -367,7 +407,7 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
   const githubRoutes = options.github ? createGithubRoutes(database, options.github) : {};
   const credentialRoutes = createCredentialRoutes(database);
 
-  return {
+  const routes: Routes = {
     ...passkeyRoutes,
     ...discordRoutes,
     ...githubRoutes,
@@ -995,4 +1035,6 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
       return { status, body: { error: result.error ?? "retry_failed", tick: result.tick } };
     },
   };
+
+  return rateLimitAuthRoutes(routes, options.authRateLimit ?? DEFAULT_AUTH_RATE_LIMIT);
 }
