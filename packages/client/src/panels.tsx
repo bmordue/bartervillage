@@ -18,6 +18,7 @@ import {
 
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
 import {
+  createCounterOfferOrder,
   createOfferOrder,
   createStack,
   createWantedRequestOrder,
@@ -449,11 +450,18 @@ export function PlayersPanel({ players = [], currentPlayerId, onViewPlot }: Play
 export interface BarterPanelProps {
   offers?: BarterOffer[] | undefined;
   inventory?: InventoryItem[] | undefined;
+  currentPlayerId?: string | undefined;
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
 }
 
-export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterPanelProps) {
+export function BarterPanel({
+  offers = [],
+  inventory = [],
+  currentPlayerId,
+  onAddOrder,
+}: BarterPanelProps) {
   const [kind, setKind] = useState<BarterPostKind>("offer");
+  const [counterParentId, setCounterParentId] = useState("");
   const [giveItem, setGiveItem] = useState<string>(inventory[0]?.item ?? "");
   const [giveQuantity, setGiveQuantity] = useState(1);
   const [wantItem, setWantItem] = useState<string>("");
@@ -474,17 +482,23 @@ export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterP
     let draft: OrderDraft;
     try {
       draft =
-        kind === "offer"
-          ? createOfferOrder({
+        kind === "counter_offer"
+          ? createCounterOfferOrder({
+              parentOfferId: counterParentId,
               gives: [createStack(giveItem, giveQuantity)],
               wants: [createStack(wantItem, wantQuantity)],
-              expiryTicks,
             })
-          : createWantedRequestOrder({
-              wants: [createStack(wantItem, wantQuantity)],
-              quantity: requestQuantity,
-              expiryTicks,
-            });
+          : kind === "offer"
+            ? createOfferOrder({
+                gives: [createStack(giveItem, giveQuantity)],
+                wants: [createStack(wantItem, wantQuantity)],
+                expiryTicks,
+              })
+            : createWantedRequestOrder({
+                wants: [createStack(wantItem, wantQuantity)],
+                quantity: requestQuantity,
+                expiryTicks,
+              });
     } catch (caught) {
       setError(errorMessage(caught));
       return;
@@ -539,10 +553,40 @@ export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterP
             >
               <option value="offer">Offer</option>
               <option value="wanted_request">Wanted request</option>
+              <option value="counter_offer">Counter-offer</option>
             </select>
           </label>
 
-          {kind === "offer" ? (
+          {kind === "counter_offer" ? (
+            <label class="order-field">
+              <span>Parent post</span>
+              <select
+                value={counterParentId}
+                disabled={busy}
+                onChange={(event) => {
+                  setCounterParentId((event.currentTarget as HTMLSelectElement).value);
+                  setError(null);
+                }}
+              >
+                <option value="">Choose a post to counter</option>
+                {offers
+                  .filter(
+                    (offer) =>
+                      offer.status === "open" &&
+                      offer.kind !== "counter_offer" &&
+                      offer.posterId !== currentPlayerId,
+                  )
+                  .map((offer) => (
+                    <option key={offer.id} value={offer.id}>
+                      {kindLabel(offer.kind)} from {offer.posterName ?? offer.posterId} —{" "}
+                      {describeOffer(offer)}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ) : null}
+
+          {kind !== "wanted_request" ? (
             <div class="barter-row">
               <label class="order-field">
                 <span>Give item</span>
@@ -579,7 +623,7 @@ export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterP
 
           <div class="barter-row">
             <label class="order-field">
-              <span>{kind === "offer" ? "Want item" : "Wanted item"}</span>
+              <span>{kind === "wanted_request" ? "Wanted item" : "Want item"}</span>
               <select
                 value={wantItem}
                 disabled={busy}
@@ -625,21 +669,37 @@ export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterP
             </label>
           ) : null}
 
-          <label class="order-field">
-            <span>Expiry (ticks)</span>
-            <input
-              type="number"
-              min={MIN_OFFER_EXPIRY_TICKS}
-              max={MAX_OFFER_EXPIRY_TICKS}
-              value={expiryTicks}
-              disabled={busy}
-              onInput={(event) =>
-                setExpiryTicks(Number((event.currentTarget as HTMLInputElement).value))
-              }
-            />
-          </label>
+          {kind !== "counter_offer" ? (
+            <label class="order-field">
+              <span>Expiry (ticks)</span>
+              <input
+                type="number"
+                min={MIN_OFFER_EXPIRY_TICKS}
+                max={MAX_OFFER_EXPIRY_TICKS}
+                value={expiryTicks}
+                disabled={busy}
+                onInput={(event) =>
+                  setExpiryTicks(Number((event.currentTarget as HTMLInputElement).value))
+                }
+              />
+            </label>
+          ) : null}
 
-          {kind === "offer" ? (
+          {kind === "counter_offer" ? (
+            <p class="barter-expiry-hint">
+              Counters inherit the parent post's expiry and cannot themselves be countered.
+            </p>
+          ) : null}
+
+          {kind === "counter_offer" ? (
+            <p class="barter-lock">
+              {giveQuantity > 0 && giveItem.length > 0
+                ? `${giveQuantity} ${humanize(giveItem)} locks when queued`
+                : "The counter's goods lock when queued"}
+              {selectedStock ? ` (${selectedStock.free} free)` : ""}. Remove the order before the
+              tick to release the lock.
+            </p>
+          ) : kind === "offer" ? (
             <p class="barter-lock">
               {giveQuantity > 0 && giveItem.length > 0
                 ? `${giveQuantity} ${humanize(giveItem)} locks when queued`
@@ -650,13 +710,19 @@ export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterP
           ) : (
             <p class="barter-lock barter-lock-none">Wanted requests lock no goods.</p>
           )}
-          <p class="barter-expiry-hint">
-            Acceptable from the next tick and expires at the start of tick expiry + 1.
-          </p>
+          {kind !== "counter_offer" ? (
+            <p class="barter-expiry-hint">
+              Acceptable from the next tick and expires at the start of tick expiry + 1.
+            </p>
+          ) : null}
 
           {error ? <p class="order-error">{error}</p> : null}
           <button type="submit" class="order-add" disabled={busy}>
-            {kind === "offer" ? "Queue offer" : "Queue wanted request"}
+            {kind === "offer"
+              ? "Queue offer"
+              : kind === "counter_offer"
+                ? "Queue counter-offer"
+                : "Queue wanted request"}
           </button>
         </form>
       ) : null}

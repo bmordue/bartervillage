@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createOfferOrder,
+  createCounterOfferOrder,
   createStack,
   createWantedRequestOrder,
   DEFAULT_EXPIRY_TICKS,
@@ -104,5 +105,47 @@ describe("createWantedRequestOrder (M6.02)", () => {
         expiryTicks: 7,
       }),
     ).toThrow("positive whole number");
+  });
+});
+
+describe("createCounterOfferOrder (M6.03)", () => {
+  it("builds a counter_offer order against the parent post", () => {
+    expect(
+      createCounterOfferOrder({
+        parentOfferId: "o1",
+        gives: [{ item: "wheat", quantity: 2 }],
+        wants: [{ item: "wood", quantity: 1 }],
+      }),
+    ).toEqual({
+      type: "counter_offer",
+      payload: {
+        parentOfferId: "o1",
+        gives: [{ item: "wheat", quantity: 2 }],
+        wants: [{ item: "wood", quantity: 1 }],
+      },
+    });
+  });
+
+  it("requires a parent offer id", () => {
+    expect(() => createCounterOfferOrder({ parentOfferId: "", gives: [], wants: [] })).toThrow(
+      "Choose a post to counter",
+    );
+  });
+
+  it("requires goods on both sides", () => {
+    expect(() =>
+      createCounterOfferOrder({
+        parentOfferId: "o1",
+        gives: [],
+        wants: [{ item: "wood", quantity: 1 }],
+      }),
+    ).toThrow("at least one item");
+    expect(() =>
+      createCounterOfferOrder({
+        parentOfferId: "o1",
+        gives: [{ item: "wheat", quantity: 1 }],
+        wants: [],
+      }),
+    ).toThrow("at least one item");
   });
 });

@@ -250,6 +250,7 @@ export function App({
           <BarterPanel
             offers={offers}
             inventory={inventory}
+            currentPlayerId={currentPlayerId}
             {...(onAddOrder ? { onAddOrder } : {})}
           />
           <InventoryPanel items={inventory} storage={plot?.storage} />

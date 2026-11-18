@@ -56,7 +56,7 @@ export async function fetchBarter(
   return body.offers ?? [];
 }
 
-export type BarterPostKind = "offer" | "wanted_request";
+export type BarterPostKind = "offer" | "wanted_request" | "counter_offer";
 
 export interface OfferDraft {
   gives: ItemStack[];
@@ -123,6 +123,12 @@ export function createOfferOrder(draft: OfferDraft): OrderDraft {
   };
 }
 
+export interface CounterOfferDraft {
+  parentOfferId: string;
+  gives: ItemStack[];
+  wants: ItemStack[];
+}
+
 /**
  * Build the order that posts a wanted request. Wanted requests lock nothing and
  * settle through counter-offers (spec §7; M2.E03).
@@ -138,6 +144,25 @@ export function createWantedRequestOrder(draft: WantedRequestDraft): OrderDraft 
       wants: positiveStacks(draft.wants, "A wanted request's goods"),
       quantity: draft.quantity,
       expiryTicks: draft.expiryTicks,
+    },
+  };
+}
+
+/**
+ * Build the order that posts a counter-offer against an open offer or wanted
+ * request. The counter locks only the counterer's goods; a wanted request's
+ * wanter side locks when they accept (spec §7; M2.E04, M2.E06).
+ */
+export function createCounterOfferOrder(draft: CounterOfferDraft): OrderDraft {
+  if (!draft.parentOfferId || draft.parentOfferId.length === 0) {
+    throw new Error("Choose a post to counter.");
+  }
+  return {
+    type: "counter_offer",
+    payload: {
+      parentOfferId: draft.parentOfferId,
+      gives: positiveStacks(draft.gives, "A counter-offer's goods"),
+      wants: positiveStacks(draft.wants, "A counter-offer's request"),
     },
   };
 }
