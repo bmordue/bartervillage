@@ -10,6 +10,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 
 import { content as bundledContent } from "@bartervillage/content";
 import {
+  currentBadge,
   ready as markReady,
   removeOrder,
   reorderQueue,
@@ -601,15 +602,21 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
         return { status: 404, body: { error: "player_not_found" } };
       }
 
-      const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);
-      const ready =
-        world === undefined
-          ? undefined
-          : database.get<ReadyRow>(
-              `SELECT tick, position FROM ready WHERE player_id = ? AND tick = ?`,
-              playerId,
-              world.current_tick,
-            );
+      const state = loadWorldState(database, worldId);
+      if (!state) {
+        return { status: 404, body: { error: "world_not_found" } };
+      }
+
+      const goodwillEntry = state.goodwill.find((entry) => entry.playerId === playerId);
+      const goodwillScore = goodwillEntry?.score ?? 0;
+      const badge = currentBadge(goodwillScore, bundledContent.goodwill);
+
+      const world = state.world;
+      const ready = database.get<ReadyRow>(
+        `SELECT tick, position FROM ready WHERE player_id = ? AND tick = ?`,
+        playerId,
+        world.currentTick,
+      );
 
       return {
         status: 200,
@@ -619,6 +626,9 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
             name: player.name,
             plotId: player.plot_id,
             energy: player.energy,
+            goodwill: goodwillScore,
+            badge: badge?.id ?? null,
+            badgeName: badge?.name ?? null,
           },
           ready: ready ?? null,
         },

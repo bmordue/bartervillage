@@ -11,6 +11,7 @@ import {
   SEASONS,
   WEATHERS,
   type AnimalDefinition,
+  type BadgeDefinition,
   type BiomeDefinition,
   type BuildingDefinition,
   type ContentPack,
@@ -240,6 +241,25 @@ export function validateContent(input: unknown): ContentValidationResult {
   if (goodwill) {
     numberField(errors, "$.goodwill", goodwill, "gift", (v) => v >= 0, "must be non-negative");
     numberField(errors, "$.goodwill", goodwill, "help", (v) => v >= 0, "must be non-negative");
+    const badgesRaw = requireArray(errors, "$.goodwill.badges", goodwill.badges) ?? [];
+    collectIds(errors, "$.goodwill.badges", badgesRaw, (index, entry): BadgeDefinition | null => {
+      const path = `$.goodwill.badges[${index}]`;
+      const record = requireRecord(errors, path, entry);
+      if (!record) {
+        return null;
+      }
+      const id = stringField(errors, path, record, "id");
+      stringField(errors, path, record, "name");
+      const minScore = numberField(
+        errors,
+        path,
+        record,
+        "minScore",
+        (v) => Number.isInteger(v) && v >= 0,
+        "must be a non-negative integer",
+      );
+      return id && minScore !== null ? { id, name: String(record.name), minScore } : null;
+    });
   }
 
   const cropsRaw = requireArray(errors, "$.crops", root.crops) ?? [];

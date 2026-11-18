@@ -26,7 +26,7 @@ function makeContent(): ContentPack {
       berries: { name: "Berries" },
     },
     energy: { dailyBudget: 100, travelPerBoundary: 5, costs },
-    goodwill: { gift: 5, help: 1 },
+    goodwill: { gift: 5, help: 1, badges: [] },
     crops: [],
     animals: [],
     recipes: [],

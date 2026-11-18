@@ -300,7 +300,7 @@
 - [x] **M6.09** Help flow: water, feed or tend on another player's plot; helper pays energy and earns +1 goodwill; host receives the benefit (spec §8). _Depends on: M2.A16, M2.B03, M2.B09, M4.B02, M5.A08._
 - [x] **M6.10** Restrict each chore to once per tick and resolve contention by queue order (spec §8). _Depends on: M2.A09, M6.09._
 - [x] **M6.11** Block helping on your own plot (spec §8). _Depends on: M6.09._
-- [ ] **M6.12** Goodwill score and badges as cosmetic only, with no tradeable, spendable or functional effect (spec §8). _Depends on: M3.01, M6.08, M6.09; blocked by D.02._
+- [x] **M6.12** Goodwill score and badges as cosmetic only, with no tradeable, spendable or functional effect (spec §8). _Depends on: M3.01, M6.08, M6.09; blocked by D.02._
 - [ ] **M6.13** Phrase book UI using a fixed content-defined list with no free text (spec §8). _Depends on: M3.16, M5.A03, M8.07; blocked by D.03._
 - [ ] **M6.14** Show public trade history through the event log and replay (spec §7). _Depends on: M2.A03, M3.18, M5.C01._
 

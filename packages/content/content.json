@@ -209,7 +209,13 @@
   },
   "goodwill": {
     "gift": 5,
-    "help": 1
+    "help": 1,
+    "badges": [
+      { "id": "badge_kindHelper", "name": "Kind Helper", "minScore": 1 },
+      { "id": "badge_generous", "name": "Generous", "minScore": 5 },
+      { "id": "badge_charitable", "name": "Charitable", "minScore": 10 },
+      { "id": "badge_neighbor", "name": "Neighborhood Goodwill", "minScore": 25 }
+    ]
   },
   "crops": [
     {

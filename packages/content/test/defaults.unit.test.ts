@@ -8,8 +8,10 @@ describe("default content values", () => {
     expect(content.energy.travelPerBoundary).toBe(5);
   });
 
-  it("sets the default goodwill awards", () => {
-    expect(content.goodwill).toEqual({ gift: 5, help: 1 });
+  it("sets the default goodwill awards and badges", () => {
+    expect(content.goodwill.gift).toBe(5);
+    expect(content.goodwill.help).toBe(1);
+    expect(content.goodwill.badges.length).toBeGreaterThan(0);
   });
 
   it("contains no currency or coin concept (M3.03)", () => {

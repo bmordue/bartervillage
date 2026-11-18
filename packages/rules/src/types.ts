@@ -38,6 +38,7 @@ export type BuildingTypeId = string;
 export type RecipeId = string;
 export type BiomeId = string;
 export type DecorationTypeId = string;
+export type BadgeId = string;
 export type PhraseId = string;
 
 export type Tick = number;
@@ -800,9 +801,16 @@ export interface EnergyConfig {
   costs: Record<OrderType, number>;
 }
 
+export interface BadgeDefinition {
+  id: BadgeId;
+  name: string;
+  minScore: number;
+}
+
 export interface GoodwillConfig {
   gift: number;
   help: number;
+  badges: BadgeDefinition[];
 }
 
 export interface CropDefinition {

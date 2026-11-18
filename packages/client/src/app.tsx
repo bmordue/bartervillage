@@ -214,6 +214,14 @@ export function App({
           <StatusItem label="Weather" value={world?.weather} />
           <StatusItem label="Deadline" value={world?.nextDeadline} />
           <StatusItem
+            label="Goodwill"
+            value={
+              player
+                ? `${String(player.player.goodwill)}${player.player.badgeName ? ` (${player.player.badgeName})` : ""}`
+                : undefined
+            }
+          />
+          <StatusItem
             label="Ready"
             value={player ? (player.ready ? "Ready" : "Not ready") : undefined}
           />

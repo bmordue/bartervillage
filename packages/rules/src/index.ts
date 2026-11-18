@@ -28,3 +28,4 @@ export * from "./help.js";
 export * from "./gift.js";
 export * from "./ready.js";
 export * from "./seasons.js";
+export * from "./goodwill.js";

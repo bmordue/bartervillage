@@ -13,6 +13,9 @@ export interface PlayerSnapshot {
   name: string;
   plotId: string;
   energy: number;
+  goodwill: number;
+  badge: string | null;
+  badgeName: string | null;
 }
 
 export interface ReadyState {
