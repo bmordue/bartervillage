@@ -77,6 +77,18 @@ function helpHandler(context: OrderExecutionContext): OrderOutcome {
     return orderFailed(`Target plot ${payload.targetPlotId} has no host`);
   }
 
+  const choreAlreadyDone = context.state.orders.some(
+    (order) =>
+      order.playerId === context.player.id &&
+      order.tick === context.state.world.currentTick &&
+      order.status === "resolved" &&
+      order.type === "help" &&
+      (order.payload as { chore?: string }).chore === payload.chore,
+  );
+  if (choreAlreadyDone) {
+    return orderFailed(`Chore ${payload.chore} already completed this tick`);
+  }
+
   const cost = orderEnergyCost(context.content, "help");
   if (!spendEnergy(context.player, cost)) {
     return orderFailed(`Not enough energy to help (needs ${cost})`);

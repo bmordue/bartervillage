@@ -213,4 +213,64 @@ describe("help order handler (M2.A16)", () => {
     expect(outcome.ok).toBe(false);
     expect(outcome.reason).toContain("Not enough energy");
   });
+
+  it("fails second same-chore help by same player in same tick (M6.10)", () => {
+    registerHelpHandlers();
+    const state = twoPlotState([crop(), crop({ id: "c2", tileX: 1, tileY: 0 })]);
+    // Simulate first help already resolved
+    const firstOrder = makeOrder("help", { targetPlotId: "plot2", chore: "water" });
+    firstOrder.status = "resolved";
+    state.orders.push(firstOrder);
+
+    // Second water by same player same tick should fail
+    const secondOrder = makeOrder("help", { targetPlotId: "plot2", chore: "water" }, { id: "o2" });
+    const outcome = resolveOrder(makeContext(state, "p1", secondOrder));
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toContain("already completed this tick");
+  });
+
+  it("allows different chore by same player in same tick (M6.10)", () => {
+    registerHelpHandlers();
+    const state = twoPlotState([crop()]);
+    // Simulate water already done
+    const firstOrder = makeOrder("help", { targetPlotId: "plot2", chore: "water" });
+    firstOrder.status = "resolved";
+    state.orders.push(firstOrder);
+
+    // Tend should succeed
+    const secondOrder = makeOrder("help", { targetPlotId: "plot2", chore: "tend" }, { id: "o2" });
+    const outcome = resolveOrder(makeContext(state, "p1", secondOrder));
+
+    expect(outcome.ok).toBe(true);
+    expect(state.crops[0]?.tended).toBe(true);
+  });
+
+  it("resolves cross-player contention by queue order (M6.10)", () => {
+    registerHelpHandlers();
+    const state = twoPlotState([crop()]);
+    state.players.push(testPlayer({ id: "p3", plotId: "plot3", energy: 100 }));
+    state.plots.push({
+      id: "plot3",
+      playerId: "p3",
+      regionId: "r1",
+      siteX: 0,
+      siteY: 2,
+      width: 12,
+      height: 12,
+      worldOwned: false,
+    });
+    // p1 already watered the host plot's crop this tick
+    state.crops[0]!.watered = true;
+    const firstOrder = makeOrder("help", { targetPlotId: "plot2", chore: "water" });
+    firstOrder.status = "resolved";
+    state.orders.push(firstOrder);
+
+    // p3 cannot water again - nothing left to water
+    const secondOrder = makeOrder("help", { targetPlotId: "plot2", chore: "water" }, { id: "o2" });
+    const outcome = resolveOrder(makeContext(state, "p3", secondOrder));
+
+    expect(outcome.ok).toBe(false);
+    expect(outcome.reason).toContain("No water target");
+  });
 });
