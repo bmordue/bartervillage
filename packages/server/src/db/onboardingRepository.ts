@@ -30,6 +30,7 @@ export interface OnboardPlayerOptions {
   inviteCodeHash: string;
   sessionId: string;
   credential?: Omit<CreateCredentialOptions, "playerId">;
+  credentialKey?: Buffer;
   now?: Date;
   sessionTtlMs?: number;
 }
@@ -72,7 +73,11 @@ export function onboardPlayer(db: Database, options: OnboardPlayerOptions): Onbo
 
       provisionStarterBuildings(db, options.plotId);
       if (options.credential !== undefined) {
-        createCredential(db, { ...options.credential, playerId: options.playerId, now }, undefined);
+        createCredential(
+          db,
+          { ...options.credential, playerId: options.playerId, now },
+          options.credentialKey,
+        );
       }
       const session = createSession(db, {
         id: options.sessionId,

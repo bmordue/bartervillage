@@ -589,6 +589,25 @@ CREATE TABLE webauthn_challenges (
 CREATE INDEX webauthn_challenges_expiry ON webauthn_challenges(expires_at);
 `;
 
+/**
+ * Short-lived OAuth flow state (spec §12; M4.C02).
+ *
+ * The browser cookie binds a state ID to the provider callback; the PKCE
+ * verifier and any pending onboarding details never leave the server.
+ */
+export const OAUTH_STATE_MIGRATION = `
+CREATE TABLE oauth_states (
+  id TEXT PRIMARY KEY,
+  provider TEXT NOT NULL CHECK (provider IN ('discord', 'github')),
+  purpose TEXT NOT NULL CHECK (purpose IN ('login', 'onboard', 'link')),
+  payload_json TEXT NOT NULL,
+  code_verifier TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX oauth_states_expiry ON oauth_states(expires_at);
+`;
+
 export const MIGRATIONS: readonly Migration[] = [
   { version: 1, name: "initial_schema", sql: INITIAL_SCHEMA },
   { version: 2, name: "order_locks", sql: LOCKS_MIGRATION },
@@ -596,4 +615,5 @@ export const MIGRATIONS: readonly Migration[] = [
   { version: 4, name: "immutable_replay", sql: IMMUTABLE_REPLAY_MIGRATION },
   { version: 5, name: "domain_constraints", sql: DOMAIN_CONSTRAINTS_MIGRATION },
   { version: 6, name: "passkey_auth", sql: PASSKEY_MIGRATION },
+  { version: 7, name: "oauth_states", sql: OAUTH_STATE_MIGRATION },
 ];

@@ -17,6 +17,8 @@ import {
   type Order,
   type OrderType,
 } from "@bartervillage/rules";
+import { createDiscordRoutes } from "./auth/discordRoutes.js";
+import type { DiscordAuth } from "./auth/discord.js";
 import { createPasskeyRoutes } from "./auth/passkeyRoutes.js";
 import type { PasskeyAuth } from "./auth/passkey.js";
 import type { Database } from "./db/database.js";
@@ -36,6 +38,8 @@ export interface ApiRequest {
   path: string;
   headers: IncomingMessage["headers"];
   body?: unknown;
+  /** Query parameters parsed from the request URL. */
+  query?: Record<string, string>;
   /** Path parameters captured from `:name` segments. */
   params?: Record<string, string>;
 }
@@ -58,6 +62,11 @@ function writeJson(
   body: unknown,
   headers: Record<string, string | string[]> = {},
 ): void {
+  if (body === undefined) {
+    response.writeHead(status, { "cache-control": "no-store", ...headers });
+    response.end();
+    return;
+  }
   const payload = JSON.stringify(body);
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
@@ -72,6 +81,19 @@ function requestPath(request: IncomingMessage): string {
   const url = request.url ?? "/";
   const queryIndex = url.indexOf("?");
   return queryIndex === -1 ? url : url.slice(0, queryIndex);
+}
+
+function requestQuery(request: IncomingMessage): Record<string, string> {
+  const url = request.url ?? "/";
+  const queryIndex = url.indexOf("?");
+  if (queryIndex === -1) {
+    return {};
+  }
+  const query: Record<string, string> = {};
+  for (const [key, value] of new URLSearchParams(url.slice(queryIndex + 1))) {
+    query[key] = value;
+  }
+  return query;
 }
 
 function defaultRoutes(): Routes {
@@ -173,6 +195,7 @@ export function createApiServer(options: ApiServerOptions = {}): Server {
         path,
         headers: request.headers,
         params: match.params,
+        query: requestQuery(request),
         body,
       });
       writeJson(response, result.status, result.body, result.headers);
@@ -322,6 +345,7 @@ type ArchivedEventRow = {
 
 export interface BuildApiRoutesOptions {
   passkey?: PasskeyAuth;
+  discord?: DiscordAuth;
 }
 
 export function buildApiRoutes(database: Database, options: BuildApiRoutesOptions = {}): Routes {
@@ -335,9 +359,11 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
   }
 
   const passkeyRoutes = options.passkey ? createPasskeyRoutes(database, options.passkey) : {};
+  const discordRoutes = options.discord ? createDiscordRoutes(database, options.discord) : {};
 
   return {
     ...passkeyRoutes,
+    ...discordRoutes,
     "GET /world": (request) => {
       const worldId = getWorldId(request);
       const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);

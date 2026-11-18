@@ -152,6 +152,21 @@ export function updatePasskeyCredential(
   return Number(result.changes) === 1;
 }
 
+/** Replace the encrypted token set on an OAuth credential. */
+export function updateCredentialSecret(
+  db: Database,
+  id: string,
+  secret: string,
+  key: Buffer,
+): boolean {
+  const result = db.run(
+    "UPDATE credentials SET secret_ciphertext = ? WHERE id = ?",
+    encryptSecret(secret, key),
+    id,
+  );
+  return Number(result.changes) === 1;
+}
+
 export function loadCredential(db: Database, id: string): Credential | undefined {
   const row = db.get<CredentialRow>("SELECT * FROM credentials WHERE id = ?", id);
   return row ? toCredential(row) : undefined;

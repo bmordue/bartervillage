@@ -6,6 +6,7 @@
  */
 
 import { startApiServer } from "./api.js";
+import { DiscordAuth, discordOptionsFromEnv } from "./auth/discord.js";
 import { PasskeyAuth, passkeyOptionsFromEnv } from "./auth/passkey.js";
 import { Database } from "./db/database.js";
 import { buildApiRoutes } from "./api.js";
@@ -17,11 +18,16 @@ export async function main(): Promise<void> {
     process.env.DATABASE_PATH ? { path: process.env.DATABASE_PATH } : {},
   );
   const passkey = new PasskeyAuth(passkeyOptionsFromEnv(process.env));
+  const discordOptions = discordOptionsFromEnv(process.env);
+  const discord = discordOptions === undefined ? undefined : new DiscordAuth(discordOptions);
   const running = await startApiServer({
     port,
     host,
     logger: (message) => console.error(message),
-    routes: buildApiRoutes(database, { passkey }),
+    routes: buildApiRoutes(database, {
+      passkey,
+      ...(discord === undefined ? {} : { discord }),
+    }),
   });
 
   console.log(`API listening on http://${host}:${running.port}`);
