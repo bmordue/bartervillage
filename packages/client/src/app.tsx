@@ -241,6 +241,7 @@ export function App({
             orders={orders}
             failures={orderFailures}
             failureTick={failureTick}
+            availableEnergy={player?.player.energy}
             onAddOrder={onAddOrder}
             onAddOrders={onAddOrders}
             onRemoveOrder={onRemoveOrder}

@@ -7,6 +7,9 @@
 
 import { useState } from "preact/hooks";
 
+import { content } from "@bartervillage/content";
+import { orderEnergyCost, type OrderType } from "@bartervillage/rules";
+
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
 import { validateOrderDraft } from "./orderValidation.js";
 import type { BarterOffer, ItemStack } from "./barter.js";
@@ -105,6 +108,8 @@ export interface OrderPanelProps {
   orders?: QueuedOrder[] | undefined;
   failures?: QueuedOrder[] | undefined;
   failureTick?: number | null | undefined;
+  /** Last polled player energy; used for a light, non-authoritative check. */
+  availableEnergy?: number | undefined;
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
   onAddOrders?: ((drafts: OrderDraft[]) => void | Promise<void>) | undefined;
   onRemoveOrder?: ((orderId: string) => void | Promise<void>) | undefined;
@@ -144,6 +149,7 @@ export function OrderPanel({
   orders = [],
   failures = [],
   failureTick,
+  availableEnergy,
   onAddOrder,
   onAddOrders,
   onRemoveOrder,
@@ -187,8 +193,12 @@ export function OrderPanel({
       return;
     }
     const draft = { type, payload: payload as Record<string, unknown> };
+    const energyCost = orderEnergyCost(content, type as OrderType);
     try {
-      validateOrderDraft(draft);
+      validateOrderDraft(draft, {
+        ...(availableEnergy === undefined ? {} : { availableEnergy }),
+        energyCost,
+      });
     } catch (caught) {
       setError(errorMessage(caught));
       return;

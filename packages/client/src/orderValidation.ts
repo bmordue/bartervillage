@@ -1,20 +1,29 @@
 /**
- * Light client-side validation for queued orders (M4.B04).
+ * Light client-side validation for queued orders (M4.B04, M5.B07).
  *
- * This module provides light validation only (energy, basic validity). The server
- * remains authoritative for all business rules (energy, capacity, locks, location,
- * and offer state).
+ * The client only catches obvious input mistakes and an energy shortfall from
+ * the last poll. The server remains authoritative for all business rules
+ * (energy, capacity, locks, location and offer state), so a stale client can
+ * never let an invalid order through.
  */
 
 import type { OrderDraft } from "./orders.js";
 
+export interface OrderDraftValidation {
+  /** Energy from the most recent player snapshot, when known. */
+  availableEnergy?: number;
+  /** Content-defined energy cost for this order type, when known. */
+  energyCost?: number;
+}
+
 /**
  * Lightweight validation performed on the client before sending an order to the server.
  *
- * This check is non‑authoritative; all substantive rules (energy, capacity,
- * location, locks, offer state) are enforced server‑side.
+ * This check is non-authoritative; all substantive rules (energy, capacity,
+ * location, locks, offer state) are enforced server-side. The energy check uses
+ * the last polled snapshot and is only a convenience.
  */
-export function validateOrderDraft(draft: OrderDraft): void {
+export function validateOrderDraft(draft: OrderDraft, options: OrderDraftValidation = {}): void {
   if (!draft.type || typeof draft.type !== "string") {
     throw new Error("Order type must be a non‑empty string.");
   }
@@ -24,6 +33,17 @@ export function validateOrderDraft(draft: OrderDraft): void {
   // a plain object) to avoid common user errors.
   if (!draft.payload || typeof draft.payload !== "object" || Array.isArray(draft.payload)) {
     throw new Error("Order payload must be a JSON object.");
+  }
+
+  // Energy is a light check only: the server re-reads the authoritative budget.
+  if (
+    options.availableEnergy !== undefined &&
+    options.energyCost !== undefined &&
+    options.energyCost > options.availableEnergy
+  ) {
+    throw new Error(
+      `Not enough energy for this order (needs ${options.energyCost}, have ${options.availableEnergy}).`,
+    );
   }
 
   // Help orders target a host plot and a chore; the tile is optional because a
