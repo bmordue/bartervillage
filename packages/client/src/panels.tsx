@@ -1,18 +1,32 @@
 /**
  * Orders, barter board and inventory panels (M5.A03).
  *
- * These panels are read-only views. Queue editing arrives in M5.B02, the
- * inventory detail in M5.B05 and the full barter board in M6.01.
+ * The order panel edits the queue (M5.B02), the inventory panel shows stock
+ * detail (M5.B05) and the barter panel lists the board plus the offer and
+ * wanted-request flows (M6.01, M6.02).
  */
 
 import { useState } from "preact/hooks";
 
 import { content } from "@bartervillage/content";
-import { orderEnergyCost, type OrderType } from "@bartervillage/rules";
+import {
+  MAX_OFFER_EXPIRY_TICKS,
+  MIN_OFFER_EXPIRY_TICKS,
+  orderEnergyCost,
+  type OrderType,
+} from "@bartervillage/rules";
 
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
+import {
+  createOfferOrder,
+  createStack,
+  createWantedRequestOrder,
+  DEFAULT_EXPIRY_TICKS,
+  type BarterOffer,
+  type BarterPostKind,
+  type ItemStack,
+} from "./barter.js";
 import { validateOrderDraft } from "./orderValidation.js";
-import type { BarterOffer, ItemStack } from "./barter.js";
 import type { InventoryItem } from "./inventory.js";
 import { moveOrder, type OrderDraft, type QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
@@ -434,9 +448,54 @@ export function PlayersPanel({ players = [], currentPlayerId, onViewPlot }: Play
 
 export interface BarterPanelProps {
   offers?: BarterOffer[] | undefined;
+  inventory?: InventoryItem[] | undefined;
+  onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
 }
 
-export function BarterPanel({ offers = [] }: BarterPanelProps) {
+export function BarterPanel({ offers = [], inventory = [], onAddOrder }: BarterPanelProps) {
+  const [kind, setKind] = useState<BarterPostKind>("offer");
+  const [giveItem, setGiveItem] = useState<string>(inventory[0]?.item ?? "");
+  const [giveQuantity, setGiveQuantity] = useState(1);
+  const [wantItem, setWantItem] = useState<string>("");
+  const [wantQuantity, setWantQuantity] = useState(1);
+  const [requestQuantity, setRequestQuantity] = useState(1);
+  const [expiryTicks, setExpiryTicks] = useState(DEFAULT_EXPIRY_TICKS);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const tradableItems = Object.keys(content.items).sort();
+  const selectedStock = inventory.find((entry) => entry.item === giveItem);
+
+  const submit = (event: Event): void => {
+    event.preventDefault();
+    if (!onAddOrder) {
+      return;
+    }
+    let draft: OrderDraft;
+    try {
+      draft =
+        kind === "offer"
+          ? createOfferOrder({
+              gives: [createStack(giveItem, giveQuantity)],
+              wants: [createStack(wantItem, wantQuantity)],
+              expiryTicks,
+            })
+          : createWantedRequestOrder({
+              wants: [createStack(wantItem, wantQuantity)],
+              quantity: requestQuantity,
+              expiryTicks,
+            });
+    } catch (caught) {
+      setError(errorMessage(caught));
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    void Promise.resolve(onAddOrder(draft))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setBusy(false));
+  };
+
   return (
     <Panel title="Barter board">
       {offers.length === 0 ? (
@@ -465,6 +524,142 @@ export function BarterPanel({ offers = [] }: BarterPanelProps) {
           ))}
         </ul>
       )}
+
+      {onAddOrder ? (
+        <form class="barter-form" onSubmit={submit}>
+          <label class="order-field">
+            <span>Post type</span>
+            <select
+              value={kind}
+              disabled={busy}
+              onChange={(event) => {
+                setKind((event.currentTarget as HTMLSelectElement).value as BarterPostKind);
+                setError(null);
+              }}
+            >
+              <option value="offer">Offer</option>
+              <option value="wanted_request">Wanted request</option>
+            </select>
+          </label>
+
+          {kind === "offer" ? (
+            <div class="barter-row">
+              <label class="order-field">
+                <span>Give item</span>
+                <select
+                  value={giveItem}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setGiveItem((event.currentTarget as HTMLSelectElement).value);
+                    setError(null);
+                  }}
+                >
+                  {inventory.length === 0 ? <option value="">No goods</option> : null}
+                  {inventory.map((entry) => (
+                    <option key={entry.item} value={entry.item}>
+                      {humanize(entry.item)} ({entry.free} free)
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label class="order-field">
+                <span>Give qty</span>
+                <input
+                  type="number"
+                  min={1}
+                  value={giveQuantity}
+                  disabled={busy}
+                  onInput={(event) =>
+                    setGiveQuantity(Number((event.currentTarget as HTMLInputElement).value))
+                  }
+                />
+              </label>
+            </div>
+          ) : null}
+
+          <div class="barter-row">
+            <label class="order-field">
+              <span>{kind === "offer" ? "Want item" : "Wanted item"}</span>
+              <select
+                value={wantItem}
+                disabled={busy}
+                onChange={(event) => {
+                  setWantItem((event.currentTarget as HTMLSelectElement).value);
+                  setError(null);
+                }}
+              >
+                <option value="">Choose an item</option>
+                {tradableItems.map((item) => (
+                  <option key={item} value={item}>
+                    {humanize(item)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label class="order-field">
+              <span>Want qty</span>
+              <input
+                type="number"
+                min={1}
+                value={wantQuantity}
+                disabled={busy}
+                onInput={(event) =>
+                  setWantQuantity(Number((event.currentTarget as HTMLInputElement).value))
+                }
+              />
+            </label>
+          </div>
+
+          {kind === "wanted_request" ? (
+            <label class="order-field">
+              <span>How many trades</span>
+              <input
+                type="number"
+                min={1}
+                value={requestQuantity}
+                disabled={busy}
+                onInput={(event) =>
+                  setRequestQuantity(Number((event.currentTarget as HTMLInputElement).value))
+                }
+              />
+            </label>
+          ) : null}
+
+          <label class="order-field">
+            <span>Expiry (ticks)</span>
+            <input
+              type="number"
+              min={MIN_OFFER_EXPIRY_TICKS}
+              max={MAX_OFFER_EXPIRY_TICKS}
+              value={expiryTicks}
+              disabled={busy}
+              onInput={(event) =>
+                setExpiryTicks(Number((event.currentTarget as HTMLInputElement).value))
+              }
+            />
+          </label>
+
+          {kind === "offer" ? (
+            <p class="barter-lock">
+              {giveQuantity > 0 && giveItem.length > 0
+                ? `${giveQuantity} ${humanize(giveItem)} locks when queued`
+                : "The offered goods lock when queued"}
+              {selectedStock ? ` (${selectedStock.free} free)` : ""}. Remove the order before the
+              tick to release the lock.
+            </p>
+          ) : (
+            <p class="barter-lock barter-lock-none">Wanted requests lock no goods.</p>
+          )}
+          <p class="barter-expiry-hint">
+            Acceptable from the next tick and expires at the start of tick expiry + 1.
+          </p>
+
+          {error ? <p class="order-error">{error}</p> : null}
+          <button type="submit" class="order-add" disabled={busy}>
+            {kind === "offer" ? "Queue offer" : "Queue wanted request"}
+          </button>
+        </form>
+      ) : null}
     </Panel>
   );
 }

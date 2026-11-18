@@ -1,9 +1,14 @@
 /**
- * Barter board fetch (M5.A03).
+ * Barter board fetch and post flows (M5.A03, M6.02).
  *
  * Wraps `GET /barter` so the barter panel can list open offers, wanted requests
- * and counter-offers.
+ * and counter-offers, and builds the order drafts for creating offers and
+ * wanted requests with explicit expiry and lock behaviour.
  */
+
+import { MAX_OFFER_EXPIRY_TICKS, MIN_OFFER_EXPIRY_TICKS } from "@bartervillage/rules";
+
+import type { OrderDraft } from "./orders.js";
 
 export interface ItemStack {
   item: string;
@@ -49,4 +54,90 @@ export async function fetchBarter(
   }
   const body = (await response.json()) as BarterResponse;
   return body.offers ?? [];
+}
+
+export type BarterPostKind = "offer" | "wanted_request";
+
+export interface OfferDraft {
+  gives: ItemStack[];
+  wants: ItemStack[];
+  expiryTicks: number;
+}
+
+export interface WantedRequestDraft {
+  wants: ItemStack[];
+  quantity: number;
+  expiryTicks: number;
+}
+
+export const DEFAULT_EXPIRY_TICKS = 7;
+
+/**
+ * Build a single stack from form input. Light, non-authoritative validation:
+ * the server still checks ownership, free stock and content ids.
+ */
+export function createStack(item: string, quantity: number): ItemStack {
+  const trimmed = item.trim();
+  if (trimmed.length === 0) {
+    throw new Error("Choose an item.");
+  }
+  if (!Number.isInteger(quantity) || quantity <= 0) {
+    throw new Error("Quantity must be a positive whole number.");
+  }
+  return { item: trimmed, quantity };
+}
+
+function positiveStacks(stacks: readonly ItemStack[], label: string): ItemStack[] {
+  if (stacks.length === 0) {
+    throw new Error(`${label} must include at least one item.`);
+  }
+  return stacks.map((stack) => createStack(stack.item, stack.quantity));
+}
+
+/** Expiry is configurable from 1 to 28 ticks (spec §7). */
+export function validatePostExpiry(expiryTicks: number): void {
+  if (
+    !Number.isInteger(expiryTicks) ||
+    expiryTicks < MIN_OFFER_EXPIRY_TICKS ||
+    expiryTicks > MAX_OFFER_EXPIRY_TICKS
+  ) {
+    throw new Error(
+      `Expiry must be a whole number from ${MIN_OFFER_EXPIRY_TICKS} to ${MAX_OFFER_EXPIRY_TICKS} ticks.`,
+    );
+  }
+}
+
+/**
+ * Build the order that posts an offer. The offered goods lock as soon as the
+ * order is queued (spec §7; M2.E02).
+ */
+export function createOfferOrder(draft: OfferDraft): OrderDraft {
+  validatePostExpiry(draft.expiryTicks);
+  return {
+    type: "post_offer",
+    payload: {
+      gives: positiveStacks(draft.gives, "An offer's goods"),
+      wants: positiveStacks(draft.wants, "An offer's request"),
+      expiryTicks: draft.expiryTicks,
+    },
+  };
+}
+
+/**
+ * Build the order that posts a wanted request. Wanted requests lock nothing and
+ * settle through counter-offers (spec §7; M2.E03).
+ */
+export function createWantedRequestOrder(draft: WantedRequestDraft): OrderDraft {
+  validatePostExpiry(draft.expiryTicks);
+  if (!Number.isInteger(draft.quantity) || draft.quantity <= 0) {
+    throw new Error("Wanted request quantity must be a positive whole number.");
+  }
+  return {
+    type: "post_wanted_request",
+    payload: {
+      wants: positiveStacks(draft.wants, "A wanted request's goods"),
+      quantity: draft.quantity,
+      expiryTicks: draft.expiryTicks,
+    },
+  };
 }

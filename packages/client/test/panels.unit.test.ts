@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { createElement } from "preact";
 import { render } from "preact-render-to-string";
 
 import { BarterPanel, InventoryPanel, OrderFailuresPanel } from "../src/panels.js";
@@ -48,7 +49,7 @@ describe("inventory panel (M5.B05)", () => {
 describe("barter panel (M6.01)", () => {
   it("lists posts with poster names, free stock and counter links", () => {
     const html = render(
-      BarterPanel({
+      createElement(BarterPanel, {
         offers: [
           {
             id: "o1",
@@ -90,6 +91,42 @@ describe("barter panel (M6.01)", () => {
     expect(html).toContain("Counter-offer");
     expect(html).toContain("Poster free stock: 3 Wheat, 4 Wood");
     expect(html).toContain("counters o1");
+  });
+});
+
+describe("barter post flows (M6.02)", () => {
+  const inventory = [
+    { item: "wheat", quantity: 10, locked: 2, free: 8 },
+    { item: "wood", quantity: 4, locked: 0, free: 4 },
+  ];
+
+  it("renders an offer form with lock and expiry controls", () => {
+    const html = render(createElement(BarterPanel, { inventory, onAddOrder: () => undefined }));
+
+    expect(html).toContain("Post type");
+    expect(html).toContain("Give item");
+    expect(html).toContain("Want item");
+    expect(html).toContain("Expiry (ticks)");
+    expect(html).toContain('min="1"');
+    expect(html).toContain('max="28"');
+    expect(html).toContain("Wheat (8 free)");
+    expect(html).toContain("locks when queued");
+    expect(html).toContain("8 free");
+    expect(html).toContain("Queue offer");
+  });
+
+  it("offers a wanted-request post type", () => {
+    const html = render(createElement(BarterPanel, { inventory, onAddOrder: () => undefined }));
+
+    expect(html).toContain('<option value="wanted_request">Wanted request</option>');
+    expect(html).toContain("Choose an item");
+  });
+
+  it("omits the post form without a callback", () => {
+    const html = render(createElement(BarterPanel, { inventory }));
+
+    expect(html).not.toContain("Post type");
+    expect(html).not.toContain("Queue offer");
   });
 });
 

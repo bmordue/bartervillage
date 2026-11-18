@@ -633,6 +633,43 @@ body {
   font-size: 0.72rem;
 }
 
+.barter-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.barter-row {
+  display: grid;
+  grid-template-columns: 1fr 5.5rem;
+  gap: 8px;
+}
+
+.barter-lock {
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid #d9b36a;
+  border-radius: 8px;
+  background: #fdf4dd;
+  color: #6f4f16;
+  font-size: 0.72rem;
+}
+
+.barter-lock-none {
+  border-color: var(--border);
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.barter-expiry-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
 .inventory-capacity {
   margin-bottom: 10px;
 }

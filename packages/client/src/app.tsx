@@ -247,7 +247,11 @@ export function App({
             onRemoveOrder={onRemoveOrder}
             onReorderOrders={onReorderOrders}
           />
-          <BarterPanel offers={offers} />
+          <BarterPanel
+            offers={offers}
+            inventory={inventory}
+            {...(onAddOrder ? { onAddOrder } : {})}
+          />
           <InventoryPanel items={inventory} storage={plot?.storage} />
           <PlayersPanel
             players={players}
