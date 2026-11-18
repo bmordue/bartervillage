@@ -186,6 +186,129 @@ describe("barter post flows (M6.02)", () => {
   });
 });
 
+describe("accept offer flow (M6.05)", () => {
+  const inventory = [
+    { item: "wheat", quantity: 10, locked: 2, free: 8 },
+    { item: "wood", quantity: 4, locked: 0, free: 4 },
+  ];
+
+  it("shows an accept button for open offers by other players", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p2",
+            posterName: "Bea",
+            kind: "offer",
+            gives: [{ item: "wood", quantity: 2 }],
+            wants: [{ item: "wheat", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wood", free: 2 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        currentTick: 5,
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Accept post");
+  });
+
+  it("hides the accept button for wanted requests", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p2",
+            posterName: "Bea",
+            kind: "wanted_request",
+            gives: [],
+            wants: [{ item: "wheat", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wheat", free: 2 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        currentTick: 5,
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).not.toContain("Accept post");
+  });
+
+  it("hides the accept button for the current player's own posts", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "offer",
+            gives: [{ item: "wood", quantity: 2 }],
+            wants: [{ item: "wheat", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wood", free: 2 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        currentTick: 5,
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).not.toContain("Accept post");
+  });
+
+  it("hides the accept button for posts that are not yet acceptable", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p2",
+            posterName: "Bea",
+            kind: "offer",
+            gives: [{ item: "wood", quantity: 2 }],
+            wants: [{ item: "wheat", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 5,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wood", free: 2 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        currentTick: 5,
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).not.toContain("Accept post");
+  });
+});
+
 describe("counter-offer flow (M6.03)", () => {
   const inventory = [
     { item: "wheat", quantity: 10, locked: 2, free: 8 },

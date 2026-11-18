@@ -171,6 +171,26 @@ export interface CounterOfferDraft {
   wants: ItemStack[];
 }
 
+export interface AcceptOfferDraft {
+  offerId: string;
+}
+
+/**
+ * Build the order that accepts an open offer or counter-offer. The accepter's
+ * side locks at queue time and the trade settles at the tick (spec §7; M6.05).
+ */
+export function createAcceptOfferOrder(draft: AcceptOfferDraft): OrderDraft {
+  if (!draft.offerId || draft.offerId.length === 0) {
+    throw new Error("Choose a post to accept.");
+  }
+  return {
+    type: "accept_offer",
+    payload: {
+      offerId: draft.offerId,
+    },
+  };
+}
+
 /**
  * Build the order that posts a counter-offer against an open offer or wanted
  * request. The counter locks only the counterer's goods; a wanted request's

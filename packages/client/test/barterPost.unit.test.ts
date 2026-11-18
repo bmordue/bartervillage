@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createAcceptOfferOrder,
   createCancelOfferOrder,
   createOfferOrder,
   createCounterOfferOrder,
@@ -161,5 +162,18 @@ describe("createCancelOfferOrder (M6.04)", () => {
 
   it("requires an offer id", () => {
     expect(() => createCancelOfferOrder({ offerId: "" })).toThrow("Choose a post to cancel");
+  });
+});
+
+describe("createAcceptOfferOrder (M6.05)", () => {
+  it("builds an accept_offer order for the chosen post", () => {
+    expect(createAcceptOfferOrder({ offerId: "o1" })).toEqual({
+      type: "accept_offer",
+      payload: { offerId: "o1" },
+    });
+  });
+
+  it("requires an offer id", () => {
+    expect(() => createAcceptOfferOrder({ offerId: "" })).toThrow("Choose a post to accept");
   });
 });

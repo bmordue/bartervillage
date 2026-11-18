@@ -293,7 +293,7 @@
 - [x] **M6.02** Create offer and wanted-request flows, including lock and expiry controls (spec §7). _Depends on: M2.E02, M2.E07, M5.B02, M6.01._
 - [x] **M6.03** Counter-offer flow with parent-post context and the one-level limit (spec §7). _Depends on: M2.E04, M2.E06, M6.02._
 - [x] **M6.04** Cancel post flow that releases locks (spec §7). _Depends on: M2.E08, M2.E10, M6.01._
-- [ ] **M6.05** Accept offer and accept counter-offer flows with clear validation and failure messaging (spec §7). _Depends on: M2.E13-M2.E20, M5.B02, M6.01._
+- [x] **M6.05** Accept offer and accept counter-offer flows with clear validation and failure messaging (spec §7). _Depends on: M2.E13-M2.E20, M5.B02, M6.01._
 - [ ] **M6.06** Show the negotiation cascade: parent, siblings and settled counter (spec §7). _Depends on: M2.E17, M6.03, M6.05._
 - [ ] **M6.07** Enforce and surface the 10-open-post cap (spec §7). _Depends on: M2.E09, M6.02._
 - [ ] **M6.08** Gift flow: remote transfer, recipient capacity check, lock enforcement and +5 goodwill to the giver (spec §8). _Depends on: M2.A02, M2.D06, M2.D07, M4.B02, M5.B02._

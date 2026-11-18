@@ -18,6 +18,7 @@ import {
 
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
 import {
+  createAcceptOfferOrder,
   createCancelOfferOrder,
   createCounterOfferOrder,
   createOfferOrder,
@@ -452,6 +453,7 @@ export interface BarterPanelProps {
   offers?: BarterOffer[] | undefined;
   inventory?: InventoryItem[] | undefined;
   currentPlayerId?: string | undefined;
+  currentTick?: number | undefined;
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
 }
 
@@ -459,6 +461,7 @@ export function BarterPanel({
   offers = [],
   inventory = [],
   currentPlayerId,
+  currentTick,
   onAddOrder,
 }: BarterPanelProps) {
   const [kind, setKind] = useState<BarterPostKind>("offer");
@@ -511,6 +514,46 @@ export function BarterPanel({
       .finally(() => setBusy(false));
   };
 
+  const accept = (offerId: string): void => {
+    if (!onAddOrder) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    void Promise.resolve(onAddOrder(createAcceptOfferOrder({ offerId })))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setBusy(false));
+  };
+
+  function acceptableThisTick(offer: BarterOffer): boolean {
+    if (currentTick === undefined) {
+      return true;
+    }
+    return currentTick >= offer.createdAtTick + 1 && currentTick <= offer.expiryTick;
+  }
+
+  function canAccept(offer: BarterOffer): boolean {
+    if (offer.status !== "open") {
+      return false;
+    }
+    if (offer.kind === "wanted_request") {
+      return false;
+    }
+    if (!currentPlayerId || offer.posterId === currentPlayerId) {
+      return false;
+    }
+    if (!acceptableThisTick(offer)) {
+      return false;
+    }
+    if (offer.kind === "counter_offer") {
+      const parent = offers.find((candidate) => candidate.id === offer.parentOfferId);
+      if (!parent || parent.status !== "open" || parent.posterId !== currentPlayerId) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   const cancel = (offerId: string): void => {
     if (!onAddOrder) {
       return;
@@ -545,6 +588,17 @@ export function BarterPanel({
                 <p class="offer-free">
                   Poster free stock: {describeFreeStock(offer.posterFreeStock)}
                 </p>
+              ) : null}
+              {canAccept(offer) ? (
+                <button
+                  type="button"
+                  class="order-control"
+                  aria-label={`Accept post ${offer.id}`}
+                  disabled={busy}
+                  onClick={() => void accept(offer.id)}
+                >
+                  Accept post
+                </button>
               ) : null}
               {currentPlayerId && offer.status === "open" && offer.posterId === currentPlayerId ? (
                 <button
