@@ -10,7 +10,11 @@
 import { createHash, randomBytes } from "node:crypto";
 
 import { loadCredentialKey } from "../crypto.js";
-import { findCredentialBySubject, updateCredentialSecret } from "../db/credentialRepository.js";
+import {
+  createCredential,
+  findCredentialBySubject,
+  updateCredentialSecret,
+} from "../db/credentialRepository.js";
 import type { Database } from "../db/database.js";
 import { hashInviteCode } from "../db/inviteRepository.js";
 import {
@@ -39,7 +43,8 @@ export type GithubError =
   | "site_unavailable"
   | "state_invalid"
   | "provider_error"
-  | "account_not_found";
+  | "account_not_found"
+  | "credential_taken";
 
 export interface GithubAuthOptions {
   clientId: string;
@@ -59,6 +64,8 @@ export interface StartGithubLoginInput {
   inviteCode?: string;
   name?: string;
   plotId?: string;
+  /** Attach the GitHub identity to this existing player instead of signing in. */
+  linkPlayerId?: string;
 }
 
 export type StartGithubLoginResult =
@@ -158,9 +165,22 @@ export class GithubAuth {
     if (onboarding && provided.length !== 3) {
       return { ok: false, reason: "invalid_request" };
     }
+    const linking = input.linkPlayerId !== undefined;
+    if (linking && onboarding) {
+      return { ok: false, reason: "invalid_request" };
+    }
 
     let payload: Record<string, unknown> = {};
-    if (onboarding) {
+    if (linking) {
+      const linkPlayerId = input.linkPlayerId?.trim() ?? "";
+      if (linkPlayerId.length === 0) {
+        return { ok: false, reason: "invalid_request" };
+      }
+      if (!db.get<{ id: string }>("SELECT id FROM players WHERE id = ?", linkPlayerId)) {
+        return { ok: false, reason: "account_not_found" };
+      }
+      payload = { playerId: linkPlayerId };
+    } else if (onboarding) {
       const inviteCode = input.inviteCode?.trim() ?? "";
       const name = input.name?.trim() ?? "";
       const plotId = input.plotId?.trim() ?? "";
@@ -207,7 +227,7 @@ export class GithubAuth {
     createOAuthState(db, {
       id: stateId,
       provider: "github",
-      purpose: onboarding ? "onboard" : "login",
+      purpose: onboarding ? "onboard" : linking ? "link" : "login",
       payload,
       codeVerifier,
       now: this.now(),
@@ -245,8 +265,12 @@ export class GithubAuth {
     }
 
     const secret = serializeTokenSet(tokenSet);
+    const linkPlayerId = readString(state.payload, "playerId");
     const existing = findCredentialBySubject(db, "github", subject);
     if (existing) {
+      if (state.purpose === "link" && existing.playerId !== linkPlayerId) {
+        return { ok: false, reason: "credential_taken" };
+      }
       updateCredentialSecret(db, existing.id, secret, this.credentialKey);
       const session = createSession(db, {
         id: randomId("session"),
@@ -254,6 +278,33 @@ export class GithubAuth {
         now: this.now(),
       });
       return { ok: true, playerId: existing.playerId, session, stateId };
+    }
+
+    if (state.purpose === "link") {
+      if (!linkPlayerId) {
+        return { ok: false, reason: "state_invalid" };
+      }
+      if (!db.get<{ id: string }>("SELECT id FROM players WHERE id = ?", linkPlayerId)) {
+        return { ok: false, reason: "account_not_found" };
+      }
+      createCredential(
+        db,
+        {
+          id: randomId("credential"),
+          playerId: linkPlayerId,
+          kind: "github",
+          subject,
+          secret,
+          now: this.now(),
+        },
+        this.credentialKey,
+      );
+      const session = createSession(db, {
+        id: randomId("session"),
+        playerId: linkPlayerId,
+        now: this.now(),
+      });
+      return { ok: true, playerId: linkPlayerId, session, stateId };
     }
 
     if (state.purpose !== "onboard") {

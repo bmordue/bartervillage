@@ -17,6 +17,7 @@ import {
   type Order,
   type OrderType,
 } from "@bartervillage/rules";
+import { createCredentialRoutes } from "./auth/credentialRoutes.js";
 import { createDiscordRoutes } from "./auth/discordRoutes.js";
 import type { DiscordAuth } from "./auth/discord.js";
 import { createGithubRoutes } from "./auth/githubRoutes.js";
@@ -364,11 +365,13 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
   const passkeyRoutes = options.passkey ? createPasskeyRoutes(database, options.passkey) : {};
   const discordRoutes = options.discord ? createDiscordRoutes(database, options.discord) : {};
   const githubRoutes = options.github ? createGithubRoutes(database, options.github) : {};
+  const credentialRoutes = createCredentialRoutes(database);
 
   return {
     ...passkeyRoutes,
     ...discordRoutes,
     ...githubRoutes,
+    ...credentialRoutes,
     "GET /world": (request) => {
       const worldId = getWorldId(request);
       const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);

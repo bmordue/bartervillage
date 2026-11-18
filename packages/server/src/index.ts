@@ -1,12 +1,14 @@
 export const packageName = "@bartervillage/server";
 
 export * from "./api.js";
+export * from "./auth/credentialRoutes.js";
 export * from "./auth/discord.js";
 export * from "./auth/discordRoutes.js";
 export * from "./auth/github.js";
 export * from "./auth/githubRoutes.js";
 export * from "./auth/passkey.js";
 export * from "./auth/passkeyRoutes.js";
+export * from "./auth/requestSession.js";
 export * from "./cookies.js";
 export * from "./mutations.js";
 export * from "./resolution.js";

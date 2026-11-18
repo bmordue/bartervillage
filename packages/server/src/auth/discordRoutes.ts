@@ -20,6 +20,7 @@ import {
 import type { Database } from "../db/database.js";
 import { deleteSession } from "../db/sessionRepository.js";
 import { type DiscordAuth, type DiscordError, type StartDiscordLoginInput } from "./discord.js";
+import { loadRequestPlayerId } from "./requestSession.js";
 
 export const DISCORD_STATE_COOKIE = "bv_discord";
 export const DISCORD_STATE_COOKIE_PATH = "/auth/discord";
@@ -54,6 +55,7 @@ function errorStatus(reason: DiscordError): number {
     case "player_cap_reached":
     case "name_taken":
     case "site_unavailable":
+    case "credential_taken":
       return 409;
     case "provider_error":
       return 502;
@@ -94,6 +96,29 @@ export function createDiscordRoutes(db: Database, auth: DiscordAuth): Routes {
   return {
     "GET /auth/discord/login": (request) => {
       const result = auth.startLogin(db, startInput(request));
+      if (!result.ok) {
+        return errorResponse(result.reason);
+      }
+      return {
+        status: 302,
+        body: undefined,
+        headers: {
+          location: result.authorizationUrl,
+          "set-cookie": [stateCookie(result.stateId)],
+        },
+      };
+    },
+
+    "GET /auth/discord/link": (request) => {
+      const playerId = loadRequestPlayerId(db, request);
+      if (playerId === undefined) {
+        return {
+          status: 401,
+          body: { error: "not_authenticated" },
+          headers: { "set-cookie": [clearStateCookie()] },
+        };
+      }
+      const result = auth.startLogin(db, { ...startInput(request), linkPlayerId: playerId });
       if (!result.ok) {
         return errorResponse(result.reason);
       }

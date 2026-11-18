@@ -20,6 +20,7 @@ import {
 import type { Database } from "../db/database.js";
 import { deleteSession } from "../db/sessionRepository.js";
 import { type GithubAuth, type GithubError, type StartGithubLoginInput } from "./github.js";
+import { loadRequestPlayerId } from "./requestSession.js";
 
 export const GITHUB_STATE_COOKIE = "bv_github";
 export const GITHUB_STATE_COOKIE_PATH = "/auth/github";
@@ -54,6 +55,7 @@ function errorStatus(reason: GithubError): number {
     case "player_cap_reached":
     case "name_taken":
     case "site_unavailable":
+    case "credential_taken":
       return 409;
     case "provider_error":
       return 502;
@@ -94,6 +96,29 @@ export function createGithubRoutes(db: Database, auth: GithubAuth): Routes {
   return {
     "GET /auth/github/login": (request) => {
       const result = auth.startLogin(db, startInput(request));
+      if (!result.ok) {
+        return errorResponse(result.reason);
+      }
+      return {
+        status: 302,
+        body: undefined,
+        headers: {
+          location: result.authorizationUrl,
+          "set-cookie": [stateCookie(result.stateId)],
+        },
+      };
+    },
+
+    "GET /auth/github/link": (request) => {
+      const playerId = loadRequestPlayerId(db, request);
+      if (playerId === undefined) {
+        return {
+          status: 401,
+          body: { error: "not_authenticated" },
+          headers: { "set-cookie": [clearStateCookie()] },
+        };
+      }
+      const result = auth.startLogin(db, { ...startInput(request), linkPlayerId: playerId });
       if (!result.ok) {
         return errorResponse(result.reason);
       }

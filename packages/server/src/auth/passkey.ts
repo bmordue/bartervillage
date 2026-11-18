@@ -21,6 +21,7 @@ import {
 } from "@simplewebauthn/server";
 
 import {
+  createCredential,
   findCredentialBySubject,
   listPlayerCredentials,
   updatePasskeyCredential,
@@ -62,7 +63,9 @@ export type PasskeyError =
   | "challenge_invalid"
   | "verification_failed"
   | "no_passkey"
-  | "credential_not_found";
+  | "credential_not_found"
+  | "account_not_found"
+  | "credential_taken";
 
 export interface StartRegistrationInput {
   inviteCode: string;
@@ -81,6 +84,17 @@ export type StartRegistrationResult =
 export type FinishRegistrationResult =
   | { ok: true; playerId: string; plotId: string; session: Session }
   | { ok: false; reason: PasskeyError };
+
+export type StartLinkRegistrationResult =
+  | {
+      ok: true;
+      options: PublicKeyCredentialCreationOptionsJSON;
+      challengeId: string;
+    }
+  | { ok: false; reason: PasskeyError };
+
+export type FinishLinkRegistrationResult =
+  { ok: true; playerId: string } | { ok: false; reason: PasskeyError };
 
 export interface StartAuthenticationInput {
   playerId?: string;
@@ -249,6 +263,9 @@ export class PasskeyAuth {
     if (!challenge) {
       return { ok: false, reason: "challenge_invalid" };
     }
+    if (readString(challenge.payload, "mode") !== undefined) {
+      return { ok: false, reason: "challenge_invalid" };
+    }
 
     const playerId = readString(challenge.payload, "playerId");
     const name = readString(challenge.payload, "name");
@@ -299,6 +316,108 @@ export class PasskeyAuth {
       return { ok: false, reason: failureReason(result.reason) };
     }
     return { ok: true, playerId: result.playerId, plotId: result.plotId, session: result.session };
+  }
+
+  async startLinkRegistration(
+    db: Database,
+    linkPlayerId: string,
+  ): Promise<StartLinkRegistrationResult> {
+    const playerId = linkPlayerId.trim();
+    if (playerId.length === 0) {
+      return { ok: false, reason: "invalid_request" };
+    }
+    const player = db.get<{ name: string }>("SELECT name FROM players WHERE id = ?", playerId);
+    if (!player) {
+      return { ok: false, reason: "account_not_found" };
+    }
+
+    const options = await generateRegistrationOptions({
+      rpName: this.rpName,
+      rpID: this.rpID,
+      userID: new TextEncoder().encode(playerId),
+      userName: player.name,
+      userDisplayName: player.name,
+      attestationType: "none",
+      authenticatorSelection: {
+        residentKey: "preferred",
+        userVerification: "required",
+      },
+    });
+    if (options.user.id.length < USER_ID.minLength || options.user.id.length > USER_ID.maxLength) {
+      return { ok: false, reason: "invalid_request" };
+    }
+
+    const challengeId = this.createChallenge(db, "registration", options.challenge, {
+      mode: "link",
+      playerId,
+    });
+    return { ok: true, options, challengeId };
+  }
+
+  async finishLinkRegistration(
+    db: Database,
+    challengeId: string,
+    response: RegistrationResponseJSON,
+  ): Promise<FinishLinkRegistrationResult> {
+    const challenge = consumeWebAuthnChallenge(db, challengeId, "registration", this.now());
+    if (!challenge) {
+      return { ok: false, reason: "challenge_invalid" };
+    }
+    if (readString(challenge.payload, "mode") !== "link") {
+      return { ok: false, reason: "challenge_invalid" };
+    }
+    const playerId = readString(challenge.payload, "playerId");
+    if (!playerId) {
+      return { ok: false, reason: "challenge_invalid" };
+    }
+    if (!db.get<{ id: string }>("SELECT id FROM players WHERE id = ?", playerId)) {
+      return { ok: false, reason: "account_not_found" };
+    }
+
+    let registration;
+    try {
+      registration = await this.verifyRegistration({
+        response,
+        expectedChallenge: challenge.challenge,
+        expectedOrigin: this.origins,
+        expectedRPID: this.rpID,
+        requireUserVerification: true,
+      });
+    } catch {
+      return { ok: false, reason: "verification_failed" };
+    }
+    if (!registration.verified) {
+      return { ok: false, reason: "verification_failed" };
+    }
+
+    const credential = registration.registrationInfo.credential;
+    const existing = findCredentialBySubject(db, "passkey", credential.id);
+    if (existing) {
+      if (existing.playerId !== playerId) {
+        return { ok: false, reason: "credential_taken" };
+      }
+      updatePasskeyCredential(db, existing.id, {
+        counter: credential.counter,
+        transports: credential.transports ?? [],
+        deviceType: registration.registrationInfo.credentialDeviceType,
+        backedUp: registration.registrationInfo.credentialBackedUp,
+      });
+      return { ok: true, playerId };
+    }
+
+    createCredential(db, {
+      id: randomId("credential"),
+      playerId,
+      kind: "passkey",
+      subject: credential.id,
+      publicKey: Buffer.from(credential.publicKey).toString("base64url"),
+      counter: credential.counter,
+      transports: credential.transports ?? [],
+      deviceType: registration.registrationInfo.credentialDeviceType,
+      backedUp: registration.registrationInfo.credentialBackedUp,
+      now: this.now(),
+    });
+    return { ok: true, playerId };
   }
 
   async startAuthentication(

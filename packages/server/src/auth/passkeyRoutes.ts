@@ -23,6 +23,7 @@ import type { Database } from "../db/database.js";
 import { deleteSession } from "../db/sessionRepository.js";
 import type { PasskeyAuth } from "./passkey.js";
 import { type PasskeyError } from "./passkey.js";
+import { loadRequestPlayerId } from "./requestSession.js";
 
 export const WEBAUTHN_COOKIE = "bv_webauthn";
 export const WEBAUTHN_COOKIE_PATH = "/auth/passkey";
@@ -74,7 +75,10 @@ function errorStatus(reason: PasskeyError): number {
     case "player_cap_reached":
     case "name_taken":
     case "site_unavailable":
+    case "credential_taken":
       return 409;
+    case "account_not_found":
+      return 403;
   }
 }
 
@@ -156,6 +160,50 @@ export function createPasskeyRoutes(db: Database, auth: PasskeyAuth): Routes {
           csrfToken,
         },
         headers: sessionHeaders(result.session.id, csrfToken),
+      };
+    },
+
+    "POST /auth/passkey/link/options": async (request) => {
+      const playerId = loadRequestPlayerId(db, request);
+      if (playerId === undefined) {
+        return { status: 401, body: { error: "not_authenticated" } };
+      }
+      const result = await auth.startLinkRegistration(db, playerId);
+      if (!result.ok) {
+        return errorResponse(result.reason);
+      }
+      return {
+        status: 200,
+        body: { options: result.options },
+        headers: { "set-cookie": [challengeCookie(result.challengeId)] },
+      };
+    },
+
+    "POST /auth/passkey/link/verify": async (request) => {
+      const playerId = loadRequestPlayerId(db, request);
+      if (playerId === undefined) {
+        return { status: 401, body: { error: "not_authenticated" } };
+      }
+      const challengeId = readChallengeId(request);
+      const body = parseBody(request);
+      if (
+        challengeId === undefined ||
+        body === undefined ||
+        !isRegistrationResponse(body.response)
+      ) {
+        return errorResponse("invalid_request");
+      }
+      const result = await auth.finishLinkRegistration(db, challengeId, body.response);
+      if (!result.ok) {
+        return errorResponse(result.reason);
+      }
+      if (result.playerId !== playerId) {
+        return errorResponse("credential_not_found");
+      }
+      return {
+        status: 200,
+        body: { ok: true, playerId: result.playerId },
+        headers: { "set-cookie": [clearChallengeCookie()] },
       };
     },
 
