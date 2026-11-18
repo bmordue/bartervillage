@@ -1,5 +1,6 @@
 /**
- * Unit tests for the inventory panel detail (M5.B05).
+ * Unit tests for the inventory panel detail (M5.B05) and the barter board
+ * negotiation cascade (M6.06).
  */
 
 import { describe, expect, it } from "vitest";
@@ -91,6 +92,121 @@ describe("barter panel (M6.01)", () => {
     expect(html).toContain("Counter-offer");
     expect(html).toContain("Poster free stock: 3 Wheat, 4 Wood");
     expect(html).toContain("counters o1");
+  });
+});
+
+describe("negotiation cascade (M6.06)", () => {
+  const parent = {
+    id: "o1",
+    posterId: "p2",
+    posterName: "Bea",
+    kind: "offer",
+    gives: [{ item: "wood", quantity: 2 }],
+    wants: [{ item: "wheat", quantity: 1 }],
+    quantity: 1,
+    createdAtTick: 3,
+    expiryTick: 10,
+    status: "open",
+    parentOfferId: null,
+    posterFreeStock: [{ item: "wood", free: 2 }],
+  };
+
+  it("nests counter-offers beneath their parent post as one negotiation", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        offers: [
+          parent,
+          {
+            id: "c1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "counter_offer",
+            gives: [{ item: "stone", quantity: 1 }],
+            wants: [{ item: "wheat", quantity: 2 }],
+            quantity: 1,
+            createdAtTick: 4,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: "o1",
+            posterFreeStock: [],
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain('class="counter-list"');
+    expect(html).toContain('class="counter-item"');
+    expect(html).toContain("counters o1");
+    expect(html.match(/class="offer-item"/g)).toHaveLength(1);
+  });
+
+  it("shows sibling counter-offers in the same negotiation group", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        offers: [
+          parent,
+          {
+            id: "c1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "counter_offer",
+            gives: [{ item: "stone", quantity: 1 }],
+            wants: [{ item: "wheat", quantity: 2 }],
+            quantity: 1,
+            createdAtTick: 4,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: "o1",
+            posterFreeStock: [],
+          },
+          {
+            id: "c2",
+            posterId: "p3",
+            posterName: "Cleo",
+            kind: "counter_offer",
+            gives: [{ item: "clay", quantity: 3 }],
+            wants: [{ item: "wheat", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 5,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: "o1",
+            posterFreeStock: [],
+          },
+        ],
+      }),
+    );
+
+    expect(html.match(/class="counter-item"/g)).toHaveLength(2);
+    expect(html).toContain("Ada");
+    expect(html).toContain("Cleo");
+  });
+
+  it("marks the settled counter and shows the settlement line", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        offers: [
+          { ...parent, status: "cancelled" },
+          {
+            id: "c1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "counter_offer",
+            gives: [{ item: "stone", quantity: 1 }],
+            wants: [{ item: "wheat", quantity: 2 }],
+            quantity: 1,
+            createdAtTick: 4,
+            expiryTick: 10,
+            status: "settled",
+            parentOfferId: "o1",
+            posterFreeStock: [],
+          },
+        ],
+      }),
+    );
+
+    expect(html).toContain("(settled)");
+    expect(html).toContain("Negotiation settled by counter-offer c1");
   });
 });
 

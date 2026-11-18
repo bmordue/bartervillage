@@ -3,7 +3,7 @@
  *
  * The order panel edits the queue (M5.B02), the inventory panel shows stock
  * detail (M5.B05) and the barter panel lists the board plus the offer and
- * wanted-request flows (M6.01, M6.02).
+ * wanted-request flows (M6.01, M6.02, M6.06).
  */
 
 import { useState } from "preact/hooks";
@@ -457,6 +457,32 @@ export interface BarterPanelProps {
   onAddOrder?: ((draft: OrderDraft) => void | Promise<void>) | undefined;
 }
 
+interface NegotiationGroup {
+  parent: BarterOffer;
+  counters: BarterOffer[];
+}
+
+/** Group open posts into negotiations: a parent post plus its counter-offers. */
+function groupByNegotiation(offers: BarterOffer[]): NegotiationGroup[] {
+  const groups = new Map<string, NegotiationGroup>();
+  for (const offer of offers) {
+    if (offer.kind !== "counter_offer") {
+      groups.set(offer.id, { parent: offer, counters: [] });
+    }
+  }
+  for (const offer of offers) {
+    if (offer.kind === "counter_offer") {
+      const group = groups.get(offer.parentOfferId ?? "");
+      if (group) {
+        group.counters.push(offer);
+      } else {
+        groups.set(offer.id, { parent: offer, counters: [] });
+      }
+    }
+  }
+  return [...groups.values()];
+}
+
 export function BarterPanel({
   offers = [],
   inventory = [],
@@ -476,6 +502,7 @@ export function BarterPanel({
   const [error, setError] = useState<string | null>(null);
 
   const tradableItems = Object.keys(content.items).sort();
+  const groups = groupByNegotiation(offers);
   const selectedStock = inventory.find((entry) => entry.item === giveItem);
 
   const submit = (event: Event): void => {
@@ -567,49 +594,103 @@ export function BarterPanel({
 
   return (
     <Panel title="Barter board">
-      {offers.length === 0 ? (
+      {groups.length === 0 ? (
         <p class="empty-state">No open offers.</p>
       ) : (
         <ul class="offer-list">
-          {offers.map((offer) => (
-            <li key={offer.id} class="offer-item">
+          {groups.map((group) => (
+            <li key={group.parent.id} class="offer-item">
               <div class="offer-heading">
-                <span class="offer-kind">{kindLabel(offer.kind)}</span>
-                <span class="offer-poster">{offer.posterName ?? offer.posterId}</span>
+                <span class="offer-kind">{kindLabel(group.parent.kind)}</span>
+                <span class="offer-poster">{group.parent.posterName ?? group.parent.posterId}</span>
               </div>
-              <p class="offer-trade">{describeOffer(offer)}</p>
+              <p class="offer-trade">{describeOffer(group.parent)}</p>
               <p class="offer-meta">
-                Qty {offer.quantity} · expires tick {offer.expiryTick}
-                {offer.kind === "counter_offer" && offer.parentOfferId
-                  ? ` · counters ${offer.parentOfferId}`
-                  : ""}
+                Qty {group.parent.quantity} · expires tick {group.parent.expiryTick}
               </p>
-              {offer.posterFreeStock && offer.posterFreeStock.length > 0 ? (
+              {group.parent.posterFreeStock && group.parent.posterFreeStock.length > 0 ? (
                 <p class="offer-free">
-                  Poster free stock: {describeFreeStock(offer.posterFreeStock)}
+                  Poster free stock: {describeFreeStock(group.parent.posterFreeStock)}
                 </p>
               ) : null}
-              {canAccept(offer) ? (
+              {group.counters.length > 0 ? (
+                <ul class="counter-list">
+                  {group.counters.map((counter) => (
+                    <li key={counter.id} class="counter-item">
+                      <div class="counter-heading">
+                        <span class="counter-kind">{kindLabel(counter.kind)}</span>
+                        <span class="counter-poster">{counter.posterName ?? counter.posterId}</span>
+                        {counter.status === "settled" && (
+                          <span class="counter-settled"> (settled)</span>
+                        )}
+                      </div>
+                      <p class="counter-trade">{describeOffer(counter)}</p>
+                      <p class="counter-meta">
+                        Qty {counter.quantity} · expires tick {counter.expiryTick}
+                        {counter.parentOfferId ? ` · counters ${counter.parentOfferId}` : ""}
+                      </p>
+                      {counter.posterFreeStock && counter.posterFreeStock.length > 0 ? (
+                        <p class="counter-free">
+                          Poster free stock: {describeFreeStock(counter.posterFreeStock)}
+                        </p>
+                      ) : null}
+                      {canAccept(counter) ? (
+                        <button
+                          type="button"
+                          class="order-control"
+                          aria-label={`Accept post ${counter.id}`}
+                          disabled={busy}
+                          onClick={() => void accept(counter.id)}
+                        >
+                          Accept post
+                        </button>
+                      ) : null}
+                      {currentPlayerId &&
+                      counter.status === "open" &&
+                      counter.posterId === currentPlayerId ? (
+                        <button
+                          type="button"
+                          class="order-control order-remove"
+                          aria-label={`Cancel post ${counter.id}`}
+                          disabled={busy}
+                          onClick={() => void cancel(counter.id)}
+                        >
+                          Cancel post
+                        </button>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {canAccept(group.parent) ? (
                 <button
                   type="button"
                   class="order-control"
-                  aria-label={`Accept post ${offer.id}`}
+                  aria-label={`Accept post ${group.parent.id}`}
                   disabled={busy}
-                  onClick={() => void accept(offer.id)}
+                  onClick={() => void accept(group.parent.id)}
                 >
                   Accept post
                 </button>
               ) : null}
-              {currentPlayerId && offer.status === "open" && offer.posterId === currentPlayerId ? (
+              {currentPlayerId &&
+              group.parent.status === "open" &&
+              group.parent.posterId === currentPlayerId ? (
                 <button
                   type="button"
                   class="order-control order-remove"
-                  aria-label={`Cancel post ${offer.id}`}
+                  aria-label={`Cancel post ${group.parent.id}`}
                   disabled={busy}
-                  onClick={() => void cancel(offer.id)}
+                  onClick={() => void cancel(group.parent.id)}
                 >
                   Cancel post
                 </button>
+              ) : null}
+              {group.counters.some((counter) => counter.status === "settled") ? (
+                <p class="negotiation-settled">
+                  Negotiation settled by counter-offer{" "}
+                  {group.counters.find((counter) => counter.status === "settled")!.id}.
+                </p>
               ) : null}
             </li>
           ))}

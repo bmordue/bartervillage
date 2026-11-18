@@ -633,6 +633,66 @@ body {
   font-size: 0.72rem;
 }
 
+.counter-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.counter-item {
+  padding: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.counter-item:first-child {
+  border-top: none;
+}
+
+.counter-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.counter-kind {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.counter-settled {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.counter-trade {
+  margin: 4px 0 0;
+  color: var(--ink);
+}
+
+.counter-meta {
+  margin: 2px 0 0;
+  font-size: 0.75rem;
+}
+
+.counter-free {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.negotiation-settled {
+  margin: 8px 0 0;
+  padding: 6px 8px;
+  border: 1px solid #d9b36a;
+  border-radius: 8px;
+  background: #fdf4dd;
+  color: #6f4f16;
+  font-size: 0.72rem;
+}
+
 .barter-form {
   display: flex;
   flex-direction: column;
