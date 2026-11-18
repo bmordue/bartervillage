@@ -5,6 +5,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  createCancelOfferOrder,
   createOfferOrder,
   createCounterOfferOrder,
   createStack,
@@ -147,5 +148,18 @@ describe("createCounterOfferOrder (M6.03)", () => {
         wants: [],
       }),
     ).toThrow("at least one item");
+  });
+});
+
+describe("createCancelOfferOrder (M6.04)", () => {
+  it("builds a cancel_offer order for the chosen post", () => {
+    expect(createCancelOfferOrder({ offerId: "o1" })).toEqual({
+      type: "cancel_offer",
+      payload: { offerId: "o1" },
+    });
+  });
+
+  it("requires an offer id", () => {
+    expect(() => createCancelOfferOrder({ offerId: "" })).toThrow("Choose a post to cancel");
   });
 });

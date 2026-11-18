@@ -123,10 +123,27 @@ export function createOfferOrder(draft: OfferDraft): OrderDraft {
   };
 }
 
-export interface CounterOfferDraft {
-  parentOfferId: string;
-  gives: ItemStack[];
-  wants: ItemStack[];
+/**
+ * Build the order that cancels a post and releases its locks (spec §7; M6.04).
+ *
+ * Only the poster can cancel an open post. The locked goods are released and the post
+ * transitions to cancelled status. Cancelling a parent automatically cascades to its
+ * counter-offers.
+ */
+export interface CancelOfferDraft {
+  offerId: string;
+}
+
+export function createCancelOfferOrder(draft: CancelOfferDraft): OrderDraft {
+  if (!draft.offerId || draft.offerId.length === 0) {
+    throw new Error("Choose a post to cancel.");
+  }
+  return {
+    type: "cancel_offer",
+    payload: {
+      offerId: draft.offerId,
+    },
+  };
 }
 
 /**
@@ -146,6 +163,12 @@ export function createWantedRequestOrder(draft: WantedRequestDraft): OrderDraft 
       expiryTicks: draft.expiryTicks,
     },
   };
+}
+
+export interface CounterOfferDraft {
+  parentOfferId: string;
+  gives: ItemStack[];
+  wants: ItemStack[];
 }
 
 /**

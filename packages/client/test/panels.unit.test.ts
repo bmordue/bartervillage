@@ -128,6 +128,62 @@ describe("barter post flows (M6.02)", () => {
     expect(html).not.toContain("Post type");
     expect(html).not.toContain("Queue offer");
   });
+
+  it("shows a cancel-post button for the current player's own open posts", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p1",
+            posterName: "Ada",
+            kind: "offer",
+            gives: [{ item: "wheat", quantity: 2 }],
+            wants: [{ item: "wood", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wheat", free: 3 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).toContain("Cancel post");
+  });
+
+  it("hides the cancel-post button for posts by other players", () => {
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers: [
+          {
+            id: "o1",
+            posterId: "p2",
+            posterName: "Bea",
+            kind: "offer",
+            gives: [{ item: "wheat", quantity: 2 }],
+            wants: [{ item: "wood", quantity: 1 }],
+            quantity: 1,
+            createdAtTick: 3,
+            expiryTick: 10,
+            status: "open",
+            parentOfferId: null,
+            posterFreeStock: [{ item: "wheat", free: 3 }],
+          },
+        ],
+        currentPlayerId: "p1",
+        onAddOrder: () => undefined,
+      }),
+    );
+
+    expect(html).not.toContain("Cancel post");
+  });
 });
 
 describe("counter-offer flow (M6.03)", () => {

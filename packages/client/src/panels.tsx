@@ -18,6 +18,7 @@ import {
 
 import { expandTileBatch, type BatchLayout, type BatchMode } from "./batch.js";
 import {
+  createCancelOfferOrder,
   createCounterOfferOrder,
   createOfferOrder,
   createStack,
@@ -510,6 +511,17 @@ export function BarterPanel({
       .finally(() => setBusy(false));
   };
 
+  const cancel = (offerId: string): void => {
+    if (!onAddOrder) {
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    void Promise.resolve(onAddOrder(createCancelOfferOrder({ offerId })))
+      .catch((caught) => setError(errorMessage(caught)))
+      .finally(() => setBusy(false));
+  };
+
   return (
     <Panel title="Barter board">
       {offers.length === 0 ? (
@@ -533,6 +545,17 @@ export function BarterPanel({
                 <p class="offer-free">
                   Poster free stock: {describeFreeStock(offer.posterFreeStock)}
                 </p>
+              ) : null}
+              {currentPlayerId && offer.status === "open" && offer.posterId === currentPlayerId ? (
+                <button
+                  type="button"
+                  class="order-control order-remove"
+                  aria-label={`Cancel post ${offer.id}`}
+                  disabled={busy}
+                  onClick={() => void cancel(offer.id)}
+                >
+                  Cancel post
+                </button>
               ) : null}
             </li>
           ))}
