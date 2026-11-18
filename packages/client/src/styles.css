@@ -693,6 +693,22 @@ body {
   font-size: 0.72rem;
 }
 
+.post-count {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.post-count-full {
+  margin-top: 8px;
+  padding: 6px 8px;
+  border: 1px solid #d9b36a;
+  border-radius: 8px;
+  background: #fdf4dd;
+  color: #6f4f16;
+  font-size: 0.72rem;
+}
+
 .barter-form {
   display: flex;
   flex-direction: column;

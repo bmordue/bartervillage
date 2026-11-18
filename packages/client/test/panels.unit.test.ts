@@ -1,6 +1,6 @@
 /**
- * Unit tests for the inventory panel detail (M5.B05) and the barter board
- * negotiation cascade (M6.06).
+ * Unit tests for the inventory panel detail (M5.B05), the barter board
+ * negotiation cascade (M6.06) and the open post cap (M6.07).
  */
 
 import { describe, expect, it } from "vitest";
@@ -8,6 +8,7 @@ import { createElement } from "preact";
 import { render } from "preact-render-to-string";
 
 import { BarterPanel, InventoryPanel, OrderFailuresPanel } from "../src/panels.js";
+import type { BarterOffer } from "../src/barter.js";
 
 describe("inventory panel (M5.B05)", () => {
   it("shows held, locked, free and capacity", () => {
@@ -472,6 +473,70 @@ describe("counter-offer flow (M6.03)", () => {
 
     expect(html).not.toContain("Parent post");
     expect(html).not.toContain("Counters inherit the parent post");
+  });
+});
+
+describe("open post cap (M6.07)", () => {
+  const inventory = [
+    { item: "wheat", quantity: 10, locked: 2, free: 8 },
+    { item: "wood", quantity: 4, locked: 0, free: 4 },
+  ];
+
+  function makeOffer(id: string, posterId: string, kind: "offer" | "counter_offer"): BarterOffer {
+    return {
+      id,
+      posterId,
+      posterName: posterId === "p1" ? "Ada" : "Bea",
+      kind,
+      gives: [{ item: "wheat", quantity: 1 }],
+      wants: [{ item: "wood", quantity: 1 }],
+      quantity: 1,
+      createdAtTick: 3,
+      expiryTick: 10,
+      status: "open",
+      parentOfferId: kind === "counter_offer" ? "p1" : null,
+      posterFreeStock: [],
+    };
+  }
+
+  it("shows the current player's open post count", () => {
+    const offers = [makeOffer("o1", "p1", "offer"), makeOffer("o2", "p2", "offer")];
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers,
+        currentPlayerId: "p1",
+        onAddOrder: () => undefined,
+      }),
+    );
+    expect(html).toContain("Open posts: 1 / 10");
+  });
+
+  it("hides the count when the player has no open posts", () => {
+    const offers = [makeOffer("o1", "p2", "offer")];
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers,
+        currentPlayerId: "p1",
+        onAddOrder: () => undefined,
+      }),
+    );
+    expect(html).not.toContain("Open posts:");
+  });
+
+  it("surfaces the cap warning when the player reaches the limit", () => {
+    const offers = Array.from({ length: 10 }, (_, i) => makeOffer(`o${i}`, "p1", "offer"));
+    const html = render(
+      createElement(BarterPanel, {
+        inventory,
+        offers,
+        currentPlayerId: "p1",
+        onAddOrder: () => undefined,
+      }),
+    );
+    expect(html).toContain("Open posts: 10 / 10");
+    expect(html).toContain("at most 10 open posts");
   });
 });
 

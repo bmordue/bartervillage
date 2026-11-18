@@ -11,6 +11,7 @@ import { useState } from "preact/hooks";
 import { content } from "@bartervillage/content";
 import {
   MAX_OFFER_EXPIRY_TICKS,
+  MAX_OPEN_POSTS,
   MIN_OFFER_EXPIRY_TICKS,
   orderEnergyCost,
   type OrderType,
@@ -504,6 +505,10 @@ export function BarterPanel({
   const tradableItems = Object.keys(content.items).sort();
   const groups = groupByNegotiation(offers);
   const selectedStock = inventory.find((entry) => entry.item === giveItem);
+  // How many open posts does this player currently has?
+  const myOpenCount = offers.filter(
+    (o) => o.posterId === currentPlayerId && o.status === "open",
+  ).length;
 
   const submit = (event: Event): void => {
     event.preventDefault();
@@ -696,6 +701,17 @@ export function BarterPanel({
           ))}
         </ul>
       )}
+
+      {myOpenCount > 0 ? (
+        <p class="post-count">
+          Open posts: {myOpenCount} / {MAX_OPEN_POSTS}
+        </p>
+      ) : null}
+      {myOpenCount >= MAX_OPEN_POSTS ? (
+        <p class="post-count post-count-full">
+          The board allows at most {MAX_OPEN_POSTS} open posts per player.
+        </p>
+      ) : null}
 
       {onAddOrder ? (
         <form class="barter-form" onSubmit={submit}>
