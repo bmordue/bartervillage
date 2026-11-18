@@ -7,6 +7,7 @@
 
 import { startApiServer } from "./api.js";
 import { DiscordAuth, discordOptionsFromEnv } from "./auth/discord.js";
+import { GithubAuth, githubOptionsFromEnv } from "./auth/github.js";
 import { PasskeyAuth, passkeyOptionsFromEnv } from "./auth/passkey.js";
 import { Database } from "./db/database.js";
 import { buildApiRoutes } from "./api.js";
@@ -20,6 +21,8 @@ export async function main(): Promise<void> {
   const passkey = new PasskeyAuth(passkeyOptionsFromEnv(process.env));
   const discordOptions = discordOptionsFromEnv(process.env);
   const discord = discordOptions === undefined ? undefined : new DiscordAuth(discordOptions);
+  const githubOptions = githubOptionsFromEnv(process.env);
+  const github = githubOptions === undefined ? undefined : new GithubAuth(githubOptions);
   const running = await startApiServer({
     port,
     host,
@@ -27,6 +30,7 @@ export async function main(): Promise<void> {
     routes: buildApiRoutes(database, {
       passkey,
       ...(discord === undefined ? {} : { discord }),
+      ...(github === undefined ? {} : { github }),
     }),
   });
 

@@ -19,6 +19,8 @@ import {
 } from "@bartervillage/rules";
 import { createDiscordRoutes } from "./auth/discordRoutes.js";
 import type { DiscordAuth } from "./auth/discord.js";
+import { createGithubRoutes } from "./auth/githubRoutes.js";
+import type { GithubAuth } from "./auth/github.js";
 import { createPasskeyRoutes } from "./auth/passkeyRoutes.js";
 import type { PasskeyAuth } from "./auth/passkey.js";
 import type { Database } from "./db/database.js";
@@ -346,6 +348,7 @@ type ArchivedEventRow = {
 export interface BuildApiRoutesOptions {
   passkey?: PasskeyAuth;
   discord?: DiscordAuth;
+  github?: GithubAuth;
 }
 
 export function buildApiRoutes(database: Database, options: BuildApiRoutesOptions = {}): Routes {
@@ -360,10 +363,12 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
 
   const passkeyRoutes = options.passkey ? createPasskeyRoutes(database, options.passkey) : {};
   const discordRoutes = options.discord ? createDiscordRoutes(database, options.discord) : {};
+  const githubRoutes = options.github ? createGithubRoutes(database, options.github) : {};
 
   return {
     ...passkeyRoutes,
     ...discordRoutes,
+    ...githubRoutes,
     "GET /world": (request) => {
       const worldId = getWorldId(request);
       const world = database.get<WorldStateRow>(`SELECT * FROM worlds WHERE id = ?`, worldId);
