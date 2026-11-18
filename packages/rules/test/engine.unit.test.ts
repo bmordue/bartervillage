@@ -48,7 +48,8 @@ describe("resolveTick entry point", () => {
 
   it("fails an order with no registered handler without changing other state", () => {
     const state = testWorldState({
-      orders: [testOrder({ id: "o2", type: "gift", payload: { toPlayerId: "p2", items: [] } })],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      orders: [testOrder({ id: "o2", type: "nonexistent" as any, payload: {} })],
     });
     const result = resolveTick({ state, content: testContent() });
     expect(result.state.orders[0]?.status).toBe("failed");

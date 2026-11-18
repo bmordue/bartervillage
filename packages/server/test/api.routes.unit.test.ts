@@ -511,6 +511,7 @@ describe("REST API routes", () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);
     insertPlayer(harness.database, "p1", "plot1", 100);
+    insertPlayer(harness.database, "p2", "plot2", 100, 1, 0);
 
     const response = await fetch(`${harness.baseUrl}/player/p1/orders`, {
       method: "POST",
@@ -532,6 +533,7 @@ describe("REST API routes", () => {
     harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
     insertWorld(harness.database);
     insertPlayer(harness.database, "p1", "plot1", 100);
+    insertPlayer(harness.database, "p2", "plot2", 100, 1, 0);
     harness.database.run(
       `INSERT INTO orders (id, player_id, tick, sequence, type, payload_json, status)
        VALUES ('existing', 'p1', 0, 7, 'gift', '{}', 'queued')`,

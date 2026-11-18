@@ -10,12 +10,14 @@ import { registerDefaultHandlers } from "./defaults.js";
 import { registerForageHandlers } from "./forage.js";
 import { registerGoalHandlers } from "./goals.js";
 import { registerHelpHandlers } from "./help.js";
+import { registerGiftHandlers } from "./gift.js";
 
 registerDefaultHandlers();
 registerBuildingHandlers();
 registerCraftingHandlers();
 registerForageHandlers();
 registerHelpHandlers();
+registerGiftHandlers();
 registerBarterHandlers();
 registerDecorationHandlers();
 registerGoalHandlers();

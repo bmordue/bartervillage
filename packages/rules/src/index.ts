@@ -25,5 +25,6 @@ export * from "./decorations.js";
 export * from "./defaults.js";
 export * from "./forage.js";
 export * from "./help.js";
+export * from "./gift.js";
 export * from "./ready.js";
 export * from "./seasons.js";
