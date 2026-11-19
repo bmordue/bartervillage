@@ -28,6 +28,7 @@ import { fetchPlayer, setReady, type PlayerStatus } from "./player.js";
 import { fetchPlayers, type PlayerSummary } from "./players.js";
 import { fetchPlot, type PlotSnapshot } from "./plot.js";
 import { createPoller } from "./polling.js";
+import { fetchLatestReplay, type TickReplayResponse } from "./replay.js";
 import { fetchWorld, type WorldSnapshot } from "./world.js";
 
 interface StatusSnapshot {
@@ -64,6 +65,7 @@ export function mountApp(root?: HTMLElement | null): void {
   let latest: Partial<StatusSnapshot> = {};
   let notice: string | null = null;
   let viewedPlot: PlotSnapshot | null = null;
+  let latestReplay: TickReplayResponse | null = null;
   let draw: (snapshot?: Partial<StatusSnapshot>) => void = () => undefined;
 
   const poller = createPoller<StatusSnapshot>({
@@ -109,6 +111,15 @@ export function mountApp(root?: HTMLElement | null): void {
     onError: (error) => {
       console.error("status poll failed", error);
     },
+  });
+
+  const replayPoller = createPoller<TickReplayResponse>({
+    fetchData: (signal) => fetchLatestReplay("", "w1", signal),
+    onData: (replay) => {
+      latestReplay = replay;
+      draw();
+    },
+    intervalMs: 10000,
   });
 
   const refresh = (): Promise<void> => poller.pollNow();
@@ -194,6 +205,7 @@ export function mountApp(root?: HTMLElement | null): void {
           })
         }
         mapView={mapView}
+        {...(latestReplay ? { replay: latestReplay } : {})}
       />,
       target,
     );
@@ -201,9 +213,17 @@ export function mountApp(root?: HTMLElement | null): void {
 
   draw();
   poller.start();
+  replayPoller.start();
 
   if (typeof window !== "undefined") {
-    window.addEventListener("pagehide", () => poller.stop(), { once: true });
+    window.addEventListener(
+      "pagehide",
+      () => {
+        poller.stop();
+        replayPoller.stop();
+      },
+      { once: true },
+    );
   }
 }
 

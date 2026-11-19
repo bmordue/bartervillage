@@ -20,4 +20,6 @@ export * from "./players.js";
 export * from "./plot.js";
 export * from "./plotView.js";
 export * from "./polling.js";
+export * from "./replay.js";
+export * from "./replayPanel.js";
 export * from "./world.js";

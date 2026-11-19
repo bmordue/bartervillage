@@ -21,6 +21,8 @@ import type { PlayerSummary } from "./players.js";
 import type { PlotSnapshot } from "./plot.js";
 import { PlotView } from "./plotView.js";
 import type { WorldSnapshot } from "./world.js";
+import { ReplayPanel } from "./replayPanel.js";
+import type { TickReplayResponse } from "./replay.js";
 
 export { Panel } from "./panel.js";
 export type { PanelProps } from "./panel.js";
@@ -48,6 +50,7 @@ export interface AppProps {
   onCloseViewedPlot?: () => void;
   onHelp?: (targetPlotId: string, chore: HelpChore) => void | Promise<void>;
   onToggleReady?: (ready: boolean) => void | Promise<void>;
+  replay?: TickReplayResponse;
 }
 
 /** Placeholder status chip shown until live world data is wired in (M5.A04). */
@@ -199,6 +202,7 @@ export function App({
   onCloseViewedPlot,
   onHelp,
   onToggleReady,
+  replay,
 }: AppProps) {
   return (
     <div class="app-shell" data-testid="app-shell">
@@ -268,6 +272,7 @@ export function App({
             onViewPlot={onViewPlot}
           />
           <PhrasePanel />
+          {replay ? <ReplayPanel replay={replay} /> : null}
         </aside>
       </main>
 

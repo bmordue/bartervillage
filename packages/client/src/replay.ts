@@ -1,8 +1,9 @@
 /**
  * Client-side replay fetch and playback (spec §10; M5.C01).
  *
- * Fetches the latest tick replay via GET /replay/latest and exposes the
- * parsed events in sequence order for playback in the UI (M5.C02).
+ * Fetches the latest tick replay via GET /replay/latest and plays events back
+ * in recorded sequence order. Pure controller kept free of Preact so it can be
+ * unit-tested in Node.
  */
 
 import type { ArchivedEvent, EventType } from "@bartervillage/rules";
@@ -61,90 +62,48 @@ export async function fetchLatestReplay(
   };
 }
 
-export type ReplayState = "idle" | "playing" | "paused" | "done";
+export class ReplayPlayback {
+  private readonly events: ArchivedEvent[];
+  private cursor = 0;
 
-export interface ReplayPlayerProps {
-  replay: TickReplayResponse;
-  onEvent: (event: ArchivedEvent) => void;
-  tickInterval?: number;
-}
-
-export class ReplayPlayer {
-  private replay: TickReplayResponse;
-  private index = 0;
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private state: ReplayState = "idle";
-  private tickInterval: number;
-  private onEvent: (event: ArchivedEvent) => void;
-
-  constructor(props: ReplayPlayerProps) {
-    this.replay = props.replay;
-    this.onEvent = props.onEvent;
-    this.tickInterval = props.tickInterval ?? 500;
+  constructor(replay: TickReplayResponse) {
+    this.events = replay.events;
   }
 
-  load(replay: TickReplayResponse): void {
-    this.stop();
-    this.replay = replay;
-    this.index = 0;
-    this.state = "idle";
+  get total(): number {
+    return this.events.length;
   }
 
-  play(): void {
-    if (this.state === "playing") return;
-    this.state = "playing";
-    this.tick();
+  get index(): number {
+    return this.cursor;
   }
 
-  pause(): void {
-    this.state = "paused";
-    this.stopTimer();
+  get isDone(): boolean {
+    return this.cursor >= this.events.length;
   }
 
-  stop(): void {
-    this.stopTimer();
-    this.index = 0;
-    this.state = "idle";
-  }
-
-  get events(): ArchivedEvent[] {
-    return this.replay.events;
-  }
-
-  get currentEvent(): ArchivedEvent | undefined {
-    return this.replay.events[this.index] ?? undefined;
+  get current(): ArchivedEvent | undefined {
+    return this.cursor === 0 ? undefined : this.events[this.cursor - 1];
   }
 
   get progress(): number {
-    const events = this.events;
-    return events.length === 0 ? 0 : this.index / events.length;
+    return this.events.length === 0 ? 0 : this.cursor / this.events.length;
   }
 
-  get isPlaying(): boolean {
-    return this.state === "playing";
+  reset(): void {
+    this.cursor = 0;
   }
 
-  private tick(): void {
-    this.stopTimer();
-    if (this.state !== "playing") return;
-
-    const events = this.events;
-    if (this.index >= events.length) {
-      this.state = "done";
-      return;
+  /** Advance to the next event and return it, or undefined when finished. */
+  next(): ArchivedEvent | undefined {
+    if (this.isDone) {
+      return undefined;
     }
-
-    const event = events[this.index];
-    if (!event) return;
-    this.index += 1;
-    this.onEvent(event);
-    this.timer = setTimeout(() => this.tick(), this.tickInterval);
-  }
-
-  private stopTimer(): void {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
+    const event = this.events[this.cursor];
+    if (!event) {
+      return undefined;
     }
+    this.cursor += 1;
+    return event;
   }
 }
