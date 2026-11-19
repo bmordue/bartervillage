@@ -213,3 +213,9 @@ export function deleteCredential(db: Database, id: string): boolean {
   const result = db.run("DELETE FROM credentials WHERE id = ?", id);
   return Number(result.changes) === 1;
 }
+
+/** Delete all credentials for a player, allowing them to re-register. */
+export function deletePlayerCredentials(db: Database, playerId: string): boolean {
+  const result = db.run("DELETE FROM credentials WHERE player_id = ?", playerId);
+  return Number(result.changes) > 0;
+}

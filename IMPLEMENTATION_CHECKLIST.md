@@ -253,7 +253,7 @@
 - [x] **M4.C04** Support multiple credentials per player, including account linking (spec §12). _Depends on: M4.C01-M4.C03._
 - [x] **M4.C05** Invite issuance and redemption flow (spec §3, §12). _Depends on: M3.01, M4.B01._
 - [x] **M4.C06** Session creation, expiry and logout. _Depends on: M3.01, M4.B01._
-- [ ] **M4.C07** Choose and implement an account-recovery path for lost credentials (spec §15). _Depends on: M4.C01-M4.C06; blocked by D.12._
+- [x] **M4.C07** Choose and implement an account-recovery path for lost credentials (spec §15). _Depends on: M4.C01-M4.C06; blocked by D.12._
 - [x] **M4.C08** Transactional site claim during onboarding, with first-write-wins for simultaneous claims (spec §5). _Depends on: M3.09, M4.C05, M4.C06._
 
 ## Milestone 5: Vertical slice with plot view, order queue, one tick and replay (spec §16.5)
@@ -365,7 +365,7 @@
 - [x] **D.09** **Decision:** tick-failure alerting and safe manual retry path. Persistent resolution failure = 3 consecutive failures for the same tick. Alert: structured log line with world/tick IDs and failure count. Manual retry: admin REST POST `/world/:worldId/ticks/:tick/retry` (requires no resolving lease) plus a worker CLI retry command. _Blocks: M4.A32, M9.11._
 - [ ] **D.10** **Decision:** replay payload size strategy, including compression or snapshot reconstruction (spec §15). _Blocks: M5.C01, M5.C03._
 - [x] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
-- [ ] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07._
+- [x] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07. Informs: M4.C04, M9.10._
 - [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
 - [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
 - [x] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._

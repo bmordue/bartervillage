@@ -4,6 +4,7 @@ import { CREDENTIAL_KEY_BYTES } from "../src/crypto.js";
 import {
   createCredential,
   deleteCredential,
+  deletePlayerCredentials,
   findCredentialBySubject,
   listPlayerCredentials,
   loadCredential,
@@ -26,6 +27,9 @@ function setup(): Database {
   db = database;
   database.run(
     "INSERT INTO players (id, name, plot_id, joined_tick, energy) VALUES ('p1', 'Ada', 'plot1', 0, 100)",
+  );
+  database.run(
+    "INSERT INTO players (id, name, plot_id, joined_tick, energy) VALUES ('p2', 'Bo', 'plot2', 0, 100)",
   );
   return database;
 }
@@ -116,5 +120,28 @@ describe("credential persistence", () => {
     expect(deleteCredential(database, "c1")).toBe(true);
     expect(deleteCredential(database, "c1")).toBe(false);
     expect(loadCredential(database, "c1")).toBeUndefined();
+  });
+
+  it("deletes all credentials for a player at once", () => {
+    const database = setup();
+    createCredential(
+      database,
+      { id: "c1", playerId: "p1", kind: "discord", subject: "discord:123" },
+      key,
+    );
+    createCredential(
+      database,
+      { id: "c2", playerId: "p1", kind: "github", subject: "github:42" },
+      key,
+    );
+    createCredential(
+      database,
+      { id: "c3", playerId: "p2", kind: "discord", subject: "discord:777" },
+      key,
+    );
+
+    expect(deletePlayerCredentials(database, "p1")).toBe(true);
+    expect(listPlayerCredentials(database, "p1")).toHaveLength(0);
+    expect(listPlayerCredentials(database, "p2")).toHaveLength(1);
   });
 });
