@@ -319,7 +319,7 @@
 - [x] **M7.11** Rewards can unlock recipes, crop varieties, building types, map areas and wild zones (spec §9). _Depends on: M2.D12, M3.14, M3.15, M7.10._
 - [x] **M7.12** Web push with VAPID keys, a service worker and stored subscriptions (spec §11, §12). _Depends on: M3.01, M4.B02, M5.A01._
 - [x] **M7.13** Notify players with the tick number on resolution; the client fetches the replay when opened (spec §11). _Depends on: M4.A18, M7.12._
-- [ ] **M7.14** Log push failures without affecting tick resolution; treat iOS push as best-effort (spec §11). _Depends on: M7.13; blocked by D.15._
+- [x] **M7.14** Log push failures without affecting tick resolution; treat iOS push as best-effort (spec §11). _Depends on: M7.13; blocked by D.15._
 
 ## Milestone 8: Content pass and onboarding (spec §16.8)
 
@@ -368,6 +368,6 @@
 - [ ] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07._
 - [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
 - [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
-- [ ] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
+- [x] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
 - [ ] **D.16** **Decision:** verify art-pack licensing before adding assets (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
 - [x] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._
