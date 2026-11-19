@@ -363,7 +363,7 @@
 - [x] **D.07** **Decision:** keep one-way travel with a free return home or revise it (spec §15). _Blocks: M2.A13-M2.A15, M8.06. Informs: M2.A16._
 - [x] **D.08** **Decision:** wild depletion tuning and depletion warnings (spec §15). _Blocks: M2.C01, M2.C02, M8.05. Informs: M5.B06._
 - [x] **D.09** **Decision:** tick-failure alerting and safe manual retry path. Persistent resolution failure = 3 consecutive failures for the same tick. Alert: structured log line with world/tick IDs and failure count. Manual retry: admin REST POST `/world/:worldId/ticks/:tick/retry` (requires no resolving lease) plus a worker CLI retry command. _Blocks: M4.A32, M9.11._
-- [ ] **D.10** **Decision:** replay payload size strategy, including compression or snapshot reconstruction (spec §15). _Blocks: M5.C01, M5.C03._
+- [x] **D.10** **Decision:** replay payload size strategy — the server serves the full event log from the database; compression or snapshot reconstruction can be added if replay fetches become slow later (spec §15). _Blocks: M5.C01, M5.C03._
 - [x] **D.11** **Decision:** season rollover loss tuning and withering warnings (spec §15). _Blocks: M2.B06, M7.02, M8.02. Informs: M2.B05._
 - [x] **D.12** **Decision:** account recovery when every linked credential is lost (spec §15). _Blocks: M4.C07. Informs: M4.C04, M9.10._
 - [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
