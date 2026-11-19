@@ -283,7 +283,7 @@
 
 - [x] **M5.C01** Fetch the latest tick replay and play back events in recorded order (spec §10). _Depends on: M3.18, M4.A18, M4.A19, M4.B02, M5.A02._
 - [x] **M5.C02** Render complete avatar movement paths and allow following different locations (spec §5, §10). _Depends on: M4.A21, M5.C01._
-- [ ] **M5.C03** Allow unlimited replays of the latest tick; players only see the latest tick while all logs are archived server-side (spec §10). _Depends on: M3.18, M5.C01; blocked by D.10._
+- [x] **M5.C03** Allow unlimited replays of the latest tick; players only see the latest tick while all logs are archived server-side (spec §10). _Depends on: M3.18, M5.C01; blocked by D.10._
 - [ ] **M5.C04** Handle the `v: 1` event header and version metadata (spec §10). _Depends on: M4.A20, M5.C01._
 - [ ] **M5.C05** Ensure replay logs contain only public game events, never credentials or push subscriptions (spec §10). _Depends on: M3.18, M4.B09, M5.C01._
 

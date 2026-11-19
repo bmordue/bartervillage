@@ -381,6 +381,53 @@ describe("REST API routes", () => {
     expect(data.error).toBe("no_replay_data");
   });
 
+  it("GET /replay/latest serves only the latest tick while older logs stay archived", async () => {
+    harness = await startTestApi({ buildRoutes: (database) => ({ ...buildApiRoutes(database) }) });
+    insertWorld(harness.database);
+
+    for (const tick of [0, 1]) {
+      harness.database.run(
+        `INSERT INTO tick_logs (world_id, tick, header_json, state_hash)
+         VALUES ('w1', ?, ?, ?)`,
+        tick,
+        JSON.stringify({
+          v: 1,
+          worldSeed: "seed",
+          tick,
+          generatorVersion: "gen-1",
+          contentVersion: "content-1",
+          rulesVersion: "1.0.0",
+        }),
+        `hash-${tick}`,
+      );
+      harness.database.run(
+        `INSERT INTO archived_events (world_id, tick, sequence, version, type, payload_json)
+         VALUES ('w1', ?, 0, 1, 'weather', ?)`,
+        tick,
+        JSON.stringify({ weather: "clear", season: "spring" }),
+      );
+    }
+
+    const response = await fetch(`${harness.baseUrl}/replay/latest`);
+
+    expect(response.status).toBe(200);
+    const data = (await response.json()) as {
+      tick: number;
+      events: { tick: number }[];
+    };
+    expect(data.tick).toBe(1);
+    expect(data.events).toHaveLength(1);
+    expect(data.events[0]?.tick).toBe(1);
+
+    expect(
+      harness.database.get<{ count: number }>("SELECT COUNT(*) AS count FROM tick_logs")?.count,
+    ).toBe(2);
+    expect(
+      harness.database.get<{ count: number }>("SELECT COUNT(*) AS count FROM archived_events")
+        ?.count,
+    ).toBe(2);
+  });
+
   it("GET /push/subscriptions returns empty subscriptions", async () => {
     harness = await startTestApi({
       buildRoutes: (database) => ({

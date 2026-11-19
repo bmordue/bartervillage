@@ -48,6 +48,23 @@ describe("ReplayPlayback (M5.C01)", () => {
     expect(playback.index).toBe(0);
     expect(playback.next()?.sequence).toBe(0);
   });
+
+  it("allows unlimited replays of the same latest tick", () => {
+    const playback = new ReplayPlayback(replay);
+
+    for (let round = 0; round < 3; round += 1) {
+      const played: number[] = [];
+      for (let event = playback.next(); event !== undefined; event = playback.next()) {
+        played.push(event.sequence);
+      }
+      expect(played).toEqual([0, 1]);
+      expect(playback.isDone).toBe(true);
+      playback.reset();
+    }
+
+    expect(playback.isDone).toBe(false);
+    expect(playback.progress).toBe(0);
+  });
 });
 
 describe("fetchLatestReplay (M5.C01)", () => {
