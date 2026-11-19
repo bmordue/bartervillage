@@ -24,13 +24,24 @@ import {
   clearTickResolutionFailure,
 } from "@bartervillage/server";
 import type { ResolveTickResult } from "@bartervillage/rules";
-
 import { tryAcquireLock } from "./lock.js";
 
 export interface TickContext {
   database: Database;
   worldId: string;
   tick: number;
+}
+
+/**
+ * Called after a tick commits successfully, once the resolving lease and tick
+ * lock are released (spec §14.9, §11; M4.A23, M7.13). Push failures here are
+ * logged and never affect tick resolution.
+ */
+
+export interface TickAfterCommitResult {
+  worldId: string;
+  tick: number;
+  stateHash: string;
 }
 
 export interface TickPollerOptions {
@@ -41,6 +52,7 @@ export interface TickPollerOptions {
   logger: (message: string) => void;
   resolve?: (context: TickContext) => ResolveTickResult | void;
   shouldResolve?: (context: TickContext & { now: Date }) => boolean;
+  afterCommit?: (result: TickAfterCommitResult) => void | Promise<void>;
   now?: () => number;
   staleAfterMs?: number;
   leaseTtlMs?: number;
@@ -105,9 +117,20 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
       const attemptedTick = world.currentTick;
       options.database.raw.exec("BEGIN IMMEDIATE");
       try {
-        resolve({ database: options.database, worldId: options.worldId, tick });
+        const resolution = resolve({ database: options.database, worldId: options.worldId, tick });
         clearTickResolutionFailure(options.database, options.worldId, attemptedTick);
         options.database.raw.exec("COMMIT");
+        if (resolution && options.afterCommit) {
+          void Promise.resolve(
+            options.afterCommit({
+              worldId: options.worldId,
+              tick: resolution.header.tick,
+              stateHash: resolution.stateHash,
+            }),
+          ).catch((error: unknown) => {
+            options.logger(`worker: after-commit hook failed: ${String(error)}`);
+          });
+        }
         return;
       } catch (error) {
         try {

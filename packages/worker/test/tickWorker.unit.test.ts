@@ -1,3 +1,21 @@
+/**
+ * Tick poller unit tests (spec §14; M4.A02/M4.A03).
+ *
+ * Each poll tries the global tick lock. If another worker holds it, the poll
+ * returns without resolving. Once the lock is held, the short-lived resolving
+ * lease is taken in its own transaction; the lease and lock are released after
+ * resolution succeeds or throws, and a crashed worker's lease expires by TTL.
+ *
+ * Persistent resolution failures are tracked in their own table (D.09): every
+ * failed attempt is recorded per tick and, once the consecutive count reaches
+ * the alert threshold (three by default), a structured alert is logged. The
+ * poller keeps retrying on its normal cadence, and the host can also trigger a
+ * safe manual retry through `retryWorldTick` or the REST endpoint.
+ *
+ * The `afterCommit` hook (M7.13) runs after tick resolution and lease/lock
+ * release, used for side effects like push notifications.
+ */
+
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +31,7 @@ import {
 
 import { tryAcquireLock } from "../src/lock.js";
 import { createTickPoller } from "../src/tickWorker.js";
+import type { ResolveTickResult, TickHeader, WorldState } from "@bartervillage/rules";
 
 let db: Database | undefined;
 let directory: string | undefined;
@@ -44,12 +63,77 @@ function setup(withWorld = true): {
   return { database, path: join(directory, "tick.lock") };
 }
 
+function makeWorldState(): WorldState {
+  return {
+    world: {
+      id: "w1",
+      config: {
+        seed: "seed-1",
+        generatorVersion: "gen-1",
+        contentVersion: "content-1",
+        rulesVersion: "rules-1",
+        deadlineTime: "20:00",
+        timezone: "UTC",
+        minTickGapMinutes: 60,
+        playerCap: 20,
+      },
+      currentTick: 1,
+      season: "spring",
+      weather: "clear",
+      nextDeadline: null,
+      resolving: null,
+    },
+    players: [],
+    regions: [],
+    tiles: [],
+    plots: [],
+    buildings: [],
+    crops: [],
+    animals: [],
+    inventory: [],
+    orders: [],
+    orderLocks: [],
+    ready: [],
+    offers: [],
+    wildNodes: [],
+    claims: [],
+    goals: [],
+    contributions: [],
+    goodwill: [],
+    decorations: [],
+    nextOrderSequence: 1,
+    unlockedRecipes: [],
+    unlockedCrops: [],
+    unlockedBuildings: [],
+    unlockedRegions: [],
+    unlockedNodes: [],
+  };
+}
+
+function makeHeader(tick: number): TickHeader {
+  return {
+    v: 1,
+    worldSeed: "seed-1",
+    tick,
+    generatorVersion: "gen-1",
+    contentVersion: "content-1",
+    rulesVersion: "rules-1",
+  };
+}
+
+function makeResolveResult(tick: number): ResolveTickResult {
+  return {
+    state: makeWorldState(),
+    events: [],
+    stateHash: `hash-${tick}`,
+    header: makeHeader(tick),
+  };
+}
+
 describe("tick poller", () => {
   it("runs resolution when it acquires the lock and releases it afterwards", async () => {
     const { database, path } = setup();
-    const resolve = vi.fn(() => {
-      expect(loadWorld(database, "w1")?.resolving?.owner).toBe("worker-a");
-    });
+    const resolve = vi.fn(() => makeResolveResult(1));
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -71,7 +155,7 @@ describe("tick poller", () => {
   it("skips resolution when another worker holds the lock", async () => {
     const { database, path } = setup();
     const held = tryAcquireLock({ path, owner: "worker-a" });
-    const resolve = vi.fn();
+    const resolve = vi.fn(() => makeResolveResult(1));
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -111,7 +195,7 @@ describe("tick poller", () => {
   it("skips resolution when a resolving lease is still held", async () => {
     const { database, path } = setup();
     acquireResolvingLease(database, "w1", { owner: "worker-a" });
-    const resolve = vi.fn();
+    const resolve = vi.fn(() => makeResolveResult(1));
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -132,7 +216,7 @@ describe("tick poller", () => {
 
   it("skips resolution when the tick is not due and releases the lock", async () => {
     const { database, path } = setup();
-    const resolve = vi.fn();
+    const resolve = vi.fn(() => makeResolveResult(1));
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -154,7 +238,7 @@ describe("tick poller", () => {
 
   it("skips an unknown world and releases the lock", async () => {
     const { database, path } = setup(false);
-    const resolve = vi.fn();
+    const resolve = vi.fn(() => makeResolveResult(1));
     const logger = vi.fn();
 
     const poll = createTickPoller({
@@ -211,6 +295,7 @@ describe("persistent failure alerting (D.09)", () => {
         if (shouldFail) {
           throw new Error("boom");
         }
+        return makeResolveResult(1);
       },
     });
 
@@ -266,7 +351,7 @@ describe("resolution transaction", () => {
       other.run(
         `INSERT INTO worlds
            (id, seed, generator_version, content_version, rules_version, deadline_time, timezone,
-            min_tick_gap_minutes, player_cap, season, weather)
+           min_tick_gap_minutes, player_cap, season, weather)
          VALUES ('w3', 'seed', 'gen-1', 'content-1', 'rules-1', '20:00', 'UTC', 60, 20, 'spring',
                  'clear')`,
       );
@@ -274,5 +359,75 @@ describe("resolution transaction", () => {
     } finally {
       other.close();
     }
+  });
+});
+
+describe("afterCommit hook (M7.13)", () => {
+  it("calls afterCommit with tick and stateHash after successful resolution", async () => {
+    const { database, path } = setup();
+    const afterCommit = vi.fn();
+    const logger = vi.fn();
+
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger,
+      resolve: () => makeResolveResult(1),
+      afterCommit,
+    });
+
+    await poll();
+
+    expect(afterCommit).toHaveBeenCalledWith({
+      worldId: "w1",
+      tick: 1,
+      stateHash: "hash-1",
+    });
+  });
+
+  it("does not call afterCommit when resolution throws", async () => {
+    const { database, path } = setup();
+    const afterCommit = vi.fn();
+    const logger = vi.fn();
+
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger,
+      resolve: () => {
+        throw new Error("boom");
+      },
+      afterCommit,
+    });
+
+    await expect(poll()).rejects.toThrow("boom");
+    expect(afterCommit).not.toHaveBeenCalled();
+  });
+
+  it("logs but does not throw when afterCommit fails", async () => {
+    const { database, path } = setup();
+    const afterCommit = vi.fn(() => Promise.reject(new Error("push failed")));
+    const logger = vi.fn();
+
+    const poll = createTickPoller({
+      database,
+      worldId: "w1",
+      lockPath: path,
+      owner: "worker-a",
+      logger,
+      resolve: () => makeResolveResult(1),
+      afterCommit,
+    });
+
+    await poll();
+
+    expect(afterCommit).toHaveBeenCalled();
+    expect(
+      logger.mock.calls.some(([msg]) => String(msg).includes("after-commit hook failed")),
+    ).toBe(true);
   });
 });

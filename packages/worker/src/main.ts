@@ -14,6 +14,7 @@ import { hostname } from "node:os";
 import { dirname, join } from "node:path";
 
 import { Database, resolveWorldTickInTransaction, retryWorldTick } from "@bartervillage/server";
+import { createPushService } from "@bartervillage/server";
 
 import { DEFAULT_POLL_INTERVAL_MS, WorkerLoop } from "./loop.js";
 import { isTickDue } from "./schedule.js";
@@ -53,6 +54,7 @@ export async function main(): Promise<void> {
   const logger = (message: string): void => {
     console.log(message);
   };
+  const pushService = createPushService();
   const loop = new WorkerLoop({
     poll: createTickPoller({
       database,
@@ -65,6 +67,19 @@ export async function main(): Promise<void> {
         const result = resolveWorldTickInTransaction(context.database, context.worldId);
         logger(`worker: resolved world ${context.worldId} tick ${result.header.tick}`);
         return result;
+      },
+      afterCommit: async (result) => {
+        const deliveries = await pushService.sendTickResolved(
+          database,
+          result.worldId,
+          result.tick,
+        );
+        const failures = deliveries.filter((delivery) => !delivery.ok);
+        if (failures.length > 0) {
+          for (const failure of failures) {
+            logger(`worker: push failed for ${failure.endpoint}: ${failure.failure ?? "unknown"}`);
+          }
+        }
       },
     }),
     intervalMs,

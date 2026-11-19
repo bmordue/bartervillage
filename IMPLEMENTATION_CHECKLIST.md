@@ -318,7 +318,7 @@
 - [x] **M7.10** Goal rewards unlock for everyone at the start of the next tick (spec §9). _Depends on: M7.09._
 - [x] **M7.11** Rewards can unlock recipes, crop varieties, building types, map areas and wild zones (spec §9). _Depends on: M2.D12, M3.14, M3.15, M7.10._
 - [x] **M7.12** Web push with VAPID keys, a service worker and stored subscriptions (spec §11, §12). _Depends on: M3.01, M4.B02, M5.A01._
-- [ ] **M7.13** Notify players with the tick number on resolution; the client fetches the replay when opened (spec §11). _Depends on: M4.A18, M7.12._
+- [x] **M7.13** Notify players with the tick number on resolution; the client fetches the replay when opened (spec §11). _Depends on: M4.A18, M7.12._
 - [ ] **M7.14** Log push failures without affecting tick resolution; treat iOS push as best-effort (spec §11). _Depends on: M7.13; blocked by D.15._
 
 ## Milestone 8: Content pass and onboarding (spec §16.8)
