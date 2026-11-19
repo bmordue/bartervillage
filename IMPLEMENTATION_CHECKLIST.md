@@ -316,7 +316,7 @@
 - [x] **M7.08** Contribution locks release when an order is removed or the goal fails or expires, with goods staying with their owners (spec §9). _Depends on: M7.07._
 - [x] **M7.09** Goal checks run after the player order phase and check success before expiry (spec §9). _Depends on: M2.A10, M7.05._
 - [x] **M7.10** Goal rewards unlock for everyone at the start of the next tick (spec §9). _Depends on: M7.09._
-- [ ] **M7.11** Rewards can unlock recipes, crop varieties, building types, map areas and wild zones (spec §9). _Depends on: M2.D12, M3.14, M3.15, M7.10._
+- [x] **M7.11** Rewards can unlock recipes, crop varieties, building types, map areas and wild zones (spec §9). _Depends on: M2.D12, M3.14, M3.15, M7.10._
 - [ ] **M7.12** Web push with VAPID keys, a service worker and stored subscriptions (spec §11, §12). _Depends on: M3.01, M4.B02, M5.A01._
 - [ ] **M7.13** Notify players with the tick number on resolution; the client fetches the replay when opened (spec §11). _Depends on: M4.A18, M7.12._
 - [ ] **M7.14** Log push failures without affecting tick resolution; treat iOS push as best-effort (spec §11). _Depends on: M7.13; blocked by D.15._
@@ -334,7 +334,7 @@
 - [ ] **M8.09** Playtesting tuning pass for energy costs, goodwill and barter liquidity (spec §15). _Depends on: M8.01-M8.07, M9.12; blocked by D.01-D.04, D.13._
 - [ ] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
 - [ ] **M8.11** Guided first tick for new players (spec §11). _Depends on: M5.A01-M5.C04; final art: M8.10._
-- [ ] **M8.12** Keep phrase strings localisation-ready (spec §8). _Depends on: M6.13, M8.07; blocked by D.03._
+- [x] **M8.12** Keep phrase strings localisation-ready (spec §8). _Depends on: M6.13, M8.07; blocked by D.03._
 
 ## Milestone 9: Deployment, backups, restore drill and friends playtest (spec §16.9)
 
