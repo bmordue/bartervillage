@@ -413,9 +413,16 @@ describe("REST API routes", () => {
     expect(response.status).toBe(200);
     const data = (await response.json()) as {
       tick: number;
+      header: { v: number; tick: number; worldSeed: string; rulesVersion: string };
       events: { tick: number }[];
     };
     expect(data.tick).toBe(1);
+    expect(data.header).toMatchObject({
+      v: 1,
+      tick: 1,
+      worldSeed: "seed",
+      rulesVersion: "1.0.0",
+    });
     expect(data.events).toHaveLength(1);
     expect(data.events[0]?.tick).toBe(1);
 

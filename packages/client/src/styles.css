@@ -883,9 +883,18 @@ body {
   min-width: 0;
 }
 
+.replay-meta p,
 .replay-event-info p {
   margin: 2px 0;
   overflow-wrap: anywhere;
+}
+
+.replay-meta {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.75rem;
 }
 
 .replay-events-list ul {

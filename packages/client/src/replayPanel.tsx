@@ -124,6 +124,12 @@ export function ReplayPanel({ replay }: ReplayPanelProps) {
         <progress value={progress * 100} max={100} />
         <span>{`${Math.round(progress * 100)}%`}</span>
       </div>
+      <div class="replay-meta">
+        <p>{`Schema v${replay.header.v} · tick ${replay.header.tick}`}</p>
+        <p>
+          {`Seed ${replay.header.worldSeed} · gen ${replay.header.generatorVersion} · content ${replay.header.contentVersion} · rules ${replay.header.rulesVersion}`}
+        </p>
+      </div>
       <div class="replay-event-info">
         <p>{`Events consumed: ${playback?.index ?? 0} / ${events.length}`}</p>
         <p>{`Current: ${describeEvent(current)}`}</p>

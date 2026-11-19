@@ -17,6 +17,7 @@ import {
   unready,
   type Order,
   type OrderType,
+  type TickHeader,
 } from "@bartervillage/rules";
 import { createCredentialRoutes } from "./auth/credentialRoutes.js";
 import { createDiscordRoutes } from "./auth/discordRoutes.js";
@@ -343,7 +344,7 @@ type ReadyRow = {
   position: number;
 };
 
-type TickLogTickRow = { tick: number };
+type TickLogTickRow = { tick: number; header_json: string };
 
 type LatestOrderTickRow = { tick: number | null };
 
@@ -732,15 +733,17 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
     "GET /replay/latest": (request) => {
       const worldId = getWorldId(request);
 
-      const latestTick = database.get<TickLogTickRow>(
-        `SELECT tick FROM tick_logs WHERE world_id = ? ORDER BY tick DESC LIMIT 1`,
+      const latest = database.get<TickLogTickRow>(
+        `SELECT tick, header_json FROM tick_logs WHERE world_id = ? ORDER BY tick DESC LIMIT 1`,
         worldId,
-      )?.tick;
+      );
 
-      if (latestTick === undefined) {
+      if (!latest) {
         return { status: 404, body: { error: "no_replay_data" } };
       }
 
+      const latestTick = latest.tick;
+      const header = JSON.parse(latest.header_json) as TickHeader;
       const events = database.all<ArchivedEventRow>(
         `SELECT tick, sequence, type, payload_json FROM archived_events WHERE world_id = ? AND tick = ? ORDER BY sequence`,
         worldId,
@@ -751,13 +754,7 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
         status: 200,
         body: {
           tick: latestTick,
-          header: {
-            tick: latestTick,
-            worldSeed: "seed",
-            generatorVersion: "gen-1",
-            contentVersion: "content-1",
-            rulesVersion: "1.0.0",
-          },
+          header,
           events: events.map((e) => ({
             tick: e.tick,
             sequence: e.sequence,

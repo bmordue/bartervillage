@@ -9,6 +9,7 @@ import { ReplayPlayback, fetchLatestReplay, type TickReplayResponse } from "../s
 const replay: TickReplayResponse = {
   tick: 3,
   header: {
+    v: 1,
     tick: 3,
     worldSeed: "seed",
     generatorVersion: "gen-1",
@@ -83,12 +84,29 @@ describe("fetchLatestReplay (M5.C01)", () => {
     vi.unstubAllGlobals();
   });
 
-  it("returns the parsed latest tick replay", async () => {
+  it("returns the parsed latest tick replay with version metadata", async () => {
     const result = await fetchLatestReplay("", "w1");
 
     expect(result.tick).toBe(3);
-    expect(result.header.tick).toBe(3);
+    expect(result.header).toEqual(replay.header);
+    expect(result.header.v).toBe(1);
+    expect(result.header.rulesVersion).toBe("1.0.0");
     expect(result.events).toHaveLength(2);
+  });
+
+  it("rejects an unsupported replay schema version", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({
+        ok: true,
+        status: 200,
+        json: async () => ({ ...replay, header: { ...replay.header, v: 2 } }),
+      })),
+    );
+
+    await expect(fetchLatestReplay("", "w1")).rejects.toThrow(
+      "Unsupported replay schema version 2",
+    );
   });
 
   it("throws on a non-2xx response", async () => {

@@ -435,6 +435,7 @@ describe("client app shell (M5.A01)", () => {
         replay: {
           tick: 1,
           header: {
+            v: 1,
             tick: 1,
             worldSeed: "seed",
             generatorVersion: "1",
@@ -449,5 +450,7 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("Follow location");
     expect(html).toContain("All locations");
     expect(html).toContain("Region 1, 0");
+    expect(html).toContain("Schema v1");
+    expect(html).toContain("Seed seed");
   });
 });

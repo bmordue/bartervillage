@@ -8,7 +8,10 @@
 
 import type { ArchivedEvent, EventType } from "@bartervillage/rules";
 
+export const REPLAY_SCHEMA_VERSION = 1;
+
 export interface TickReplayHeader {
+  v: number;
   tick: number;
   worldSeed: string;
   generatorVersion: string;
@@ -48,6 +51,12 @@ export async function fetchLatestReplay(
     throw new Error(`GET /replay/latest failed with ${response.status}`);
   }
   const body = (await response.json()) as RawTickReplayResponse;
+
+  if (!body.header || body.header.v !== REPLAY_SCHEMA_VERSION) {
+    throw new Error(
+      `Unsupported replay schema version ${String(body.header?.v)} (expected ${REPLAY_SCHEMA_VERSION})`,
+    );
+  }
 
   return {
     tick: body.tick,

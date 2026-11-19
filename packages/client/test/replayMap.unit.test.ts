@@ -18,6 +18,7 @@ const visited = { regionId: "region:1:0", x: 1, y: 0 };
 const replay: TickReplayResponse = {
   tick: 4,
   header: {
+    v: 1,
     tick: 4,
     worldSeed: "replay-seed",
     generatorVersion: "1",
