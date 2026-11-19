@@ -40,4 +40,24 @@ describe("default content values", () => {
       expect(goal.rewards.length).toBeGreaterThan(0);
     }
   });
+
+  it("defines animal types, wild nodes and forage/fishing resources", () => {
+    const animalIds = content.animals.map((animal) => animal.id);
+    expect(animalIds).toContain("chicken");
+    expect(animalIds).toContain("cow");
+    expect(animalIds).toContain("sheep");
+    expect(animalIds).toContain("pig");
+    expect(animalIds).toContain("goat");
+    expect(animalIds).toContain("duck");
+    expect(animalIds).toContain("rabbit");
+
+    const wildNodeIds = content.wildNodes.map((node) => node.id);
+    expect(wildNodeIds).toContain("berry_bush");
+    expect(wildNodeIds).toContain("river_fish");
+    expect(wildNodeIds).toContain("wood_grove");
+
+    for (const animal of content.animals) {
+      expect(content.items[animal.feedItem]).toBeDefined();
+    }
+  });
 });

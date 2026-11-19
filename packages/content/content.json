@@ -180,6 +180,27 @@
     },
     "apple": {
       "name": "Apple"
+    },
+    "grass": {
+      "name": "Grass"
+    },
+    "meat": {
+      "name": "Meat"
+    },
+    "feather": {
+      "name": "Feather"
+    },
+    "fur": {
+      "name": "Fur"
+    },
+    "honey": {
+      "name": "Honey"
+    },
+    "shellfish": {
+      "name": "Shellfish"
+    },
+    "reed": {
+      "name": "Reed"
     }
   },
   "energy": {
@@ -496,6 +517,62 @@
         }
       ],
       "feedItem": "hay"
+    },
+    {
+      "id": "pig",
+      "name": "Pig",
+      "produces": [
+        {
+          "item": "meat",
+          "quantity": 2
+        }
+      ],
+      "feedItem": "wheat"
+    },
+    {
+      "id": "goat",
+      "name": "Goat",
+      "produces": [
+        {
+          "item": "milk",
+          "quantity": 1
+        },
+        {
+          "item": "cheese",
+          "quantity": 1
+        }
+      ],
+      "feedItem": "grass"
+    },
+    {
+      "id": "duck",
+      "name": "Duck",
+      "produces": [
+        {
+          "item": "egg",
+          "quantity": 1
+        },
+        {
+          "item": "feather",
+          "quantity": 1
+        }
+      ],
+      "feedItem": "wheat"
+    },
+    {
+      "id": "rabbit",
+      "name": "Rabbit",
+      "produces": [
+        {
+          "item": "meat",
+          "quantity": 1
+        },
+        {
+          "item": "fur",
+          "quantity": 1
+        }
+      ],
+      "feedItem": "grass"
     }
   ],
   "recipes": [
@@ -2099,6 +2176,30 @@
       "id": "apple_orchard",
       "resource": "apple",
       "capacity": 18,
+      "regrowRate": 3
+    },
+    {
+      "id": "honey_comb",
+      "resource": "honey",
+      "capacity": 12,
+      "regrowRate": 2
+    },
+    {
+      "id": "mushroom_patch",
+      "resource": "mushroom",
+      "capacity": 10,
+      "regrowRate": 1
+    },
+    {
+      "id": "seashore",
+      "resource": "shellfish",
+      "capacity": 15,
+      "regrowRate": 2
+    },
+    {
+      "id": "reed_bed",
+      "resource": "reed",
+      "capacity": 20,
       "regrowRate": 3
     }
   ],
