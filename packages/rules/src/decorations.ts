@@ -43,15 +43,28 @@ function placeDecorationHandler(context: OrderExecutionContext) {
   if (occupied) {
     return orderFailed("Tile already has a decoration");
   }
-  if (!canRemoveFree(context.state, plot.id, definition.cost)) {
-    return orderFailed("Not enough free stock for the decoration");
+  const hasGoodwillGate =
+    definition.goodwillMinScore !== undefined && definition.goodwillMinScore > 0;
+  const earnedViaGoodwill =
+    hasGoodwillGate &&
+    context.state.goodwill.some(
+      (entry) =>
+        entry.playerId === context.player.id && entry.score >= definition.goodwillMinScore!,
+    );
+  if (hasGoodwillGate && !earnedViaGoodwill) {
+    return orderFailed(`Not enough goodwill (needs ${definition.goodwillMinScore})`);
   }
-  const cost = orderEnergyCost(context.content, "place_decoration");
-  if (context.player.energy < cost) {
-    return orderFailed(`Not enough energy (needs ${cost})`);
+  if (!earnedViaGoodwill) {
+    const energyCost = orderEnergyCost(context.content, "place_decoration");
+    if (context.player.energy < energyCost) {
+      return orderFailed(`Not enough energy (needs ${energyCost})`);
+    }
+    if (!canRemoveFree(context.state, plot.id, definition.cost)) {
+      return orderFailed("Not enough free stock for the decoration");
+    }
+    removeFreeItems(context.state, plot.id, definition.cost);
+    spendEnergy(context.player, energyCost);
   }
-  removeFreeItems(context.state, plot.id, definition.cost);
-  spendEnergy(context.player, cost);
   const decoration: Decoration = {
     id: `decoration:${context.order.id}`,
     plotId: plot.id,

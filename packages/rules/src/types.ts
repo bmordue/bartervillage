@@ -899,6 +899,7 @@ export interface DecorationDefinition {
   id: DecorationTypeId;
   name: string;
   cost: ItemStack[];
+  goodwillMinScore?: number;
 }
 
 export interface ContentPack {

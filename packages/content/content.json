@@ -2106,6 +2106,7 @@
     {
       "id": "flower_pot",
       "name": "Flower pot",
+      "goodwillMinScore": 5,
       "cost": [
         {
           "item": "clay",
