@@ -14,6 +14,7 @@ export * from "./map/renderer.js";
 export * from "./orders.js";
 export * from "./panel.js";
 export * from "./panels.js";
+export * from "./phrases.js";
 export * from "./player.js";
 export * from "./players.js";
 export * from "./plot.js";

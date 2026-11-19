@@ -7,8 +7,8 @@
  */
 
 import { useState } from "preact/hooks";
-
 import { content } from "@bartervillage/content";
+import type { JSX } from "preact";
 import {
   MAX_OFFER_EXPIRY_TICKS,
   MAX_OPEN_POSTS,
@@ -900,6 +900,28 @@ export function BarterPanel({
           </button>
         </form>
       ) : null}
+    </Panel>
+  );
+}
+
+function renderPhrase(phrase: { id: string; text: string }): JSX.Element {
+  return (
+    <li class="phrase-item">
+      <span class="phrase-id">{phrase.id}</span>
+      <span class="phrase-text">{phrase.text}</span>
+    </li>
+  );
+}
+
+export function PhrasePanel() {
+  const { phrases } = content;
+  return (
+    <Panel title="Phrase book">
+      {phrases.length === 0 ? (
+        <p class="empty-state">No phrases configured.</p>
+      ) : (
+        <ul class="phrase-list">{phrases.map((phrase) => renderPhrase(phrase))}</ul>
+      )}
     </Panel>
   );
 }

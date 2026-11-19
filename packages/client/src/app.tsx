@@ -15,7 +15,7 @@ import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
-import { BarterPanel, InventoryPanel, OrderPanel, PlayersPanel } from "./panels.js";
+import { BarterPanel, InventoryPanel, OrderPanel, PhrasePanel, PlayersPanel } from "./panels.js";
 import type { PlayerStatus } from "./player.js";
 import type { PlayerSummary } from "./players.js";
 import type { PlotSnapshot } from "./plot.js";
@@ -267,6 +267,7 @@ export function App({
             currentPlayerId={currentPlayerId}
             onViewPlot={onViewPlot}
           />
+          <PhrasePanel />
         </aside>
       </main>
 
