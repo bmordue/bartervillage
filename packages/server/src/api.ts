@@ -737,7 +737,7 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
         worldId,
       )?.tick;
 
-      if (!latestTick) {
+      if (latestTick === undefined) {
         return { status: 404, body: { error: "no_replay_data" } };
       }
 
