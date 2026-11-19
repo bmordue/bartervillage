@@ -112,6 +112,7 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
       return;
     }
 
+    let afterCommitResult: TickAfterCommitResult | null = null;
     try {
       const tick = latestResolvedTick(options.database, options.worldId) ?? -1;
       const attemptedTick = world.currentTick;
@@ -120,18 +121,13 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
         const resolution = resolve({ database: options.database, worldId: options.worldId, tick });
         clearTickResolutionFailure(options.database, options.worldId, attemptedTick);
         options.database.raw.exec("COMMIT");
-        if (resolution && options.afterCommit) {
-          void Promise.resolve(
-            options.afterCommit({
-              worldId: options.worldId,
-              tick: resolution.header.tick,
-              stateHash: resolution.stateHash,
-            }),
-          ).catch((error: unknown) => {
-            options.logger(`worker: after-commit hook failed: ${String(error)}`);
-          });
+        if (resolution) {
+          afterCommitResult = {
+            worldId: options.worldId,
+            tick: resolution.header.tick,
+            stateHash: resolution.stateHash,
+          };
         }
-        return;
       } catch (error) {
         try {
           options.database.raw.exec("ROLLBACK");
@@ -160,6 +156,13 @@ export function createTickPoller(options: TickPollerOptions): () => Promise<void
     } finally {
       releaseResolvingLease(options.database, options.worldId, options.owner);
       lockLease.release();
+    }
+    // Send push notifications only after the lease and lock are released
+    // (spec §14.9: release, then notify). Failures are logged only.
+    if (afterCommitResult && options.afterCommit) {
+      void Promise.resolve(options.afterCommit(afterCommitResult)).catch((error: unknown) => {
+        options.logger(`worker: after-commit hook failed: ${String(error)}`);
+      });
     }
   };
 }

@@ -220,7 +220,7 @@
 - [x] **M4.A20** Write the tick header with `v: 1`, world seed, tick number, `generator_version`, `content_version` and `rules_version` (spec §10). _Depends on: M1.07, M4.A18._
 - [x] **M4.A21** Record complete avatar movement paths, including return home, in the event log (spec §5, §10). _Depends on: M2.A14, M4.A18._
 - [x] **M4.A22** Commit the event log and state hash in the same transaction (spec §14.8, §14.9). _Depends on: M3.18, M4.A18._
-- [ ] **M4.A23** After commit, release the resolving lease and tick lock, then send push notifications; log push failures only (spec §14.9, §11). _Depends on: M4.A22, M7.13._
+- [x] **M4.A23** After commit, release the resolving lease and tick lock, then send push notifications; log push failures only (spec §14.9, §11). _Depends on: M4.A22, M7.13._
 - [x] **M4.A24** Crash safety: any exception rolls back the whole transaction, the worker logs it and retries on the next poll (spec §14.9). _Depends on: M4.A05, M4.A22._
 - [x] **M4.A25** Make resolution idempotent through the tick lock and tick number (spec §14.9). _Depends on: M4.A02, M4.A05._
 - [x] **M4.A26** Deadline scheduling from a local time and IANA timezone; the next deadline is the next occurrence strictly after resolution and at least `min_tick_gap` later, default 60 minutes (spec §4.1). _Depends on: M1.12, M4.A18._
