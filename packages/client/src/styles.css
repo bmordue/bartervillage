@@ -843,6 +843,15 @@ body {
   color: var(--ink);
 }
 
+.replay-locations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
 .replay-controls {
   display: flex;
   flex-wrap: wrap;

@@ -65,6 +65,22 @@ export async function createMapRenderer(
       world.addChild(outlines);
     }
 
+    if (view.paths.length > 0) {
+      const paths: Graphics = new PixiGraphics();
+      for (const path of view.paths) {
+        const [first, ...rest] = path.points;
+        if (!first || rest.length === 0) {
+          continue;
+        }
+        paths.moveTo(first.x, first.y);
+        for (const point of rest) {
+          paths.lineTo(point.x, point.y);
+        }
+        paths.stroke({ width: path.width, color: path.color, cap: "round", join: "round" });
+      }
+      world.addChild(paths);
+    }
+
     if (view.markers.length > 0) {
       const markers: Graphics = new PixiGraphics();
       for (const marker of view.markers) {
@@ -77,11 +93,17 @@ export async function createMapRenderer(
     const canvasHeight = container.clientHeight || view.height;
     app.renderer.resize(canvasWidth, canvasHeight);
 
-    const scale = Math.min(canvasWidth / view.width, canvasHeight / view.height);
+    const focus = view.focus ?? {
+      x: 0,
+      y: 0,
+      width: view.width,
+      height: view.height,
+    };
+    const scale = Math.min(canvasWidth / focus.width, canvasHeight / focus.height);
     world.scale.set(scale);
     world.position.set(
-      (canvasWidth - view.width * scale) / 2,
-      (canvasHeight - view.height * scale) / 2,
+      (canvasWidth - focus.width * scale) / 2 - focus.x * scale,
+      (canvasHeight - focus.height * scale) / 2 - focus.y * scale,
     );
   };
 

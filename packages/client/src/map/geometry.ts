@@ -39,6 +39,24 @@ export interface MapMarker {
   color: number;
 }
 
+/** A replay avatar trail, drawn as a polyline over the map. */
+export interface MapPath {
+  playerId?: string;
+  points: Point[];
+  color: number;
+  width: number;
+}
+
+/** A named map area the replay viewer can follow. */
+export interface MapLocation {
+  id: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface MapView {
   width: number;
   height: number;
@@ -46,11 +64,36 @@ export interface MapView {
   rects: MapRect[];
   outlines: MapOutline[];
   markers: MapMarker[];
+  paths: MapPath[];
+  locations: MapLocation[];
+  /** Optional camera rectangle; the renderer fits this instead of the whole map. */
+  focus?: MapRect;
 }
 
 /** Pixel origin of a region on the world canvas. */
 export function regionOrigin(region: Region): Point {
   return { x: region.x * region.width * TILE_SIZE, y: region.y * region.height * TILE_SIZE };
+}
+
+/** Pixel bounds of a region, used as a replay camera target. */
+export function regionBounds(region: Region): MapRect {
+  const origin = regionOrigin(region);
+  return {
+    x: origin.x,
+    y: origin.y,
+    width: region.width * TILE_SIZE,
+    height: region.height * TILE_SIZE,
+    color: 0x000000,
+  };
+}
+
+/** Pixel centre of a region, where avatars are drawn during replay. */
+export function regionCenter(region: Region): Point {
+  const origin = regionOrigin(region);
+  return {
+    x: origin.x + (region.width * TILE_SIZE) / 2,
+    y: origin.y + (region.height * TILE_SIZE) / 2,
+  };
 }
 
 /** Pixel origin of a tile, relative to the world canvas. */
@@ -111,6 +154,10 @@ export interface BuildMapViewOptions {
   includeWildNodes?: boolean;
   /** Replay overlays (e.g. avatar positions) drawn on top of the map. */
   extraMarkers?: readonly MapMarker[];
+  /** Replay avatar trails drawn on top of the map. */
+  extraPaths?: readonly MapPath[];
+  /** Camera rectangle, usually one of the generated locations. */
+  focus?: MapRect;
 }
 
 /**
@@ -185,6 +232,12 @@ export function buildMapView(source: MapSource, options: BuildMapViewOptions = {
     markers.push(...options.extraMarkers);
   }
 
+  const locations: MapLocation[] = source.regions.map((region) => ({
+    id: region.id,
+    name: `Region ${region.x}, ${region.y}`,
+    ...regionBounds(region),
+  }));
+
   return {
     width: width || TILE_SIZE,
     height: height || TILE_SIZE,
@@ -192,5 +245,8 @@ export function buildMapView(source: MapSource, options: BuildMapViewOptions = {
     rects,
     outlines,
     markers,
+    paths: [...(options.extraPaths ?? [])],
+    locations,
+    ...(options.focus ? { focus: options.focus } : {}),
   };
 }

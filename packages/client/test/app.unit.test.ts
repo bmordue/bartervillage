@@ -15,6 +15,8 @@ const emptyView: MapView = {
   rects: [],
   outlines: [],
   markers: [],
+  paths: [],
+  locations: [],
 };
 
 describe("client app shell (M5.A01)", () => {
@@ -418,5 +420,34 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain('data-chore="feed"');
     expect(html).toContain("+1");
     expect(html).toContain("Water crops");
+  });
+
+  it("offers follow-location controls when a replay spans several regions", () => {
+    const html = render(
+      App({
+        mapView: {
+          ...emptyView,
+          locations: [
+            { id: "region:0:0", name: "Region 0, 0", x: 0, y: 0, width: 32, height: 32 },
+            { id: "region:1:0", name: "Region 1, 0", x: 32, y: 0, width: 32, height: 32 },
+          ],
+        },
+        replay: {
+          tick: 1,
+          header: {
+            tick: 1,
+            worldSeed: "seed",
+            generatorVersion: "1",
+            contentVersion: "1.0.0",
+            rulesVersion: "1.0.0",
+          },
+          events: [],
+        },
+      }),
+    );
+
+    expect(html).toContain("Follow location");
+    expect(html).toContain("All locations");
+    expect(html).toContain("Region 1, 0");
   });
 });

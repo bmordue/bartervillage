@@ -13,6 +13,7 @@ import type { HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
 import type { MapView } from "./map/geometry.js";
+import { focusForLocation } from "./map/replayMap.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
 import { Panel } from "./panel.js";
 import { BarterPanel, InventoryPanel, OrderPanel, PhrasePanel, PlayersPanel } from "./panels.js";
@@ -112,6 +113,7 @@ function Viewport({
   onCloseViewedPlot,
   onHelp,
   helperEnergy,
+  replay,
 }: {
   mapView?: MapView | undefined;
   plot?: PlotSnapshot | undefined;
@@ -119,9 +121,13 @@ function Viewport({
   onCloseViewedPlot?: (() => void) | undefined;
   onHelp?: ((targetPlotId: string, chore: HelpChore) => void | Promise<void>) | undefined;
   helperEnergy?: number | undefined;
+  replay?: TickReplayResponse | undefined;
 }) {
   const [selectedView, setSelectedView] = useState<"world" | "plot" | null>(null);
+  const [followedLocation, setFollowedLocation] = useState<string | null>(null);
   const activeView = selectedView ?? (plot ? "plot" : "world");
+  const focus = focusForLocation(mapView?.locations ?? [], followedLocation);
+  const focusedView = mapView && focus ? { ...mapView, focus } : mapView;
 
   if (viewedPlot) {
     return (
@@ -166,10 +172,31 @@ function Viewport({
           </button>
         </nav>
       ) : null}
+      {activeView === "world" && replay && mapView && mapView.locations.length > 1 ? (
+        <nav class="replay-locations" aria-label="Follow location">
+          <button
+            type="button"
+            class={followedLocation === null ? "view-tab view-tab-active" : "view-tab"}
+            onClick={() => setFollowedLocation(null)}
+          >
+            All locations
+          </button>
+          {mapView.locations.map((location) => (
+            <button
+              key={location.id}
+              type="button"
+              class={followedLocation === location.id ? "view-tab view-tab-active" : "view-tab"}
+              onClick={() => setFollowedLocation(location.id)}
+            >
+              {location.name}
+            </button>
+          ))}
+        </nav>
+      ) : null}
       {activeView === "plot" && plot ? (
         <PlotView plot={plot} />
-      ) : mapView ? (
-        <MapCanvas view={mapView} />
+      ) : focusedView ? (
+        <MapCanvas view={focusedView} />
       ) : (
         <div class="viewport-placeholder">
           <p>Map and replay render here.</p>
@@ -245,6 +272,7 @@ export function App({
           onCloseViewedPlot={onCloseViewedPlot}
           onHelp={onHelp}
           helperEnergy={player?.player.energy}
+          {...(replay ? { replay } : {})}
         />
 
         <aside class="sidebar" aria-label="Game panels">

@@ -12,7 +12,9 @@ import { App } from "./app.js";
 import { fetchBarter, type BarterOffer } from "./barter.js";
 import { createHelpOrder, type HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
+import type { MapView } from "./map/geometry.js";
 import { createPreviewMapView } from "./map/preview.js";
+import { buildReplayMapView } from "./map/replayMap.js";
 import {
   addOrder,
   addOrders,
@@ -66,6 +68,7 @@ export function mountApp(root?: HTMLElement | null): void {
   let notice: string | null = null;
   let viewedPlot: PlotSnapshot | null = null;
   let latestReplay: TickReplayResponse | null = null;
+  let replayMapView: MapView | null = null;
   let draw: (snapshot?: Partial<StatusSnapshot>) => void = () => undefined;
 
   const poller = createPoller<StatusSnapshot>({
@@ -117,6 +120,7 @@ export function mountApp(root?: HTMLElement | null): void {
     fetchData: (signal) => fetchLatestReplay("", "w1", signal),
     onData: (replay) => {
       latestReplay = replay;
+      replayMapView = buildReplayMapView(replay);
       draw();
     },
     intervalMs: 10000,
@@ -204,7 +208,7 @@ export function mountApp(root?: HTMLElement | null): void {
             await reorderOrders("", "w1", playerId, orderIds);
           })
         }
-        mapView={mapView}
+        mapView={replayMapView ?? mapView}
         {...(latestReplay ? { replay: latestReplay } : {})}
       />,
       target,
