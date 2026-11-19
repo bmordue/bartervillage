@@ -28,6 +28,7 @@ import type { PasskeyAuth } from "./auth/passkey.js";
 import type { Database } from "./db/database.js";
 import { loadWorldState, saveWorldState } from "./db/stateRepository.js";
 import { checkMutationAllowed } from "./mutations.js";
+import { listPushSubscriptions, subscribePush, unsubscribePush } from "./db/pushRepository.js";
 import { validateOrderServerSide } from "./orderValidation.js";
 import { DEFAULT_AUTH_RATE_LIMIT, RateLimiter, type RateLimitOptions } from "./rateLimit.js";
 import { retryWorldTick } from "./retry.js";
@@ -767,10 +768,59 @@ export function buildApiRoutes(database: Database, options: BuildApiRoutesOption
       };
     },
 
-    "GET /push/subscriptions": () => ({
-      status: 200,
-      body: { subscriptions: [] },
-    }),
+    "GET /vapid-key": () => {
+      const publicKey = process.env.VAPID_PUBLIC_KEY;
+      if (!publicKey) {
+        return { status: 503, body: { error: "vapid_key_not_configured" } };
+      }
+      return { status: 200, body: { publicKey } };
+    },
+
+    "GET /push/subscriptions": (request) => {
+      const playerId = request.query?.playerId ?? undefined;
+      if (playerId) {
+        const subs = listPushSubscriptions(database, playerId);
+        return {
+          status: 200,
+          body: {
+            subscriptions: subs.map((s) => ({
+              endpoint: s.endpoint,
+              p256dh: s.p256dh,
+              auth: s.auth,
+            })),
+          },
+        };
+      }
+      return { status: 200, body: { subscriptions: [] } };
+    },
+
+    "POST /push/subscriptions": (request) => {
+      const body = JSON.parse((request.body as string) || "{}") as Record<string, unknown>;
+      const playerId =
+        (body.playerId as string | undefined) ?? (request.query?.playerId as string | undefined);
+      if (!body.endpoint || typeof body.endpoint !== "string") {
+        return { status: 400, body: { error: "missing_endpoint" } };
+      }
+      subscribePush(
+        database,
+        playerId ?? "p1",
+        body.endpoint as string,
+        (body.keys as { p256dh?: string })?.p256dh ?? "",
+        (body.keys as { auth?: string })?.auth ?? "",
+      );
+      return { status: 201, body: { ok: true } };
+    },
+
+    "DELETE /push/subscriptions": (request) => {
+      const body = JSON.parse((request.body as string) || "{}") as Record<string, unknown>;
+      const playerId =
+        (body.playerId as string | undefined) ?? (request.query?.playerId as string | undefined);
+      if (!body.endpoint || typeof body.endpoint !== "string") {
+        return { status: 400, body: { error: "missing_endpoint" } };
+      }
+      unsubscribePush(database, playerId ?? "p1", body.endpoint as string);
+      return { status: 200, body: { ok: true } };
+    },
 
     "POST /site": (request) => {
       const body = JSON.parse((request.body as string) || '{"playerId":""}') as {

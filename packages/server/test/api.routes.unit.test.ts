@@ -398,6 +398,85 @@ describe("REST API routes", () => {
     expect(Array.isArray(data.subscriptions)).toBe(true);
   });
 
+  it("POST /push/subscriptions stores a subscription for a player", async () => {
+    harness = await startTestApi({
+      buildRoutes: (database) => ({
+        ...buildApiRoutes(database),
+        "GET /health": () => ({ status: 200, body: { ok: true } }),
+      }),
+    });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    const response = await fetch(`${harness.baseUrl}/push/subscriptions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        playerId: "p1",
+        endpoint: "https://push.example/abc",
+        keys: { p256dh: "p256dh-key", auth: "auth-key" },
+      }),
+    });
+    expect(response.status).toBe(201);
+
+    const listing = await fetch(`${harness.baseUrl}/push/subscriptions?playerId=p1`);
+    expect(listing.status).toBe(200);
+    const data = await listing.json();
+    expect(data.subscriptions).toEqual([
+      { endpoint: "https://push.example/abc", p256dh: "p256dh-key", auth: "auth-key" },
+    ]);
+  });
+
+  it("POST /push/subscriptions rejects a missing endpoint", async () => {
+    harness = await startTestApi({
+      buildRoutes: (database) => ({
+        ...buildApiRoutes(database),
+        "GET /health": () => ({ status: 200, body: { ok: true } }),
+      }),
+    });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    const response = await fetch(`${harness.baseUrl}/push/subscriptions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ playerId: "p1" }),
+    });
+    expect(response.status).toBe(400);
+    expect((await response.json()).error).toBe("missing_endpoint");
+  });
+
+  it("DELETE /push/subscriptions removes a subscription", async () => {
+    harness = await startTestApi({
+      buildRoutes: (database) => ({
+        ...buildApiRoutes(database),
+        "GET /health": () => ({ status: 200, body: { ok: true } }),
+      }),
+    });
+    insertWorld(harness.database);
+    insertPlayer(harness.database, "p1", "plot1");
+
+    await fetch(`${harness.baseUrl}/push/subscriptions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        playerId: "p1",
+        endpoint: "https://push.example/abc",
+        keys: { p256dh: "p256dh-key", auth: "auth-key" },
+      }),
+    });
+
+    const response = await fetch(`${harness.baseUrl}/push/subscriptions?playerId=p1`, {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ endpoint: "https://push.example/abc" }),
+    });
+    expect(response.status).toBe(200);
+
+    const listing = await fetch(`${harness.baseUrl}/push/subscriptions?playerId=p1`);
+    expect((await listing.json()).subscriptions).toEqual([]);
+  });
+
   it("POST /site returns 404 when no available plot", async () => {
     harness = await startTestApi({
       buildRoutes: (database) => ({

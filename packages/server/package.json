@@ -16,6 +16,7 @@
   "dependencies": {
     "@bartervillage/content": "*",
     "@bartervillage/rules": "*",
-    "@simplewebauthn/server": "^14.1.0"
+    "@simplewebauthn/server": "^14.1.0",
+    "web-push": "^4.0.0"
   }
 }
