@@ -24,6 +24,7 @@ import { PlotView } from "./plotView.js";
 import type { WorldSnapshot } from "./world.js";
 import { ReplayPanel } from "./replayPanel.js";
 import type { TickReplayResponse } from "./replay.js";
+import { TradeHistoryPanel } from "./tradeHistoryPanel.js";
 
 export { Panel } from "./panel.js";
 export type { PanelProps } from "./panel.js";
@@ -301,6 +302,7 @@ export function App({
           />
           <PhrasePanel />
           {replay ? <ReplayPanel replay={replay} /> : null}
+          {replay ? <TradeHistoryPanel events={replay.events} /> : null}
         </aside>
       </main>
 

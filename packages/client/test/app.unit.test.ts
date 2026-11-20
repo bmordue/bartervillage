@@ -452,5 +452,6 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("Region 1, 0");
     expect(html).toContain("Schema v1");
     expect(html).toContain("Seed seed");
+    expect(html).toContain("Trade history");
   });
 });

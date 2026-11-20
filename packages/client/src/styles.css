@@ -922,6 +922,31 @@ body {
   font-weight: 600;
 }
 
+.trade-history {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 240px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.trade-history-entry {
+  padding: 4px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+}
+
+.trade-history-tick {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (max-width: 960px) {
   .app-shell {
     min-width: 0;
