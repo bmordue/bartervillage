@@ -12,6 +12,7 @@ import type { BarterOffer } from "./barter.js";
 import type { HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
+import { FirstTickPanel } from "./firstTickPanel.js";
 import type { MapView } from "./map/geometry.js";
 import { focusForLocation } from "./map/replayMap.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
@@ -24,6 +25,7 @@ import { PlotView } from "./plotView.js";
 import type { WorldSnapshot } from "./world.js";
 import { ReplayPanel } from "./replayPanel.js";
 import type { TickReplayResponse } from "./replay.js";
+import { TradeHistoryPanel } from "./tradeHistoryPanel.js";
 
 export { Panel } from "./panel.js";
 export type { PanelProps } from "./panel.js";
@@ -276,6 +278,13 @@ export function App({
         />
 
         <aside class="sidebar" aria-label="Game panels">
+          <FirstTickPanel
+            currentTick={world?.currentTick}
+            hasPlot={plot !== undefined}
+            orderCount={orders?.length ?? 0}
+            ready={player?.ready !== null && player?.ready !== undefined}
+            replayTick={replay?.tick}
+          />
           <ReadyToggle player={player} onToggleReady={onToggleReady} />
           <OrderPanel
             orders={orders}
@@ -301,6 +310,7 @@ export function App({
           />
           <PhrasePanel />
           {replay ? <ReplayPanel replay={replay} /> : null}
+          {replay ? <TradeHistoryPanel events={replay.events} /> : null}
         </aside>
       </main>
 

@@ -49,7 +49,7 @@
 - [x] **CT.06** End-to-end harness for onboarding, ordering, tick resolution and replay playback. _Depends on: M4.A15, M4.B02, M4.C05, M4.C08, M5.B02, M5.C01._
 - [x] **CT.07** 28-tick, 20-player soak and performance harness. _Depends on: CT.05, M3.08, M4.A05, M4.A15, M4.A18._
 - [x] **CT.08** Inventory-conservation assertion helper used by tick tests. _Depends on: M1.09, M2.A03, M2.D07._
-- [ ] **CT.09** Automated backup and restore-drill test. _Depends on: CT.03, M9.05._
+- [x] **CT.09** Automated backup and restore-drill test. _Depends on: CT.03, M9.05._
 
 ## Milestone 1: Repo, Nix flake and shared rules package skeleton (spec §16.1)
 
@@ -302,7 +302,7 @@
 - [x] **M6.11** Block helping on your own plot (spec §8). _Depends on: M6.09._
 - [x] **M6.12** Goodwill score and badges as cosmetic only, with no tradeable, spendable or functional effect (spec §8). _Depends on: M3.01, M6.08, M6.09; blocked by D.02._
 - [x] **M6.13** Phrase book UI using a fixed content-defined list with no free text (spec §8). _Depends on: M3.16, M5.A03, M8.07; blocked by D.03._
-- [ ] **M6.14** Show public trade history through the event log and replay (spec §7). _Depends on: M2.A03, M3.18, M5.C01._
+- [x] **M6.14** Show public trade history through the event log and replay (spec §7). _Depends on: M2.A03, M3.18, M5.C01._
 
 ## Milestone 7: Seasons, weather, shared goals and web push (spec §16.7)
 
@@ -332,23 +332,23 @@
 - [x] **M8.07** Phrase book contents (spec §8). _Depends on: M3.16; blocked by D.03._
 - [x] **M8.08** Content schema validation in CI and a pinned content version (spec §12). _Depends on: M1.04, M3.16, M3.17._
 - [ ] **M8.09** Playtesting tuning pass for energy costs, goodwill and barter liquidity (spec §15). _Depends on: M8.01-M8.07, M9.12; blocked by D.01-D.04, D.13._
-- [ ] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
-- [ ] **M8.11** Guided first tick for new players (spec §11). _Depends on: M5.A01-M5.C04; final art: M8.10._
+- [x] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
+- [x] **M8.11** Guided first tick for new players (spec §11). _Depends on: M5.A01-M5.C04; final art: M8.10._
 - [x] **M8.12** Keep phrase strings localisation-ready (spec §8). _Depends on: M6.13, M8.07; blocked by D.03._
 
 ## Milestone 9: Deployment, backups, restore drill and friends playtest (spec §16.9)
 
 - [x] **M9.01** Nix flake package and NixOS service module for the API and worker (spec §12). _Depends on: M1.05, M4.A01, M4.B01._
 - [ ] **M9.02** Deploy to a cheap VPS with HTTPS and a stable WebAuthn RP ID (spec §12). _Depends on: M4.C01, M9.01._
-- [ ] **M9.03** Keep session keys, OAuth secrets, the VAPID private key and backup credentials in deployment configuration (spec §12). _Depends on: M4.B10, M9.01._
+- [x] **M9.03** Keep session keys, OAuth secrets, the VAPID private key and backup credentials in deployment configuration (spec §12). _Depends on: M4.B10, M9.01._
 - [x] **M9.04** Run the worker under systemd (spec §12). _Depends on: M4.A01, M9.01._
-- [ ] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
+- [x] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
 - [ ] **M9.06** Restore the nightly backup onto a fresh VPS and pass the golden-log suite (spec §3). _Depends on: CT.03, CT.09, M9.02, M9.05._
 - [ ] **M9.07** Run the 28-tick, 20-player soak and record the p95 tick-resolution time (spec §3). _Depends on: CT.07, M4.A33, M9.02._
 - [ ] **M9.08** Verify a tampered client cannot spend energy or goods it does not have (spec §3). _Depends on: M4.B03, M5.B07, M9.02._
 - [ ] **M9.09** Verify a crash mid-tick leaves no partial state and the replay log matches the resolved state (spec §3). _Depends on: M4.A24, M9.02._
-- [ ] **M9.10** Document admin operations using configuration and database inspection only, with no in-game admin UI (spec §12). _Depends on: M4.A32, M9.01; blocked by D.14._
-- [ ] **M9.11** Add host alerting and a manual retry runbook for stalled ticks (spec §15). _Depends on: M4.A32, M9.01._
+- [x] **M9.10** Document admin operations using configuration and database inspection only, with no in-game admin UI (spec §12). _Depends on: M4.A32, M9.01; blocked by D.14._
+- [x] **M9.11** Add host alerting and a manual retry runbook for stalled ticks (spec §15). _Depends on: M4.A32, M9.01._
 - [ ] **M9.12** Run a friends playtest at the 20-player cap and collect tuning feedback (spec §16.9). _Depends on: M8.01-M8.08, M8.11, M9.02-M9.09._
 - [ ] **M9.13** Revisit the decisions in spec §15 before and after the playtest. _Depends on: D.01-D.17, M9.12._
 
@@ -369,5 +369,5 @@
 - [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
 - [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
 - [x] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
-- [ ] **D.16** **Decision:** verify art-pack licensing before adding assets (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
+- [x] **D.16** **Decision:** only CC0/public-domain art packs (for example Kenney or OpenGameArt CC0) or CC-BY 3.0/4.0 packs with attribution may be added; reject non-commercial, no-derivatives and unclear licences. Record the pack name, source URL, licence and attribution in `ART_CREDITS.md` before committing assets, and keep the licence text with the repository (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
 - [x] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._

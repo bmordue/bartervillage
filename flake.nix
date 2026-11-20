@@ -57,6 +57,10 @@
                 --add-flags "$out/lib/barter-village/node_modules/tsx/dist/cli.mjs" \
                 --add-flags "$out/lib/barter-village/packages/worker/src/main.ts"
 
+              makeWrapper ${pkgs.nodejs_22}/bin/node $out/bin/barter-village-backup \
+                --add-flags "$out/lib/barter-village/node_modules/tsx/dist/cli.mjs" \
+                --add-flags "$out/lib/barter-village/packages/worker/src/backupMain.ts"
+
               runHook postInstall
             '';
 
@@ -142,14 +146,25 @@
               description = "Public HTTPS origin clients use for WebAuthn.";
             };
 
-            environmentFile = lib.mkOption {
-              type = lib.types.nullOr lib.types.path;
-              default = null;
-              description = ''
-                Optional systemd environment file for secrets such as
-                BARTER_CREDENTIAL_KEY. Keep it out of the Nix store.
-              '';
-            };
+              environmentFile = lib.mkOption {
+                type = lib.types.nullOr lib.types.path;
+                default = null;
+                description = ''
+                  Optional systemd environment file for deployment secrets:
+                  BARTER_CREDENTIAL_KEY, the Discord and GitHub client secrets,
+                  VAPID_PRIVATE_KEY and the S3-compatible backup credentials.
+                  Keep it out of the Nix store.
+                '';
+              };
+
+              backup = lib.mkEnableOption "Nightly encrypted off-site backups";
+
+              backup.calendar = lib.mkOption {
+                type = lib.types.str;
+                default = "*-*-* 03:00:00";
+                description = "systemd timer calendar expression for the nightly backup.";
+              };
+
 
             worker.pollIntervalMs = lib.mkOption {
               type = lib.types.positiveInt;
@@ -211,6 +226,35 @@
                 EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
                 Restart = "on-failure";
                 RestartSec = 5;
+              };
+            };
+
+            systemd.services.barter-village-backup = {
+              description = "Barter Village nightly encrypted backup";
+              after = [ "network.target" ];
+              wantedBy = [ "multi-user.target" ];
+              environment = {
+                DATABASE_PATH = "${cfg.dataDir}/barter-village.sqlite";
+                BACKUP_WORK_DIR = "${cfg.dataDir}/backups";
+                NODE_ENV = "production";
+              };
+              serviceConfig = {
+                ExecStart = "${cfg.package}/bin/barter-village-backup";
+                User = cfg.user;
+                Group = cfg.group;
+                WorkingDirectory = cfg.dataDir;
+                EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+                Restart = "on-failure";
+                RestartSec = 30;
+              };
+            };
+
+            systemd.timers.barter-village-backup = {
+              description = "Run the nightly backup for Barter Village";
+              wantedBy = [ "timers.target" ];
+              timerConfig = {
+                OnCalendar = cfg.backup.calendar;
+                Persistent = true;
               };
             };
           };
