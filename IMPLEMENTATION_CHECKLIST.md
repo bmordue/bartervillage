@@ -332,7 +332,7 @@
 - [x] **M8.07** Phrase book contents (spec §8). _Depends on: M3.16; blocked by D.03._
 - [x] **M8.08** Content schema validation in CI and a pinned content version (spec §12). _Depends on: M1.04, M3.16, M3.17._
 - [ ] **M8.09** Playtesting tuning pass for energy costs, goodwill and barter liquidity (spec §15). _Depends on: M8.01-M8.07, M9.12; blocked by D.01-D.04, D.13._
-- [ ] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
+- [x] **M8.10** Source 32x32 pixel art packs, verify each pack's licence permits redistribution and record credits (spec §11). _Depends on: M1.06; blocked by D.16._
 - [x] **M8.11** Guided first tick for new players (spec §11). _Depends on: M5.A01-M5.C04; final art: M8.10._
 - [x] **M8.12** Keep phrase strings localisation-ready (spec §8). _Depends on: M6.13, M8.07; blocked by D.03._
 
