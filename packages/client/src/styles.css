@@ -428,6 +428,44 @@ body {
   font-size: 0.72rem;
 }
 
+.first-tick-intro,
+.first-tick-hint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.first-tick-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 0 8px;
+  padding-left: 0;
+  list-style: none;
+  font-size: 0.8rem;
+}
+
+.first-tick-step-done {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+.first-tick-check {
+  display: inline-block;
+  width: 1em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.first-tick-dismiss {
+  padding: 4px 8px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 .order-list,
 .offer-list,
 .player-list {

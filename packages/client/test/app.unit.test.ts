@@ -66,6 +66,23 @@ describe("client app shell (M5.A01)", () => {
     expect(html).toContain("2026-11-15T20:00:00.000Z");
   });
 
+  it("guides new players through their first tick", () => {
+    const html = render(
+      App({
+        world: {
+          id: "w1",
+          currentTick: 1,
+          season: "spring",
+          weather: "sun",
+          nextDeadline: "2026-11-15T20:00:00.000Z",
+        },
+      }),
+    );
+    expect(html).toContain("Your first tick");
+    expect(html).toContain("Queue your first orders");
+    expect(html).toContain("Open your plot to see crops, storage and energy.");
+  });
+
   it("mounts the map canvas when a view is supplied", () => {
     const html = render(App({ mapView: emptyView }));
     expect(html).toContain('class="map-canvas"');

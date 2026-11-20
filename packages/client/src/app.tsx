@@ -12,6 +12,7 @@ import type { BarterOffer } from "./barter.js";
 import type { HelpChore } from "./help.js";
 import type { InventoryItem } from "./inventory.js";
 import { MapCanvas } from "./map/MapCanvas.js";
+import { FirstTickPanel } from "./firstTickPanel.js";
 import type { MapView } from "./map/geometry.js";
 import { focusForLocation } from "./map/replayMap.js";
 import type { OrderDraft, QueuedOrder } from "./orders.js";
@@ -277,6 +278,13 @@ export function App({
         />
 
         <aside class="sidebar" aria-label="Game panels">
+          <FirstTickPanel
+            currentTick={world?.currentTick}
+            hasPlot={plot !== undefined}
+            orderCount={orders?.length ?? 0}
+            ready={player?.ready !== null && player?.ready !== undefined}
+            replayTick={replay?.tick}
+          />
           <ReadyToggle player={player} onToggleReady={onToggleReady} />
           <OrderPanel
             orders={orders}
