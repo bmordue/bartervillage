@@ -1,0 +1,20 @@
+# Barter Village — reverse proxy for VPS deployment (M9.02)
+# HTTPS is automatically provisioned via Let's Encrypt by Caddy.
+# Ensure DNS A/AAAA record points this host's IP before running Caddy.
+
+example.com {
+    # Replace example.com with your actual domain before deploying.
+    # The domain must resolve to this VPS's public IP.
+
+    # WebAuthn RP ID must match this domain exactly
+    rp example.com
+
+    # API endpoint
+    reverse_proxy 127.0.0.1:3000
+
+    # Optional: rate-limit auth endpoints
+    #limit rpc {
+    #    rate 10/s
+    #    uri /auth/*
+    #}
+}
