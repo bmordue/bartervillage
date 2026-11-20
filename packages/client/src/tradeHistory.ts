@@ -45,7 +45,7 @@ function summarize(event: ArchivedEvent): TradeHistoryEntry | null {
         sequence: event.sequence,
         tick: event.tick,
         type: "post",
-        summary: `${String(payload.posterId)} posted a ${humanize(String(payload.kind))} offer (${String(payload.offerId)})`,
+        summary: `${String(payload.posterId)} posted ${humanize(String(payload.kind))} (${String(payload.offerId)})`,
       };
     case "post_cancelled":
       return {

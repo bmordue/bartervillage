@@ -5,25 +5,25 @@
 import { describe, expect, it } from "vitest";
 import { render } from "preact-render-to-string";
 
-import type { ArchivedEvent } from "@bartervillage/rules";
+import type { ArchivedEvent, JsonObject } from "@bartervillage/rules";
 import { tradeHistoryFromEvents } from "../src/tradeHistory.js";
 import { TradeHistoryPanel } from "../src/tradeHistoryPanel.js";
 
 function event(
   sequence: number,
   type: ArchivedEvent["type"],
-  payload: Record<string, unknown>,
+  payload: JsonObject,
   tick = 3,
 ): ArchivedEvent {
   return { tick, sequence, version: 1, type, payload };
 }
 
 const events: ArchivedEvent[] = [
-  event(1, "tick_started", { tick: 3 }),
+  event(1, "weather", { weather: "sun" }),
   event(2, "post_created", {
     offerId: "offer-1",
     posterId: "p1",
-    kind: "direct_trade",
+    kind: "offer",
     expiryTick: 4,
     parentOfferId: null,
   }),
@@ -37,7 +37,7 @@ const events: ArchivedEvent[] = [
   }),
   event(4, "post_cancelled", { offerId: "offer-2", reason: "settled" }),
   event(5, "post_expired", { offerId: "offer-3" }),
-  event(6, "weather_changed", { weather: "rain" }),
+  event(6, "season_change", { season: "summer" }),
 ];
 
 describe("trade history (M6.14)", () => {
@@ -45,7 +45,7 @@ describe("trade history (M6.14)", () => {
     const history = tradeHistoryFromEvents(events);
     expect(history.map((entry) => entry.sequence)).toEqual([2, 3, 4, 5]);
     expect(history.map((entry) => entry.type)).toEqual(["post", "trade", "cancel", "expire"]);
-    expect(history[0]?.summary).toBe("p1 posted a Direct trade offer (offer-1)");
+    expect(history[0]?.summary).toBe("p1 posted Offer (offer-1)");
     expect(history[1]?.summary).toBe("p2 bought 2 Wheat from p1 for 1 Carrot");
   });
 
