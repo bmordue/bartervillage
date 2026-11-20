@@ -342,7 +342,7 @@
 - [ ] **M9.02** Deploy to a cheap VPS with HTTPS and a stable WebAuthn RP ID (spec §12). _Depends on: M4.C01, M9.01._
 - [x] **M9.03** Keep session keys, OAuth secrets, the VAPID private key and backup credentials in deployment configuration (spec §12). _Depends on: M4.B10, M9.01._
 - [x] **M9.04** Run the worker under systemd (spec §12). _Depends on: M4.A01, M9.01._
-- [ ] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
+- [x] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
 - [ ] **M9.06** Restore the nightly backup onto a fresh VPS and pass the golden-log suite (spec §3). _Depends on: CT.03, CT.09, M9.02, M9.05._
 - [ ] **M9.07** Run the 28-tick, 20-player soak and record the p95 tick-resolution time (spec §3). _Depends on: CT.07, M4.A33, M9.02._
 - [ ] **M9.08** Verify a tampered client cannot spend energy or goods it does not have (spec §3). _Depends on: M4.B03, M5.B07, M9.02._
