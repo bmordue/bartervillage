@@ -340,7 +340,7 @@
 
 - [x] **M9.01** Nix flake package and NixOS service module for the API and worker (spec §12). _Depends on: M1.05, M4.A01, M4.B01._
 - [ ] **M9.02** Deploy to a cheap VPS with HTTPS and a stable WebAuthn RP ID (spec §12). _Depends on: M4.C01, M9.01._
-- [ ] **M9.03** Keep session keys, OAuth secrets, the VAPID private key and backup credentials in deployment configuration (spec §12). _Depends on: M4.B10, M9.01._
+- [x] **M9.03** Keep session keys, OAuth secrets, the VAPID private key and backup credentials in deployment configuration (spec §12). _Depends on: M4.B10, M9.01._
 - [x] **M9.04** Run the worker under systemd (spec §12). _Depends on: M4.A01, M9.01._
 - [ ] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
 - [ ] **M9.06** Restore the nightly backup onto a fresh VPS and pass the golden-log suite (spec §3). _Depends on: CT.03, CT.09, M9.02, M9.05._

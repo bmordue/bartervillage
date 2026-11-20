@@ -146,8 +146,10 @@
               type = lib.types.nullOr lib.types.path;
               default = null;
               description = ''
-                Optional systemd environment file for secrets such as
-                BARTER_CREDENTIAL_KEY. Keep it out of the Nix store.
+                Optional systemd environment file for deployment secrets:
+                BARTER_CREDENTIAL_KEY, the Discord and GitHub client secrets,
+                VAPID_PRIVATE_KEY and the S3-compatible backup credentials.
+                Keep it out of the Nix store.
               '';
             };
 
