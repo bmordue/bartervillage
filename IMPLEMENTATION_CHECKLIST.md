@@ -369,5 +369,5 @@
 - [x] **D.13** **Decision:** barter liquidity, including the 10-post cap and one-day negotiation cycle (spec §15). _Blocks: M2.E09, M6.07, M8.09. Informs: M2.E07, M2.E17._
 - [x] **D.14** **Decision:** player departure and inactive-plot archiving policy (spec §15). _Blocks: M3.07, M3.09, M9.10. Informs: M2.F02._
 - [x] **D.15** **Decision:** iOS push expectations, treated as best-effort (spec §11, §15). _Blocks: M7.14. Informs: M7.12._
-- [ ] **D.16** **Decision:** verify art-pack licensing before adding assets (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
+- [x] **D.16** **Decision:** only CC0/public-domain art packs (for example Kenney or OpenGameArt CC0) or CC-BY 3.0/4.0 packs with attribution may be added; reject non-commercial, no-derivatives and unclear licences. Record the pack name, source URL, licence and attribution in `ART_CREDITS.md` before committing assets, and keep the licence text with the repository (spec §11, §15). _Blocks: M8.10. Informs: M5.A02._
 - [x] **D.17** **Decision:** deeper negotiation only if the one-level board feels too coarse after playtesting (spec §15). _Blocks: M2.E06, M6.03. Informs: M2.E17._
