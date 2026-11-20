@@ -19,6 +19,20 @@ overrides are:
 | `services.barter-village.worker.pollIntervalMs` | Tick worker polling cadence. |
 | `services.barter-village.backup.enable` | Enable nightly encrypted backup + timer. |
 | `services.barter-village.backup.calendar` | systemd `OnCalendar` expression (default `*-*-* 03:00:00`). |
+| `services.barter-village.rpID` | Must match the domain used in the reverse proxy. |
+| `services.barter-village.origin` | Must use `https://` in production (enforced by passkey code). |
+
+## VPS Deployment (M9.02)
+
+A dedicated deployment guide is available in `docs/deploy-vps.md`. Key steps:
+
+1. Provision a VPS with a static public IP and a registered domain name.
+2. Ensure DNS A/AAAA records point to the VPS's IP address.
+3. Set the NixOS module options: `services.barter-village.rpID = "<domain>"` and `services.barter-village.origin = "https://<domain>:443"` (or via environment file `BARTER_ORIGIN=https://<domain>:3000`).
+4. Run `caddy validate && caddy run` to start Caddy with automatic TLS via Let's Encrypt.
+5. Verify the API is accessible at `https://<domain>:443` and WebAuthn passkey registration works.
+
+See `docs/deploy-vps.md` for the complete step-by-step deployment walkthrough.
 
 ## Secrets (environment file)
 
