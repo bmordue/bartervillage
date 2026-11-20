@@ -49,7 +49,7 @@
 - [x] **CT.06** End-to-end harness for onboarding, ordering, tick resolution and replay playback. _Depends on: M4.A15, M4.B02, M4.C05, M4.C08, M5.B02, M5.C01._
 - [x] **CT.07** 28-tick, 20-player soak and performance harness. _Depends on: CT.05, M3.08, M4.A05, M4.A15, M4.A18._
 - [x] **CT.08** Inventory-conservation assertion helper used by tick tests. _Depends on: M1.09, M2.A03, M2.D07._
-- [ ] **CT.09** Automated backup and restore-drill test. _Depends on: CT.03, M9.05._
+- [x] **CT.09** Automated backup and restore-drill test. _Depends on: CT.03, M9.05._
 
 ## Milestone 1: Repo, Nix flake and shared rules package skeleton (spec §16.1)
 
