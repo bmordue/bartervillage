@@ -345,8 +345,8 @@
 - [x] **M9.05** Nightly encrypted off-site backup to S3-compatible storage using SQLite's online backup with a WAL checkpoint (spec §12). _Depends on: M3.04, M9.01, M9.03._
 - [ ] **M9.06** Restore the nightly backup onto a fresh VPS and pass the golden-log suite (spec §3). _Depends on: CT.03, CT.09, M9.02, M9.05._
 - [ ] **M9.07** Run the 28-tick, 20-player soak and record the p95 tick-resolution time (spec §3). _Depends on: CT.07, M4.A33, M9.02._
-- [ ] **M9.08** Verify a tampered client cannot spend energy or goods it does not have (spec §3). _Depends on: M4.B03, M5.B07, M9.02._
-- [ ] **M9.09** Verify a crash mid-tick leaves no partial state and the replay log matches the resolved state (spec §3). _Depends on: M4.A24, M9.02._
+- [x] **M9.08** Verify a tampered client cannot spend energy or goods it does not have (spec §3). _Depends on: M4.B03, M5.B07, M9.02._
+[x] **M9.09** Verify a crash mid-tick leaves no partial state and the replay log matches the resolved state (spec §3). _Depends on: M4.A24, M9.02._
 - [x] **M9.10** Document admin operations using configuration and database inspection only, with no in-game admin UI (spec §12). _Depends on: M4.A32, M9.01; blocked by D.14._
 - [x] **M9.11** Add host alerting and a manual retry runbook for stalled ticks (spec §15). _Depends on: M4.A32, M9.01._
 - [ ] **M9.12** Run a friends playtest at the 20-player cap and collect tuning feedback (spec §16.9). _Depends on: M8.01-M8.08, M8.11, M9.02-M9.09._
