@@ -157,7 +157,7 @@
                 '';
               };
 
-              backup = lib.mkEnableOption "Nightly encrypted off-site backups";
+              backup.enable = lib.mkEnableOption "Nightly encrypted off-site backups";
 
               backup.calendar = lib.mkOption {
                 type = lib.types.str;
@@ -229,7 +229,7 @@
               };
             };
 
-            systemd.services.barter-village-backup = {
+            systemd.services.barter-village-backup = lib.mkIf cfg.backup.enable {
               description = "Barter Village nightly encrypted backup";
               after = [ "network.target" ];
               wantedBy = [ "multi-user.target" ];
@@ -249,7 +249,7 @@
               };
             };
 
-            systemd.timers.barter-village-backup = {
+            systemd.timers.barter-village-backup = lib.mkIf cfg.backup.enable {
               description = "Run the nightly backup for Barter Village";
               wantedBy = [ "timers.target" ];
               timerConfig = {
