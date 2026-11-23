@@ -9,8 +9,9 @@
 
 import { execFile } from "node:child_process";
 import { createCipheriv, createDecipheriv, createHash, randomBytes, scryptSync } from "node:crypto";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join } from "node:path";
+import { tmpdir } from "node:os";
 import { promisify } from "node:util";
 
 import { Database } from "@bartervillage/server";
@@ -87,6 +88,17 @@ export function decryptBackup(encrypted: Buffer, passphrase: string): Buffer {
   return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 }
 
+/** Restore a decrypted SQLite database from an encrypted backup buffer. */
+export function restoreDatabase(
+  encryptedBackup: Buffer,
+  passphrase: string,
+  destination: string,
+): void {
+  const plaintext = decryptBackup(encryptedBackup, passphrase);
+  mkdirSync(dirname(destination), { recursive: true });
+  writeFileSync(destination, plaintext);
+}
+
 /** Snapshot, encrypt and upload one backup. */
 export async function runBackup(options: BackupOptions): Promise<BackupResult> {
   if (options.passphrase.length === 0) {
@@ -144,6 +156,46 @@ export function createAwsUploader(config: S3BackupConfig): BackupUpload {
       },
     );
   };
+}
+
+/** Download an object from S3-compatible storage with the AWS CLI. */
+export async function downloadBackup(
+  config: S3BackupConfig,
+  remoteKey: string,
+  destination: string,
+): Promise<void> {
+  await execFileAsync(
+    "aws",
+    [
+      "s3",
+      "cp",
+      `s3://${config.bucket}/${remoteKey}`,
+      destination,
+      "--endpoint-url",
+      config.endpoint,
+      "--region",
+      config.region,
+    ],
+    {
+      env: {
+        ...process.env,
+        AWS_ACCESS_KEY_ID: config.accessKeyId,
+        AWS_SECRET_ACCESS_KEY: config.secretAccessKey,
+      },
+    },
+  );
+}
+
+/** Read an encrypted backup from S3-compatible storage and return its bytes. */
+export async function fetchBackup(config: S3BackupConfig, remoteKey: string): Promise<Buffer> {
+  const workDir = mkdtempSync(join(tmpdir(), "bv-restore-"));
+  try {
+    const downloaded = `${workDir}/${remoteKey.split("/").pop() ?? "backup.enc"}`;
+    await downloadBackup(config, remoteKey, downloaded);
+    return readFileSync(downloaded);
+  } finally {
+    rmSync(workDir, { recursive: true, force: true });
+  }
 }
 
 /** Default work directory next to the database. */
