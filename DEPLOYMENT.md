@@ -4,6 +4,78 @@ This runbook documents how to deploy Barter Village to a cheap VPS with HTTPS an
 stable WebAuthn relying-party ID. It is a manual procedure — there is no in-game
 admin UI.
 
+## Try it locally (no VPS)
+
+You can run the whole stack on your machine without a domain, HTTPS, nginx or
+systemd. Only Node 22+ (or `nix develop`) is required.
+
+1. Install dependencies and create a local environment file:
+
+   ```sh
+   npm install
+   cp .env.example .env
+   ```
+
+   Edit `.env` for local play:
+
+   ```
+   DATABASE_PATH=./barter-village.sqlite
+   WORLD_ID=w1
+   NODE_ENV=development
+   BARTER_RP_ID=localhost
+   BARTER_ORIGIN=http://localhost:5173
+   ```
+
+   `WORLD_ID` must be `w1` because the client requests that world, and
+   `BARTER_ORIGIN` must be the browser's origin (`5173`) for passkeys.
+
+2. Generate the optional VAPID keys (the tick worker needs them to deliver push
+   notifications; without them a resolved tick logs a push error):
+
+   ```sh
+   npx web-push generate-vapid-keys
+   ```
+
+   Put the output in `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
+
+3. Seed a playable world. This creates `./barter-village.sqlite` with world `w1`,
+   a generated region, and player `p1` with a plot and starter buildings. It is
+   safe to run more than once:
+
+   ```sh
+   set -a; source .env; set +a
+   npx tsx scripts/seed-local.ts
+   ```
+
+4. Start the API in one terminal:
+
+   ```sh
+   set -a; source .env; set +a
+   npm start --workspace @bartervillage/server
+   ```
+
+5. Start the tick worker in a second terminal (optional, but needed to resolve
+   ticks when you mark yourself ready):
+
+   ```sh
+   set -a; source .env; set +a
+   npm start --workspace @bartervillage/worker
+   ```
+
+6. Start the client in a third terminal:
+
+   ```sh
+   npm run dev --workspace @bartervillage/client
+   ```
+
+   Open <http://localhost:5173/?player=p1>. The Vite dev server proxies the API
+   routes to `http://127.0.0.1:3000`, so no reverse proxy is needed.
+
+To start over, stop the processes, delete `barter-village.sqlite` (plus the
+`-shm`/`-wal` files) and rerun the seed script. Discord and GitHub login are
+disabled while their client IDs are unset; local passkey login needs
+`BARTER_ORIGIN=http://localhost:5173` to match the page origin.
+
 ## Prerequisites
 
 - A VPS running NixOS (or any Linux distro with `nix` installed) with at least 2 GB
@@ -24,7 +96,7 @@ admin UI.
 }
 
 let
-  flake = builtins.getFlake "github:your-username/barter-village";
+  flake = builtins.getFlake "github:bmordue/barter-village";
 in
 {
   imports = [ flake.nixosModules.default ];
@@ -36,8 +108,8 @@ in
     # API listens on localhost:3000; nginx proxies to it on 443.
     host = "127.0.0.1";
     port = 3000;
-    rpID = "barter-village.example.com"; # must equal `domain`
-    origin = "https://barter-village.example.com"; # HTTPS required in production
+    rpID = "$domain"; # must equal `domain`
+    origin = "https://$domain"; # HTTPS required in production
     # Secrets live in a systemd environment file, never in the Nix store.
     environmentFile = "/etc/barter-village/secrets.env";
     backup.enable = true;
