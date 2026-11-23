@@ -13,6 +13,13 @@
 - `packages/client`: Preact UI (`app.tsx`, `panels.tsx`, `plotView.tsx`).
 - Tests: `<package>/test/*.unit.test.ts`. Run one with `npx vitest run --project unit <file>`.
 
+## Taking a new task
+
+- Check `gh issue list --repo bmordue/bartervillage --state open` for the next item with no blockers.
+- Work on a fresh branch named after the task ID (e.g. `M9.02-deploy-vps`).
+- Raise a PR linked to the issue, referencing the task ID in the commit message and PR title.
+- Follow the commit style: task IDs, then a short description.
+
 ## Token discipline
 
 - Never attach, print or re-read the whole `IMPLEMENTATION_CHECKLIST.md`. Find the next task with:
