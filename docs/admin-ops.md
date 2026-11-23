@@ -19,6 +19,20 @@ overrides are:
 | `services.barter-village.worker.pollIntervalMs` | Tick worker polling cadence. |
 | `services.barter-village.backup.enable` | Enable nightly encrypted backup + timer. |
 | `services.barter-village.backup.calendar` | systemd `OnCalendar` expression (default `*-*-* 03:00:00`). |
+| `services.barter-village.rpID` | Must match the domain used in the reverse proxy. |
+| `services.barter-village.origin` | Must use `https://` in production (enforced by passkey code). |
+
+## VPS Deployment (M9.02)
+
+A dedicated deployment guide is available in `docs/deploy-vps.md`. Key steps:
+
+1. Provision a VPS with a static public IP and a registered domain name.
+2. Ensure DNS A/AAAA records point to the VPS's IP address.
+3. Set the NixOS module options: `services.barter-village.rpID = "<domain>"` and `services.barter-village.origin = "https://<domain>:443"` (or via environment file `BARTER_ORIGIN=https://<domain>:3000`).
+4. Run `caddy validate && caddy run` to start Caddy with automatic TLS via Let's Encrypt.
+5. Verify the API is accessible at `https://<domain>:443` and WebAuthn passkey registration works.
+
+See `docs/deploy-vps.md` for the complete step-by-step deployment walkthrough.
 
 ## Secrets (environment file)
 
@@ -99,6 +113,7 @@ SELECT id, player_id, kind, subject, public_key, created_at FROM credentials;
 | **Check worker logs** | `journalctl -u barter-village-worker -f` |
 | **View push failures** | `journalctl -u barter-village-worker -g 'push failed'` |
 | **Verify backup integrity** | Restore the latest `.enc` from S3, decrypt with `BACKUP_ENCRYPTION_PASSPHRASE`, open with `sqlite3 -readonly`, run the queries above. |
+| **Restore from nightly backup (M9.06)** | `sudo -u barter-village BACKUP_REMOTE_KEY=backups/2026-12-31/barter-village-2026-12-31T03-00-00.enc DATABASE_PATH=/var/lib/barter-village/barter-village.sqlite BACKUP_WORK_DIR=/var/lib/barter-village/backups BACKUP_ENCRYPTION_PASSPHRASE=<passphrase> BACKUP_S3_ENDPOINT=https://s3.amazonaws.com BACKUP_S3_BUCKET=<bucket> BACKUP_S3_ACCESS_KEY_ID=<key> BACKUP_S3_SECRET_ACCESS_KEY=<secret> /path/to/barter-village-worker restore` |
 
 ## Replay
 
