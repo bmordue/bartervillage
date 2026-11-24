@@ -19,6 +19,7 @@
     "format:check": "prettier --check .",
     "content:validate": "tsx scripts/validate-content.ts",
     "secrets:check": "tsx scripts/check-secrets.ts",
+    "local:env": "tsx scripts/create-local-env.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run --project unit",

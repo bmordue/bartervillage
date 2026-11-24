@@ -140,31 +140,38 @@
               description = "Stable WebAuthn relying-party ID (the site's domain).";
             };
 
+            domain = lib.mkOption {
+              type = lib.types.str;
+              default = "barter-village.example.com";
+              description = "Public domain name for the deployment; serves HTTPS and is the WebAuthn RP ID.";
+            };
+
             origin = lib.mkOption {
               type = lib.types.str;
               default = "http://localhost:3000";
               description = "Public HTTPS origin clients use for WebAuthn.";
             };
 
-              environmentFile = lib.mkOption {
-                type = lib.types.nullOr lib.types.path;
-                default = null;
-                description = ''
-                  Optional systemd environment file for deployment secrets:
-                  BARTER_CREDENTIAL_KEY, the Discord and GitHub client secrets,
-                  VAPID_PRIVATE_KEY and the S3-compatible backup credentials.
-                  Keep it out of the Nix store.
-                '';
-              };
+            environmentFile = lib.mkOption {
+              type = lib.types.nullOr lib.types.path;
+              default = null;
+              description = ''
+                Optional systemd environment file for deployment secrets:
+                BARTER_CREDENTIAL_KEY, the Discord and GitHub client secrets,
+                VAPID_PRIVATE_KEY and the S3-compatible backup credentials.
+                Keep it out of the Nix store.
+              '';
+            };
 
-              backup = lib.mkEnableOption "Nightly encrypted off-site backups";
+            backup.enable = lib.mkEnableOption "Nightly encrypted off-site backups";
 
-              backup.calendar = lib.mkOption {
-                type = lib.types.str;
-                default = "*-*-* 03:00:00";
-                description = "systemd timer calendar expression for the nightly backup.";
-              };
+            backup.calendar = lib.mkOption {
+              type = lib.types.str;
+              default = "*-*-* 03:00:00";
+              description = "systemd timer calendar expression for the nightly backup.";
+            };
 
+            nginx.enable = lib.mkEnableOption "nginx reverse proxy with Let's Encrypt TLS (M9.02; spec §12)";
 
             worker.pollIntervalMs = lib.mkOption {
               type = lib.types.positiveInt;
@@ -229,7 +236,7 @@
               };
             };
 
-            systemd.services.barter-village-backup = {
+            systemd.services.barter-village-backup = lib.mkIf cfg.backup.enable {
               description = "Barter Village nightly encrypted backup";
               after = [ "network.target" ];
               wantedBy = [ "multi-user.target" ];
@@ -249,12 +256,36 @@
               };
             };
 
-            systemd.timers.barter-village-backup = {
+            systemd.timers.barter-village-backup = lib.mkIf cfg.backup.enable {
               description = "Run the nightly backup for Barter Village";
               wantedBy = [ "timers.target" ];
               timerConfig = {
                 OnCalendar = cfg.backup.calendar;
                 Persistent = true;
+              };
+            };
+
+            services.nginx = lib.mkIf cfg.nginx.enable {
+              enable = true;
+              recommendedProxySettings = true;
+              recommendedOptimisation = true;
+              recommendedTlsSettings = true;
+              recommendedGzipSettings = true;
+              virtualHosts = {
+                "${cfg.domain}" = {
+                  forceSSL = true;
+                  enableACME = true;
+                  locations."/" = {
+                    proxyPass = "http://${cfg.host}:${toString cfg.port}";
+                    proxyWebsockets = true;
+                    extraConfig = ''
+                      proxy_set_header Host $host;
+                      proxy_set_header X-Real-IP $remote_addr;
+                      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                      proxy_set_header X-Forwarded-Proto $scheme;
+                    '';
+                  };
+                };
               };
             };
           };

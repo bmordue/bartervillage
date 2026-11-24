@@ -8,7 +8,7 @@
  * tick resolution (spec §11).
  */
 
-import webpush from "web-push";
+import * as webpush from "web-push";
 
 import type { Database } from "./db/database.js";
 import { listPushSubscriptions } from "./db/pushRepository.js";

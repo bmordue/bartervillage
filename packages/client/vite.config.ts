@@ -13,5 +13,19 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    proxy: {
+      "/world": "http://127.0.0.1:3000",
+      "/plot": "http://127.0.0.1:3000",
+      "/player": "http://127.0.0.1:3000",
+      "/players": "http://127.0.0.1:3000",
+      "/barter": "http://127.0.0.1:3000",
+      "/replay": "http://127.0.0.1:3000",
+      "/site": "http://127.0.0.1:3000",
+      "/ready": "http://127.0.0.1:3000",
+      "/push": "http://127.0.0.1:3000",
+      "/vapid-key": "http://127.0.0.1:3000",
+      "/auth": "http://127.0.0.1:3000",
+      "/health": "http://127.0.0.1:3000",
+    },
   },
 });
